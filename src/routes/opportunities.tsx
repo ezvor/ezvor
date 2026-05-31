@@ -1,16 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Sparkles, Search, Loader2 } from "lucide-react";
+import { Sparkles, Search, Loader2, History } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/PageHeader";
-import { OpportunityCard, type OppCardData } from "@/components/OpportunityCard";
+import { OpportunityCard, type OppCardData, type StatusCitation } from "@/components/OpportunityCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { OPPORTUNITIES, CATEGORIES, type OppCategory } from "@/data/careerData";
 import { discoverOpportunities } from "@/lib/career.functions";
+import { getLiveStatuses, getStatusChangeLog, recheckStatus, type LiveStatus } from "@/lib/status.functions";
 
 export const Route = createFileRoute("/opportunities")({
   head: () => ({
@@ -19,7 +21,7 @@ export const Route = createFileRoute("/opportunities")({
       {
         name: "description",
         content:
-          "Browse curated tech opportunities: open-source mentorships, competitive programming, hackathons, internships, scholarships and fellowships. Or discover new ones with AI.",
+          "Browse curated tech opportunities with live, source-verified application statuses. Open-source mentorships, contests, hackathons, internships, scholarships and fellowships.",
       },
     ],
   }),
@@ -34,7 +36,72 @@ function OpportunitiesPage() {
   const [aiQuery, setAiQuery] = useState("");
   const [aiResults, setAiResults] = useState<OppCardData[] | null>(null);
   const [loading, setLoading] = useState(false);
+  const [overrides, setOverrides] = useState<Record<string, LiveStatus>>({});
+  const [rechecking, setRechecking] = useState<Record<string, boolean>>({});
+
   const discover = useServerFn(discoverOpportunities);
+  const fetchStatuses = useServerFn(getLiveStatuses);
+  const fetchLog = useServerFn(getStatusChangeLog);
+  const recheck = useServerFn(recheckStatus);
+
+  const { data: liveData } = useQuery({
+    queryKey: ["live-statuses"],
+    queryFn: () => fetchStatuses(),
+  });
+  const { data: logData } = useQuery({ queryKey: ["status-log"], queryFn: () => fetchLog() });
+
+  const statusMap = useMemo(() => {
+    const m: Record<string, LiveStatus> = {};
+    for (const s of liveData?.statuses ?? []) m[s.oppId] = s;
+    for (const [k, v] of Object.entries(overrides)) m[k] = v;
+    return m;
+  }, [liveData, overrides]);
+
+  const onRecheck = async (oppId: string) => {
+    setRechecking((p) => ({ ...p, [oppId]: true }));
+    try {
+      const r = await recheck({ data: { oppId } });
+      setOverrides((p) => ({
+        ...p,
+        [oppId]: {
+          oppId,
+          status: r.status,
+          statusNote: r.statusNote,
+          sourceUrl: r.sourceUrl,
+          sourceTitle: r.sourceTitle,
+          reason: r.reason,
+          confidence: r.confidence,
+          checkedAt: r.checkedAt,
+        },
+      }));
+      toast.success(r.changed ? `Status updated: ${r.oldStatus ?? "?"} → ${r.status}` : `Confirmed: ${r.status}`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Could not re-check");
+    } finally {
+      setRechecking((p) => ({ ...p, [oppId]: false }));
+    }
+  };
+
+  const merge = (id: string, base: OppCardData): OppCardData => {
+    const live = statusMap[id];
+    const citation: StatusCitation | undefined = live?.sourceUrl
+      ? {
+          sourceUrl: live.sourceUrl,
+          sourceTitle: live.sourceTitle,
+          reason: live.reason,
+          confidence: live.confidence,
+          checkedAt: live.checkedAt,
+        }
+      : undefined;
+    return {
+      ...base,
+      status: (live?.status as OppCardData["status"]) ?? base.status,
+      statusNote: live?.statusNote ?? base.statusNote,
+      citation,
+      onRecheck: () => onRecheck(id),
+      rechecking: !!rechecking[id],
+    };
+  };
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -63,12 +130,14 @@ function OpportunitiesPage() {
     }
   };
 
+  const oppTitle = (id: string) => OPPORTUNITIES.find((o) => o.id === id)?.title ?? id;
+
   return (
     <div className="pb-16">
       <PageHeader
-        eyebrow="Curated + AI discovery"
+        eyebrow="Curated + AI discovery + live status"
         title="Opportunities worth your time"
-        description="Real, well-known programs across open source, contests, hackathons, internships, scholarships and fellowships."
+        description="Real programs with source-verified application statuses — see exactly why each is Open, Closed or Rolling."
       >
         <div className="flex w-full max-w-xl items-center gap-2 rounded-2xl border border-border/70 bg-card/70 p-2 shadow-soft backdrop-blur">
           <Sparkles className="ml-2 h-5 w-5 shrink-0 text-primary-glow" />
@@ -79,11 +148,7 @@ function OpportunitiesPage() {
             placeholder="Discover with AI… e.g. UX design internships"
             className="border-0 bg-transparent focus-visible:ring-0"
           />
-          <Button
-            onClick={runDiscover}
-            disabled={loading}
-            className="shrink-0 bg-gradient-primary shadow-glow"
-          >
+          <Button onClick={runDiscover} disabled={loading} className="shrink-0 bg-gradient-primary shadow-glow">
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
             Find
           </Button>
@@ -91,7 +156,26 @@ function OpportunitiesPage() {
       </PageHeader>
 
       <div className="mx-auto w-full max-w-6xl px-5 sm:px-8">
-        {/* AI results */}
+        {/* Recent status changes */}
+        {logData?.changes && logData.changes.length > 0 && (
+          <section className="mt-8 rounded-2xl border border-border/60 bg-card/50 p-4">
+            <h2 className="mb-2 flex items-center gap-2 font-display text-sm font-bold">
+              <History className="h-4 w-4 text-primary-glow" /> Recent status changes
+            </h2>
+            <ul className="space-y-1 text-xs text-muted-foreground">
+              {logData.changes.slice(0, 6).map((c, i) => (
+                <li key={i} className="flex flex-wrap items-center gap-1">
+                  <span className="font-medium text-foreground">{oppTitle(c.opp_id)}</span>
+                  <span>
+                    {c.old_status ?? "—"} → <span className="text-primary-glow">{c.new_status}</span>
+                  </span>
+                  <span className="ml-auto">{new Date(c.changed_at).toLocaleDateString()}</span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+
         {(loading || aiResults) && (
           <section className="mt-8">
             <h2 className="mb-4 flex items-center gap-2 font-display text-xl font-bold">
@@ -114,7 +198,6 @@ function OpportunitiesPage() {
           </section>
         )}
 
-        {/* Filters */}
         <div className="mt-10 flex flex-col gap-4">
           <div className="flex flex-wrap gap-2">
             {(["All", ...CATEGORIES] as Filter[]).map((c) => (
@@ -145,7 +228,7 @@ function OpportunitiesPage() {
 
         <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filtered.map((opp) => (
-            <OpportunityCard key={opp.id} opp={opp} />
+            <OpportunityCard key={opp.id} opp={merge(opp.id, opp)} />
           ))}
         </div>
         {filtered.length === 0 && (
