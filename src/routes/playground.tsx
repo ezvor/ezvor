@@ -624,18 +624,18 @@ function PlaygroundPage() {
   return (
     <div className="flex h-[calc(100vh-3.5rem)] flex-col">
       {TopBar}
-      <ResizablePanelGroup direction="horizontal" className="min-h-0 flex-1">
-        <ResizablePanel defaultSize={42} minSize={25}>
+      <ResizablePanelGroup orientation="horizontal" className="min-h-0 flex-1">
+        <ResizablePanel defaultSize="42%" minSize="25%">
           {Description}
         </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={58} minSize={35}>
-          <ResizablePanelGroup direction="vertical">
-            <ResizablePanel defaultSize={62} minSize={25}>
+        <ResizablePanel defaultSize="58%" minSize="35%">
+          <ResizablePanelGroup orientation="vertical">
+            <ResizablePanel defaultSize="62%" minSize="25%">
               {EditorArea}
             </ResizablePanel>
             <ResizableHandle withHandle />
-            <ResizablePanel defaultSize={38} minSize={15}>
+            <ResizablePanel defaultSize="38%" minSize="15%">
               {ConsoleArea}
             </ResizablePanel>
           </ResizablePanelGroup>
