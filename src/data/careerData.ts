@@ -716,6 +716,22 @@ export const RESOURCES: Resource[] = [
   { id: "tryhackme", title: "TryHackMe", provider: "TryHackMe", topic: "Cybersecurity", type: "Practice", free: true, url: "https://tryhackme.com/" },
   { id: "theodinproject", title: "The Odin Project", provider: "The Odin Project", topic: "Full Stack", type: "Course", free: true, url: "https://www.theodinproject.com/" },
   { id: "missing-semester", title: "The Missing Semester", provider: "MIT", topic: "Dev Tools", type: "Course", free: true, url: "https://missing.csail.mit.edu/" },
+
+  // ───────────────────── Free YouTube channels & playlists ─────────────────────
+  { id: "yt-freecodecamp", title: "freeCodeCamp.org (full courses)", provider: "YouTube · freeCodeCamp", topic: "Web Development", type: "Video", free: true, url: "https://www.youtube.com/@freecodecamp" },
+  { id: "yt-codewithharry", title: "CodeWithHarry (Web, Python, DSA)", provider: "YouTube · CodeWithHarry", topic: "Full Stack", type: "Video", free: true, url: "https://www.youtube.com/@CodeWithHarry" },
+  { id: "yt-apnacollege", title: "Apna College (DSA + Dev)", provider: "YouTube · Apna College", topic: "DSA / Interviews", type: "Video", free: true, url: "https://www.youtube.com/@ApnaCollegeOfficial" },
+  { id: "yt-neetcode", title: "NeetCode (LeetCode patterns)", provider: "YouTube · NeetCode", topic: "DSA / Interviews", type: "Video", free: true, url: "https://www.youtube.com/@NeetCode" },
+  { id: "yt-abdulbari", title: "Abdul Bari (Algorithms)", provider: "YouTube · Abdul Bari", topic: "Competitive Programming", type: "Video", free: true, url: "https://www.youtube.com/@abdul_bari" },
+  { id: "yt-mosh", title: "Programming with Mosh", provider: "YouTube · Mosh", topic: "Software Engineering", type: "Video", free: true, url: "https://www.youtube.com/@programmingwithmosh" },
+  { id: "yt-netninja", title: "The Net Ninja (Frontend)", provider: "YouTube · Net Ninja", topic: "Web Development", type: "Video", free: true, url: "https://www.youtube.com/@NetNinja" },
+  { id: "yt-fireship", title: "Fireship (quick deep-dives)", provider: "YouTube · Fireship", topic: "Software Engineering", type: "Video", free: true, url: "https://www.youtube.com/@Fireship" },
+  { id: "yt-coreyschafer", title: "Corey Schafer (Python)", provider: "YouTube · Corey Schafer", topic: "Data Science / ML", type: "Video", free: true, url: "https://www.youtube.com/@coreyms" },
+  { id: "yt-krishnaik", title: "Krish Naik (Data Science & ML)", provider: "YouTube · Krish Naik", topic: "Data Science / ML", type: "Video", free: true, url: "https://www.youtube.com/@krishnaik06" },
+  { id: "yt-statquest", title: "StatQuest (ML & Stats)", provider: "YouTube · StatQuest", topic: "Machine Learning", type: "Video", free: true, url: "https://www.youtube.com/@statquest" },
+  { id: "yt-nana", title: "TechWorld with Nana (DevOps)", provider: "YouTube · Nana", topic: "DevOps / Cloud", type: "Video", free: true, url: "https://www.youtube.com/@TechWorldwithNana" },
+  { id: "yt-networkchuck", title: "NetworkChuck (Cloud & Networking)", provider: "YouTube · NetworkChuck", topic: "DevOps / Cloud", type: "Video", free: true, url: "https://www.youtube.com/@NetworkChuck" },
+  { id: "yt-alextheanalyst", title: "Alex The Analyst (Data Analytics)", provider: "YouTube · Alex The Analyst", topic: "Data Science / ML", type: "Video", free: true, url: "https://www.youtube.com/@AlexTheAnalyst" },
 ];
 
 export const FIELDS = [
