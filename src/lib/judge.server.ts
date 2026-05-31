@@ -1,67 +1,31 @@
-// Server-only helpers that talk to a code-execution engine (Piston).
-// Piston is a free, sandboxed, multi-language code runner.
-// Docs: https://github.com/engineer-man/piston
+// Server-only helpers that talk to a free, no-key, sandboxed code-execution
+// engine (Paiza.io). It compiles + runs code in many languages with stdin.
+// Flow: create a run -> poll status -> fetch details.
 
-const PISTON_BASE = "https://emkc.org/api/v2/piston";
+const PAIZA_BASE = "https://api.paiza.io/runners";
+const API_KEY = "guest";
 
-export type LangKey = "python" | "javascript" | "typescript" | "cpp" | "c" | "java" | "go" | "rust";
+export type LangKey =
+  | "python"
+  | "javascript"
+  | "typescript"
+  | "cpp"
+  | "c"
+  | "java"
+  | "go"
+  | "rust";
 
-type Runtime = { language: string; version: string; aliases: string[] };
-
-// Map our editor language keys to the Piston language identifier + a source filename.
-const LANG_CONFIG: Record<
-  LangKey,
-  { piston: string; aliases: string[]; filename: string }
-> = {
-  python: { piston: "python", aliases: ["py", "python3"], filename: "main.py" },
-  javascript: { piston: "javascript", aliases: ["js", "node-javascript"], filename: "main.js" },
-  typescript: { piston: "typescript", aliases: ["ts"], filename: "main.ts" },
-  cpp: { piston: "c++", aliases: ["cpp", "g++"], filename: "main.cpp" },
-  c: { piston: "c", aliases: ["gcc"], filename: "main.c" },
-  java: { piston: "java", aliases: [], filename: "Main.java" },
-  go: { piston: "go", aliases: ["golang"], filename: "main.go" },
-  rust: { piston: "rust", aliases: ["rs"], filename: "main.rs" },
+// Map our editor language keys to the Paiza language identifier.
+const LANG_MAP: Record<LangKey, string> = {
+  python: "python3",
+  javascript: "javascript",
+  typescript: "typescript",
+  cpp: "cpp",
+  c: "c",
+  java: "java",
+  go: "go",
+  rust: "rust",
 };
-
-let runtimeCache: { at: number; runtimes: Runtime[] } | null = null;
-
-async function getRuntimes(): Promise<Runtime[]> {
-  // Cache for 10 minutes — runtime versions rarely change.
-  if (runtimeCache && Date.now() - runtimeCache.at < 10 * 60 * 1000) {
-    return runtimeCache.runtimes;
-  }
-  const res = await fetch(`${PISTON_BASE}/runtimes`);
-  if (!res.ok) throw new Error(`Failed to load runtimes (${res.status})`);
-  const runtimes = (await res.json()) as Runtime[];
-  runtimeCache = { at: Date.now(), runtimes };
-  return runtimes;
-}
-
-function pickVersion(runtimes: Runtime[], lang: LangKey): { language: string; version: string } {
-  const cfg = LANG_CONFIG[lang];
-  const candidates = runtimes.filter(
-    (r) =>
-      r.language === cfg.piston ||
-      cfg.aliases.includes(r.language) ||
-      r.aliases.some((a) => a === cfg.piston || cfg.aliases.includes(a)),
-  );
-  if (candidates.length === 0) {
-    throw new Error(`Language "${lang}" is not available on the runner.`);
-  }
-  // Prefer the highest semver version.
-  candidates.sort((a, b) => compareSemver(b.version, a.version));
-  return { language: candidates[0].language, version: candidates[0].version };
-}
-
-function compareSemver(a: string, b: string): number {
-  const pa = a.split(".").map((n) => parseInt(n, 10) || 0);
-  const pb = b.split(".").map((n) => parseInt(n, 10) || 0);
-  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-    const d = (pa[i] || 0) - (pb[i] || 0);
-    if (d !== 0) return d;
-  }
-  return 0;
-}
 
 export type RunResult = {
   ok: boolean;
@@ -75,13 +39,10 @@ export type RunResult = {
   error: string | null;
 };
 
-export async function runCode(opts: {
-  language: LangKey;
-  source: string;
-  stdin?: string;
-  runTimeoutMs?: number;
-}): Promise<RunResult> {
-  const empty: RunResult = {
+const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
+
+function emptyResult(error: string | null = null): RunResult {
+  return {
     ok: false,
     stdout: "",
     stderr: "",
@@ -90,57 +51,93 @@ export async function runCode(opts: {
     exitCode: null,
     signal: null,
     timedOut: false,
-    error: null,
+    error,
   };
+}
+
+export async function runCode(opts: {
+  language: LangKey;
+  source: string;
+  stdin?: string;
+  runTimeoutMs?: number;
+}): Promise<RunResult> {
+  const paizaLang = LANG_MAP[opts.language];
+  if (!paizaLang) return emptyResult(`Unsupported language: ${opts.language}`);
 
   try {
-    const cfg = LANG_CONFIG[opts.language];
-    if (!cfg) return { ...empty, error: `Unsupported language: ${opts.language}` };
-
-    const runtimes = await getRuntimes();
-    const { language, version } = pickVersion(runtimes, opts.language);
-
-    const res = await fetch(`${PISTON_BASE}/execute`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        language,
-        version,
-        files: [{ name: cfg.filename, content: opts.source }],
-        stdin: opts.stdin ?? "",
-        compile_timeout: 10000,
-        run_timeout: opts.runTimeoutMs ?? 8000,
-      }),
+    // 1) Create the run.
+    const createBody = new URLSearchParams({
+      source_code: opts.source,
+      language: paizaLang,
+      input: opts.stdin ?? "",
+      api_key: API_KEY,
     });
+    const createRes = await fetch(`${PAIZA_BASE}/create`, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: createBody.toString(),
+    });
+    if (!createRes.ok) {
+      const t = await createRes.text();
+      return emptyResult(`Runner error (${createRes.status}): ${t.slice(0, 200)}`);
+    }
+    const created = (await createRes.json()) as { id?: string; error?: string };
+    if (created.error || !created.id) {
+      return emptyResult(created.error || "Failed to start the runner.");
+    }
+    const id = created.id;
 
-    if (!res.ok) {
-      const text = await res.text();
-      return { ...empty, error: `Runner error (${res.status}): ${text.slice(0, 300)}` };
+    // 2) Poll for completion (compiled languages may take a few seconds).
+    const deadline = Date.now() + (opts.runTimeoutMs ?? 25000);
+    let status = "running";
+    while (Date.now() < deadline) {
+      await sleep(900);
+      const statusRes = await fetch(
+        `${PAIZA_BASE}/get_status?id=${id}&api_key=${API_KEY}`,
+      );
+      if (!statusRes.ok) continue;
+      const s = (await statusRes.json()) as { status?: string };
+      status = s.status ?? "running";
+      if (status === "completed") break;
+    }
+    if (status !== "completed") {
+      return emptyResult("The runner timed out. Please try again.");
     }
 
-    const data = (await res.json()) as {
-      compile?: { stdout: string; stderr: string; output: string; code: number | null; signal: string | null };
-      run?: { stdout: string; stderr: string; output: string; code: number | null; signal: string | null };
+    // 3) Fetch details.
+    const detailsRes = await fetch(
+      `${PAIZA_BASE}/get_details?id=${id}&api_key=${API_KEY}`,
+    );
+    if (!detailsRes.ok) {
+      return emptyResult(`Runner error (${detailsRes.status}).`);
+    }
+    const d = (await detailsRes.json()) as {
+      stdout?: string | null;
+      stderr?: string | null;
+      build_stderr?: string | null;
+      build_result?: string | null;
+      exit_code?: string | null;
+      result?: string | null;
     };
 
-    const run = data.run ?? { stdout: "", stderr: "", output: "", code: null, signal: null };
-    const compile = data.compile;
-    const compileOutput = compile?.stderr || compile?.output || "";
-    const timedOut = run.signal === "SIGKILL";
+    const buildFailed = d.build_result && d.build_result !== "success";
+    const compileOutput = buildFailed ? d.build_stderr ?? "Compilation failed." : "";
+    const timedOut = d.result === "timeout";
+    const exitCode = d.exit_code != null ? parseInt(d.exit_code, 10) : null;
 
     return {
-      ok: (run.code === 0 || run.code === null) && !timedOut && !compileOutput,
-      stdout: run.stdout ?? "",
-      stderr: run.stderr ?? "",
+      ok: d.result === "success" && !compileOutput && !timedOut,
+      stdout: d.stdout ?? "",
+      stderr: d.stderr ?? "",
       compileOutput,
-      output: run.output ?? "",
-      exitCode: run.code,
-      signal: run.signal,
+      output: (d.stdout ?? "") + (d.stderr ?? ""),
+      exitCode: Number.isNaN(exitCode as number) ? null : exitCode,
+      signal: null,
       timedOut,
       error: null,
     };
   } catch (e) {
-    return { ...empty, error: e instanceof Error ? e.message : "Unknown execution error" };
+    return emptyResult(e instanceof Error ? e.message : "Unknown execution error");
   }
 }
 
