@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { callAI, type ChatMessage } from "./ai.server";
+import type { GraphRoadmap, GraphNode, GraphEdge } from "@/data/graphData";
 
 interface ToolCallResult {
   choices?: { message?: { tool_calls?: { function?: { arguments?: string } }[] } }[];
@@ -150,5 +151,142 @@ export const discoverOpportunities = createServerFn({ method: "POST" })
         eligibility: string;
         difficulty: string;
       }[];
+    };
+  });
+
+/** Generate a personalized, NeetCode-style skill graph from current skills + target role. */
+export const generatePersonalGraph = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      role: z.string().min(2).max(80),
+      skills: z.string().max(400).optional(),
+    }),
+  )
+  .handler(async ({ data }): Promise<GraphRoadmap> => {
+    const messages: ChatMessage[] = [
+      {
+        role: "system",
+        content:
+          "You are a career mentor building a visual skill roadmap. Given a target role and the learner's current skills, produce 4-6 ordered stages from foundations to job-ready. SKIP or shorten topics the learner already knows and go deeper on what they're missing. Each stage has 1-2 nodes. Every node MUST include 1-3 FREE resources, preferring specific YouTube channels/playlists (e.g. freeCodeCamp, NeetCode, TechWorld with Nana, Krish Naik, StatQuest, Corey Schafer) that match the topic. Use real, working URLs.",
+      },
+      {
+        role: "user",
+        content: `Target role: ${data.role}\nCurrent skills: ${data.skills?.trim() || "beginner / not specified"}`,
+      },
+    ];
+
+    const tools = [
+      {
+        type: "function",
+        function: {
+          name: "build_graph",
+          description: "Return a staged skill graph with free resources per node.",
+          parameters: {
+            type: "object",
+            properties: {
+              title: { type: "string" },
+              tagline: { type: "string", description: "One short sentence." },
+              stages: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    nodes: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        properties: {
+                          label: { type: "string" },
+                          desc: { type: "string" },
+                          resources: {
+                            type: "array",
+                            items: {
+                              type: "object",
+                              properties: {
+                                label: { type: "string" },
+                                provider: { type: "string" },
+                                url: { type: "string" },
+                                kind: {
+                                  type: "string",
+                                  enum: ["Video", "Playlist", "Practice", "Docs", "Course"],
+                                },
+                              },
+                              required: ["label", "provider", "url", "kind"],
+                              additionalProperties: false,
+                            },
+                          },
+                        },
+                        required: ["label", "desc", "resources"],
+                        additionalProperties: false,
+                      },
+                    },
+                  },
+                  required: ["nodes"],
+                  additionalProperties: false,
+                },
+              },
+            },
+            required: ["title", "tagline", "stages"],
+            additionalProperties: false,
+          },
+        },
+      },
+    ];
+
+    const res = await callAI(messages, {
+      tools,
+      tool_choice: { type: "function", function: { name: "build_graph" } },
+    });
+    if (!res.ok) {
+      if (res.status === 429) throw new Error("Rate limit reached. Try again shortly.");
+      if (res.status === 402) throw new Error("AI credits exhausted.");
+      throw new Error("AI service error");
+    }
+
+    const out = (await res.json()) as {
+      choices?: { message?: { tool_calls?: { function?: { arguments?: string } }[] } }[];
+    };
+    const argStr = out?.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+    if (!argStr) throw new Error("No graph returned");
+
+    const parsed = JSON.parse(argStr) as {
+      title: string;
+      tagline: string;
+      stages: {
+        nodes: { label: string; desc: string; resources: GraphNode["resources"] }[];
+      }[];
+    };
+
+    // Lay out stages into rows; nodes spread across columns.
+    const nodes: GraphNode[] = [];
+    const edges: GraphEdge[] = [];
+    const idsByRow: string[][] = [];
+
+    parsed.stages.forEach((stage, row) => {
+      const rowIds: string[] = [];
+      const count = Math.max(stage.nodes.length, 1);
+      stage.nodes.forEach((n, i) => {
+        const id = `s${row}n${i}`;
+        const col = count === 1 ? 0.5 : 0.25 + (i * 0.5) / (count - 1);
+        nodes.push({ id, label: n.label, desc: n.desc, row, col, resources: n.resources ?? [] });
+        rowIds.push(id);
+      });
+      idsByRow.push(rowIds);
+    });
+
+    for (let r = 0; r < idsByRow.length - 1; r++) {
+      for (const from of idsByRow[r]) {
+        for (const to of idsByRow[r + 1]) edges.push({ from, to });
+      }
+    }
+
+    return {
+      id: "personal",
+      title: parsed.title,
+      tagline: parsed.tagline,
+      icon: "Sparkles",
+      accent: "primary",
+      nodes,
+      edges,
     };
   });
