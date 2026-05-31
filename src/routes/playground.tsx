@@ -35,9 +35,9 @@ import {
   FALLBACK_STARTER,
   type Problem,
 } from "@/data/problems";
-import type { LangKey } from "@/lib/judge.server";
+import type { LangKey, RunResult } from "@/lib/judge.server";
 import { executeCode, submitCode } from "@/lib/judge.functions";
-import type { RunResult, SubmitResult } from "@/lib/judge.functions";
+import type { SubmitResult } from "@/lib/judge.functions";
 
 export const Route = createFileRoute("/playground")({
   head: () => ({
