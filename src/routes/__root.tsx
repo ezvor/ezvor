@@ -80,13 +80,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "PathPilot — Free AI Career Guidance & Opportunities" },
+      {
+        name: "description",
+        content:
+          "Free AI career copilot for students & professionals. Get personalized guidance, roadmaps, resources, and real opportunities like GSoC, LFX, ICPC, and Meta Hacker Cup.",
+      },
+      { name: "author", content: "PathPilot" },
+      { property: "og:title", content: "PathPilot — Free AI Career Guidance" },
+      {
+        property: "og:description",
+        content:
+          "AI-powered career guidance, roadmaps, and curated opportunities for tech students & professionals.",
+      },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
