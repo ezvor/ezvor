@@ -696,7 +696,7 @@ export interface Resource {
   title: string;
   provider: string;
   topic: string;
-  type: "Course" | "Practice" | "Docs" | "Roadmap" | "Community";
+  type: "Course" | "Practice" | "Docs" | "Roadmap" | "Community" | "Video";
   free: boolean;
   url: string;
 }
