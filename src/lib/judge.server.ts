@@ -37,6 +37,8 @@ export type RunResult = {
   signal: string | null;
   timedOut: boolean;
   error: string | null;
+  timeMs: number | null;
+  memoryKb: number | null;
 };
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
@@ -52,6 +54,8 @@ function emptyResult(error: string | null = null): RunResult {
     signal: null,
     timedOut: false,
     error,
+    timeMs: null,
+    memoryKb: null,
   };
 }
 
