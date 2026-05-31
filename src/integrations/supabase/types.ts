@@ -14,7 +14,72 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      opportunity_status: {
+        Row: {
+          checked_at: string
+          confidence: string | null
+          opp_id: string
+          reason: string | null
+          source_title: string | null
+          source_url: string | null
+          status: string
+          status_note: string | null
+          updated_at: string
+        }
+        Insert: {
+          checked_at?: string
+          confidence?: string | null
+          opp_id: string
+          reason?: string | null
+          source_title?: string | null
+          source_url?: string | null
+          status: string
+          status_note?: string | null
+          updated_at?: string
+        }
+        Update: {
+          checked_at?: string
+          confidence?: string | null
+          opp_id?: string
+          reason?: string | null
+          source_title?: string | null
+          source_url?: string | null
+          status?: string
+          status_note?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      opportunity_status_log: {
+        Row: {
+          changed_at: string
+          id: string
+          new_status: string
+          old_status: string | null
+          opp_id: string
+          reason: string | null
+          source_url: string | null
+        }
+        Insert: {
+          changed_at?: string
+          id?: string
+          new_status: string
+          old_status?: string | null
+          opp_id: string
+          reason?: string | null
+          source_url?: string | null
+        }
+        Update: {
+          changed_at?: string
+          id?: string
+          new_status?: string
+          old_status?: string | null
+          opp_id?: string
+          reason?: string | null
+          source_url?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
