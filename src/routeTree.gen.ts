@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RoadmapsRouteImport } from './routes/roadmaps'
+import { Route as ResourcesRouteImport } from './routes/resources'
 import { Route as OpportunitiesRouteImport } from './routes/opportunities'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
@@ -17,6 +18,11 @@ import { Route as ApiChatRouteImport } from './routes/api/chat'
 const RoadmapsRoute = RoadmapsRouteImport.update({
   id: '/roadmaps',
   path: '/roadmaps',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ResourcesRoute = ResourcesRouteImport.update({
+  id: '/resources',
+  path: '/resources',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OpportunitiesRoute = OpportunitiesRouteImport.update({
@@ -38,12 +44,14 @@ const ApiChatRoute = ApiChatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/opportunities': typeof OpportunitiesRoute
+  '/resources': typeof ResourcesRoute
   '/roadmaps': typeof RoadmapsRoute
   '/api/chat': typeof ApiChatRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/opportunities': typeof OpportunitiesRoute
+  '/resources': typeof ResourcesRoute
   '/roadmaps': typeof RoadmapsRoute
   '/api/chat': typeof ApiChatRoute
 }
@@ -51,20 +59,28 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/opportunities': typeof OpportunitiesRoute
+  '/resources': typeof ResourcesRoute
   '/roadmaps': typeof RoadmapsRoute
   '/api/chat': typeof ApiChatRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/opportunities' | '/roadmaps' | '/api/chat'
+  fullPaths: '/' | '/opportunities' | '/resources' | '/roadmaps' | '/api/chat'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/opportunities' | '/roadmaps' | '/api/chat'
-  id: '__root__' | '/' | '/opportunities' | '/roadmaps' | '/api/chat'
+  to: '/' | '/opportunities' | '/resources' | '/roadmaps' | '/api/chat'
+  id:
+    | '__root__'
+    | '/'
+    | '/opportunities'
+    | '/resources'
+    | '/roadmaps'
+    | '/api/chat'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   OpportunitiesRoute: typeof OpportunitiesRoute
+  ResourcesRoute: typeof ResourcesRoute
   RoadmapsRoute: typeof RoadmapsRoute
   ApiChatRoute: typeof ApiChatRoute
 }
@@ -76,6 +92,13 @@ declare module '@tanstack/react-router' {
       path: '/roadmaps'
       fullPath: '/roadmaps'
       preLoaderRoute: typeof RoadmapsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/resources': {
+      id: '/resources'
+      path: '/resources'
+      fullPath: '/resources'
+      preLoaderRoute: typeof ResourcesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/opportunities': {
@@ -105,6 +128,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   OpportunitiesRoute: OpportunitiesRoute,
+  ResourcesRoute: ResourcesRoute,
   RoadmapsRoute: RoadmapsRoute,
   ApiChatRoute: ApiChatRoute,
 }
