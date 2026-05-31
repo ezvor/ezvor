@@ -4,7 +4,11 @@ export type OppCategory =
   | "Hackathons"
   | "Internships"
   | "Scholarships"
-  | "Fellowships";
+  | "Fellowships"
+  | "Bootcamps";
+
+export type OppStatus = "Open" | "Closed" | "Upcoming" | "Rolling";
+export type OppRegion = "Global" | "Pakistan";
 
 export interface Opportunity {
   id: string;
@@ -19,6 +23,12 @@ export interface Opportunity {
   url: string;
   tags: string[];
   stipend?: string;
+  /** Current application status (curated baseline; can be refreshed live). */
+  status?: OppStatus;
+  /** Region focus — used for the Pakistan filter. */
+  region?: OppRegion;
+  /** Short note shown next to status, e.g. "Has unpaid project tracks". */
+  statusNote?: string;
 }
 
 export const CATEGORIES: OppCategory[] = [
@@ -28,6 +38,7 @@ export const CATEGORIES: OppCategory[] = [
   "Internships",
   "Scholarships",
   "Fellowships",
+  "Bootcamps",
 ];
 
 export const OPPORTUNITIES: Opportunity[] = [
