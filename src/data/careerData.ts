@@ -73,7 +73,10 @@ export const OPPORTUNITIES: Opportunity[] = [
     eligibility: "Anyone 18+, beginner-friendly tracks available",
     url: "https://lfx.linuxfoundation.org/tools/mentorship/",
     tags: ["paid", "cloud-native", "remote"],
-    stipend: "$3000–$6600",
+    stipend: "$0–$6600",
+    status: "Rolling",
+    region: "Global",
+    statusNote: "Mix of paid & unpaid tracks — many projects are unpaid",
   },
   {
     id: "outreachy",
