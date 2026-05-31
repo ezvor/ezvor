@@ -34,6 +34,7 @@ export type TestCaseResult = {
   hidden: boolean;
   error: string | null;
   timedOut: boolean;
+  timeMs: number | null;
 };
 
 export type SubmitResult = {
@@ -42,6 +43,8 @@ export type SubmitResult = {
   total: number;
   compileError: string | null;
   cases: TestCaseResult[];
+  runtimeMs: number | null;
+  memoryKb: number | null;
 };
 
 // Run code against a set of test cases (the "Submit" button).
@@ -68,6 +71,8 @@ export const submitCode = createServerFn({ method: "POST" })
     const cases: TestCaseResult[] = [];
     let compileError: string | null = null;
     let passedCount = 0;
+    let runtimeMs = 0;
+    let memoryKb = 0;
 
     for (let i = 0; i < data.tests.length; i++) {
       const t = data.tests[i];
@@ -76,6 +81,9 @@ export const submitCode = createServerFn({ method: "POST" })
         source: data.source,
         stdin: t.input,
       });
+
+      runtimeMs += result.timeMs ?? 0;
+      memoryKb = Math.max(memoryKb, result.memoryKb ?? 0);
 
       // A compile error is the same for every test — report once and stop.
       if (result.compileOutput) {
@@ -90,6 +98,7 @@ export const submitCode = createServerFn({ method: "POST" })
           hidden: t.hidden ?? false,
           error: result.error,
           timedOut: result.timedOut,
+          timeMs: result.timeMs,
         });
         break;
       }
@@ -109,6 +118,7 @@ export const submitCode = createServerFn({ method: "POST" })
         hidden: t.hidden ?? false,
         error: result.error,
         timedOut: result.timedOut,
+        timeMs: result.timeMs,
       });
     }
 
@@ -118,5 +128,7 @@ export const submitCode = createServerFn({ method: "POST" })
       total: data.tests.length,
       compileError,
       cases,
+      runtimeMs: runtimeMs || null,
+      memoryKb: memoryKb || null,
     };
   });

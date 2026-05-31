@@ -336,6 +336,457 @@ public class Main {
       { input: "4\n-2 -1 -3 -4", expected: "-1", hidden: true },
     ],
   },
+  {
+    id: "contains-duplicate",
+    title: "Contains Duplicate",
+    difficulty: "Easy",
+    topic: "Arrays & Hashing",
+    description:
+      "Given an integer array `nums`, return `true` if any value appears at least twice, and `false` if every element is distinct.",
+    ioFormat:
+      "Input: line 1 = n, line 2 = n space-separated integers.\nOutput: `true` or `false`.",
+    examples: [
+      { input: "4\n1 2 3 1", output: "true" },
+      { input: "3\n1 2 3", output: "false" },
+    ],
+    constraints: ["1 ≤ n ≤ 10^5", "-10^9 ≤ nums[i] ≤ 10^9"],
+    starters: {
+      python: `import sys
+
+def contains_duplicate(nums):
+    # TODO
+    return False
+
+data = sys.stdin.read().split()
+n = int(data[0])
+nums = list(map(int, data[1:1 + n]))
+print(str(contains_duplicate(nums)).lower())
+`,
+      javascript: `const data = require('fs').readFileSync(0, 'utf8').trim().split(/\\s+/).map(Number);
+const n = data[0];
+const nums = data.slice(1, 1 + n);
+
+function containsDuplicate(nums) {
+  // TODO
+  return false;
+}
+
+console.log(containsDuplicate(nums) ? 'true' : 'false');
+`,
+      cpp: `#include <bits/stdc++.h>
+using namespace std;
+
+bool containsDuplicate(vector<int>& nums) {
+    // TODO
+    return false;
+}
+
+int main() {
+    int n; cin >> n;
+    vector<int> nums(n);
+    for (auto &x : nums) cin >> x;
+    cout << (containsDuplicate(nums) ? "true" : "false") << endl;
+}
+`,
+      java: `import java.util.*;
+
+public class Main {
+    static boolean containsDuplicate(int[] nums) {
+        // TODO
+        return false;
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        int[] nums = new int[n];
+        for (int i = 0; i < n; i++) nums[i] = sc.nextInt();
+        System.out.println(containsDuplicate(nums) ? "true" : "false");
+    }
+}
+`,
+    },
+    tests: [
+      { input: "4\n1 2 3 1", expected: "true" },
+      { input: "3\n1 2 3", expected: "false" },
+      { input: "10\n1 1 1 3 3 4 3 2 4 2", expected: "true" },
+      { input: "1\n7", expected: "false", hidden: true },
+      { input: "5\n5 4 3 2 1", expected: "false", hidden: true },
+    ],
+  },
+  {
+    id: "valid-anagram",
+    title: "Valid Anagram",
+    difficulty: "Easy",
+    topic: "Arrays & Hashing",
+    description:
+      "Given two strings `s` and `t`, return `true` if `t` is an anagram of `s`, and `false` otherwise. An anagram uses all the original letters exactly once.",
+    ioFormat: "Input: line 1 = s, line 2 = t.\nOutput: `true` or `false`.",
+    examples: [
+      { input: "anagram\nnagaram", output: "true" },
+      { input: "rat\ncar", output: "false" },
+    ],
+    constraints: ["1 ≤ s.length, t.length ≤ 5*10^4", "s and t consist of lowercase English letters"],
+    starters: {
+      python: `import sys
+
+def is_anagram(s, t):
+    # TODO
+    return False
+
+lines = sys.stdin.read().split('\\n')
+s, t = lines[0], lines[1]
+print(str(is_anagram(s, t)).lower())
+`,
+      javascript: `const lines = require('fs').readFileSync(0, 'utf8').split('\\n');
+const s = lines[0], t = lines[1];
+
+function isAnagram(s, t) {
+  // TODO
+  return false;
+}
+
+console.log(isAnagram(s, t) ? 'true' : 'false');
+`,
+      cpp: `#include <bits/stdc++.h>
+using namespace std;
+
+bool isAnagram(string s, string t) {
+    // TODO
+    return false;
+}
+
+int main() {
+    string s, t;
+    getline(cin, s);
+    getline(cin, t);
+    cout << (isAnagram(s, t) ? "true" : "false") << endl;
+}
+`,
+      java: `import java.util.*;
+
+public class Main {
+    static boolean isAnagram(String s, String t) {
+        // TODO
+        return false;
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        String s = sc.nextLine();
+        String t = sc.nextLine();
+        System.out.println(isAnagram(s, t) ? "true" : "false");
+    }
+}
+`,
+    },
+    tests: [
+      { input: "anagram\nnagaram", expected: "true" },
+      { input: "rat\ncar", expected: "false" },
+      { input: "a\nab", expected: "false" },
+      { input: "listen\nsilent", expected: "true", hidden: true },
+      { input: "aacc\nccac", expected: "false", hidden: true },
+    ],
+  },
+  {
+    id: "valid-parentheses",
+    title: "Valid Parentheses",
+    difficulty: "Easy",
+    topic: "Stack",
+    description:
+      "Given a string `s` containing just the characters `()[]{}`, determine if the input string is valid. Brackets must close in the correct order and every closing bracket has a matching opener.",
+    ioFormat: "Input: one line with the bracket string `s`.\nOutput: `true` or `false`.",
+    examples: [
+      { input: "()[]{}", output: "true" },
+      { input: "(]", output: "false" },
+    ],
+    constraints: ["1 ≤ s.length ≤ 10^4", "s consists of only the characters ()[]{}"],
+    starters: {
+      python: `import sys
+
+def is_valid(s):
+    # TODO
+    return False
+
+s = sys.stdin.readline().strip()
+print(str(is_valid(s)).lower())
+`,
+      javascript: `const s = require('fs').readFileSync(0, 'utf8').trim();
+
+function isValid(s) {
+  // TODO
+  return false;
+}
+
+console.log(isValid(s) ? 'true' : 'false');
+`,
+      cpp: `#include <bits/stdc++.h>
+using namespace std;
+
+bool isValid(string s) {
+    // TODO
+    return false;
+}
+
+int main() {
+    string s;
+    getline(cin, s);
+    cout << (isValid(s) ? "true" : "false") << endl;
+}
+`,
+      java: `import java.util.*;
+
+public class Main {
+    static boolean isValid(String s) {
+        // TODO
+        return false;
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        String s = sc.nextLine();
+        System.out.println(isValid(s) ? "true" : "false");
+    }
+}
+`,
+    },
+    tests: [
+      { input: "()[]{}", expected: "true" },
+      { input: "(]", expected: "false" },
+      { input: "([)]", expected: "false" },
+      { input: "{[]}", expected: "true", hidden: true },
+      { input: "(((", expected: "false", hidden: true },
+    ],
+  },
+  {
+    id: "binary-search",
+    title: "Binary Search",
+    difficulty: "Easy",
+    topic: "Binary Search",
+    description:
+      "Given a sorted (ascending) array of distinct integers `nums` and a `target`, return the index of `target` if it exists, otherwise return -1. You must write an O(log n) algorithm.",
+    ioFormat:
+      "Input: line 1 = n, line 2 = n sorted integers, line 3 = target.\nOutput: the index, or -1.",
+    examples: [
+      { input: "6\n-1 0 3 5 9 12\n9", output: "4" },
+      { input: "6\n-1 0 3 5 9 12\n2", output: "-1" },
+    ],
+    constraints: ["1 ≤ n ≤ 10^4", "Array is sorted ascending with distinct values"],
+    starters: {
+      python: `import sys
+
+def search(nums, target):
+    # TODO
+    return -1
+
+data = sys.stdin.read().split()
+n = int(data[0])
+nums = list(map(int, data[1:1 + n]))
+target = int(data[1 + n])
+print(search(nums, target))
+`,
+      javascript: `const data = require('fs').readFileSync(0, 'utf8').trim().split(/\\s+/).map(Number);
+const n = data[0];
+const nums = data.slice(1, 1 + n);
+const target = data[1 + n];
+
+function search(nums, target) {
+  // TODO
+  return -1;
+}
+
+console.log(search(nums, target));
+`,
+      cpp: `#include <bits/stdc++.h>
+using namespace std;
+
+int search(vector<int>& nums, int target) {
+    // TODO
+    return -1;
+}
+
+int main() {
+    int n; cin >> n;
+    vector<int> nums(n);
+    for (auto &x : nums) cin >> x;
+    int target; cin >> target;
+    cout << search(nums, target) << endl;
+}
+`,
+      java: `import java.util.*;
+
+public class Main {
+    static int search(int[] nums, int target) {
+        // TODO
+        return -1;
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        int[] nums = new int[n];
+        for (int i = 0; i < n; i++) nums[i] = sc.nextInt();
+        int target = sc.nextInt();
+        System.out.println(search(nums, target));
+    }
+}
+`,
+    },
+    tests: [
+      { input: "6\n-1 0 3 5 9 12\n9", expected: "4" },
+      { input: "6\n-1 0 3 5 9 12\n2", expected: "-1" },
+      { input: "1\n5\n5", expected: "0" },
+      { input: "5\n1 2 3 4 5\n1", expected: "0", hidden: true },
+      { input: "5\n1 2 3 4 5\n5", expected: "4", hidden: true },
+    ],
+  },
+  {
+    id: "best-time-stock",
+    title: "Best Time to Buy and Sell Stock",
+    difficulty: "Easy",
+    topic: "Sliding Window",
+    description:
+      "You are given an array `prices` where `prices[i]` is the price of a stock on day `i`. Maximize profit by choosing one day to buy and a later day to sell. Return the max profit, or 0 if none is possible.",
+    ioFormat:
+      "Input: line 1 = n, line 2 = n space-separated prices.\nOutput: the maximum profit.",
+    examples: [
+      { input: "6\n7 1 5 3 6 4", output: "5", explanation: "Buy at 1, sell at 6 → profit 5." },
+      { input: "5\n7 6 4 3 1", output: "0" },
+    ],
+    constraints: ["1 ≤ n ≤ 10^5", "0 ≤ prices[i] ≤ 10^4"],
+    starters: {
+      python: `import sys
+
+def max_profit(prices):
+    # TODO
+    return 0
+
+data = sys.stdin.read().split()
+n = int(data[0])
+prices = list(map(int, data[1:1 + n]))
+print(max_profit(prices))
+`,
+      javascript: `const data = require('fs').readFileSync(0, 'utf8').trim().split(/\\s+/).map(Number);
+const n = data[0];
+const prices = data.slice(1, 1 + n);
+
+function maxProfit(prices) {
+  // TODO
+  return 0;
+}
+
+console.log(maxProfit(prices));
+`,
+      cpp: `#include <bits/stdc++.h>
+using namespace std;
+
+int maxProfit(vector<int>& prices) {
+    // TODO
+    return 0;
+}
+
+int main() {
+    int n; cin >> n;
+    vector<int> prices(n);
+    for (auto &x : prices) cin >> x;
+    cout << maxProfit(prices) << endl;
+}
+`,
+      java: `import java.util.*;
+
+public class Main {
+    static int maxProfit(int[] prices) {
+        // TODO
+        return 0;
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        int[] prices = new int[n];
+        for (int i = 0; i < n; i++) prices[i] = sc.nextInt();
+        System.out.println(maxProfit(prices));
+    }
+}
+`,
+    },
+    tests: [
+      { input: "6\n7 1 5 3 6 4", expected: "5" },
+      { input: "5\n7 6 4 3 1", expected: "0" },
+      { input: "1\n5", expected: "0" },
+      { input: "4\n2 4 1 7", expected: "6", hidden: true },
+      { input: "3\n3 2 6", expected: "4", hidden: true },
+    ],
+  },
+  {
+    id: "climbing-stairs",
+    title: "Climbing Stairs",
+    difficulty: "Easy",
+    topic: "Dynamic Programming",
+    description:
+      "You are climbing a staircase that takes `n` steps to reach the top. Each time you can climb either 1 or 2 steps. In how many distinct ways can you climb to the top?",
+    ioFormat: "Input: one integer n.\nOutput: the number of distinct ways.",
+    examples: [
+      { input: "2", output: "2", explanation: "1+1 or 2." },
+      { input: "3", output: "3" },
+    ],
+    constraints: ["1 ≤ n ≤ 45"],
+    starters: {
+      python: `import sys
+
+def climb_stairs(n):
+    # TODO
+    return 0
+
+n = int(sys.stdin.readline())
+print(climb_stairs(n))
+`,
+      javascript: `const n = parseInt(require('fs').readFileSync(0, 'utf8').trim());
+
+function climbStairs(n) {
+  // TODO
+  return 0;
+}
+
+console.log(climbStairs(n));
+`,
+      cpp: `#include <bits/stdc++.h>
+using namespace std;
+
+long long climbStairs(int n) {
+    // TODO
+    return 0;
+}
+
+int main() {
+    int n; cin >> n;
+    cout << climbStairs(n) << endl;
+}
+`,
+      java: `import java.util.*;
+
+public class Main {
+    static long climbStairs(int n) {
+        // TODO
+        return 0;
+    }
+
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        int n = sc.nextInt();
+        System.out.println(climbStairs(n));
+    }
+}
+`,
+    },
+    tests: [
+      { input: "2", expected: "2" },
+      { input: "3", expected: "3" },
+      { input: "1", expected: "1" },
+      { input: "5", expected: "8", hidden: true },
+      { input: "10", expected: "89", hidden: true },
+    ],
+  },
 ];
 
 export const LANGUAGES: { key: LangKey; label: string; monaco: string }[] = [
