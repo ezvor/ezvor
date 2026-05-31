@@ -159,14 +159,16 @@ function PlaygroundPage() {
   };
 
   return (
-    <div className="flex flex-col gap-5 p-4 sm:p-6">
+    <div className="flex flex-col">
       <PageHeader
+        eyebrow="DSA Editor"
         title="Code Playground"
-        subtitle="Solve DSA problems in a LeetCode-style editor — compile, run, and judge against real test cases."
+        description="Solve DSA problems in a LeetCode-style editor — compile, run, and judge against real test cases."
       />
 
-      {/* Controls */}
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-col gap-5 p-4 sm:p-6">
+        {/* Controls */}
+        <div className="flex flex-wrap items-center gap-3">
         <Select value={problemId} onValueChange={handleProblemChange}>
           <SelectTrigger className="w-[220px]">
             <SelectValue />
