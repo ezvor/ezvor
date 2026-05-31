@@ -7,6 +7,7 @@ import {
   BookOpen,
   Sparkles,
   Rocket,
+  Code2,
 } from "lucide-react";
 
 import {
@@ -28,6 +29,7 @@ const items = [
   { title: "Opportunities", url: "/opportunities", icon: Compass },
   { title: "Roadmaps", url: "/roadmaps", icon: Map },
   { title: "Skill Graphs", url: "/graph", icon: Workflow },
+  { title: "Code Playground", url: "/playground", icon: Code2 },
   { title: "Resources", url: "/resources", icon: BookOpen },
   { title: "AI Advisor", url: "/advisor", icon: Sparkles },
 ];

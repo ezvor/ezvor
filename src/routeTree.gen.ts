@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as RoadmapsRouteImport } from './routes/roadmaps'
 import { Route as ResourcesRouteImport } from './routes/resources'
+import { Route as PlaygroundRouteImport } from './routes/playground'
 import { Route as OpportunitiesRouteImport } from './routes/opportunities'
 import { Route as GraphRouteImport } from './routes/graph'
 import { Route as AdvisorRouteImport } from './routes/advisor'
@@ -32,6 +33,11 @@ const RoadmapsRoute = RoadmapsRouteImport.update({
 const ResourcesRoute = ResourcesRouteImport.update({
   id: '/resources',
   path: '/resources',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PlaygroundRoute = PlaygroundRouteImport.update({
+  id: '/playground',
+  path: '/playground',
   getParentRoute: () => rootRouteImport,
 } as any)
 const OpportunitiesRoute = OpportunitiesRouteImport.update({
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/advisor': typeof AdvisorRoute
   '/graph': typeof GraphRoute
   '/opportunities': typeof OpportunitiesRoute
+  '/playground': typeof PlaygroundRoute
   '/resources': typeof ResourcesRoute
   '/roadmaps': typeof RoadmapsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByTo {
   '/advisor': typeof AdvisorRoute
   '/graph': typeof GraphRoute
   '/opportunities': typeof OpportunitiesRoute
+  '/playground': typeof PlaygroundRoute
   '/resources': typeof ResourcesRoute
   '/roadmaps': typeof RoadmapsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -94,6 +102,7 @@ export interface FileRoutesById {
   '/advisor': typeof AdvisorRoute
   '/graph': typeof GraphRoute
   '/opportunities': typeof OpportunitiesRoute
+  '/playground': typeof PlaygroundRoute
   '/resources': typeof ResourcesRoute
   '/roadmaps': typeof RoadmapsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -107,6 +116,7 @@ export interface FileRouteTypes {
     | '/advisor'
     | '/graph'
     | '/opportunities'
+    | '/playground'
     | '/resources'
     | '/roadmaps'
     | '/sitemap.xml'
@@ -118,6 +128,7 @@ export interface FileRouteTypes {
     | '/advisor'
     | '/graph'
     | '/opportunities'
+    | '/playground'
     | '/resources'
     | '/roadmaps'
     | '/sitemap.xml'
@@ -129,6 +140,7 @@ export interface FileRouteTypes {
     | '/advisor'
     | '/graph'
     | '/opportunities'
+    | '/playground'
     | '/resources'
     | '/roadmaps'
     | '/sitemap.xml'
@@ -141,6 +153,7 @@ export interface RootRouteChildren {
   AdvisorRoute: typeof AdvisorRoute
   GraphRoute: typeof GraphRoute
   OpportunitiesRoute: typeof OpportunitiesRoute
+  PlaygroundRoute: typeof PlaygroundRoute
   ResourcesRoute: typeof ResourcesRoute
   RoadmapsRoute: typeof RoadmapsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -169,6 +182,13 @@ declare module '@tanstack/react-router' {
       path: '/resources'
       fullPath: '/resources'
       preLoaderRoute: typeof ResourcesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/playground': {
+      id: '/playground'
+      path: '/playground'
+      fullPath: '/playground'
+      preLoaderRoute: typeof PlaygroundRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/opportunities': {
@@ -221,6 +241,7 @@ const rootRouteChildren: RootRouteChildren = {
   AdvisorRoute: AdvisorRoute,
   GraphRoute: GraphRoute,
   OpportunitiesRoute: OpportunitiesRoute,
+  PlaygroundRoute: PlaygroundRoute,
   ResourcesRoute: ResourcesRoute,
   RoadmapsRoute: RoadmapsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
