@@ -115,9 +115,6 @@ function AdvisorPage() {
       }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Chat failed");
-      setMessages((prev) =>
-        prev[prev.length - 1]?.role === "assistant" ? prev : prev,
-      );
     } finally {
       setLoading(false);
     }
