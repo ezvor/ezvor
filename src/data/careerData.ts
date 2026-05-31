@@ -4,7 +4,11 @@ export type OppCategory =
   | "Hackathons"
   | "Internships"
   | "Scholarships"
-  | "Fellowships";
+  | "Fellowships"
+  | "Bootcamps";
+
+export type OppStatus = "Open" | "Closed" | "Upcoming" | "Rolling";
+export type OppRegion = "Global" | "Pakistan";
 
 export interface Opportunity {
   id: string;
@@ -19,6 +23,12 @@ export interface Opportunity {
   url: string;
   tags: string[];
   stipend?: string;
+  /** Current application status (curated baseline; can be refreshed live). */
+  status?: OppStatus;
+  /** Region focus — used for the Pakistan filter. */
+  region?: OppRegion;
+  /** Short note shown next to status, e.g. "Has unpaid project tracks". */
+  statusNote?: string;
 }
 
 export const CATEGORIES: OppCategory[] = [
@@ -28,6 +38,7 @@ export const CATEGORIES: OppCategory[] = [
   "Internships",
   "Scholarships",
   "Fellowships",
+  "Bootcamps",
 ];
 
 export const OPPORTUNITIES: Opportunity[] = [
@@ -45,6 +56,9 @@ export const OPPORTUNITIES: Opportunity[] = [
     url: "https://summerofcode.withgoogle.com/",
     tags: ["mentorship", "remote", "global"],
     stipend: "$750–$3300",
+    status: "Closed",
+    region: "Global",
+    statusNote: "2025 applications closed — next cycle opens Mar 2026",
   },
   {
     id: "lfx",
@@ -59,7 +73,10 @@ export const OPPORTUNITIES: Opportunity[] = [
     eligibility: "Anyone 18+, beginner-friendly tracks available",
     url: "https://lfx.linuxfoundation.org/tools/mentorship/",
     tags: ["paid", "cloud-native", "remote"],
-    stipend: "$3000–$6600",
+    stipend: "$0–$6600",
+    status: "Rolling",
+    region: "Global",
+    statusNote: "Mix of paid & unpaid tracks — many projects are unpaid",
   },
   {
     id: "outreachy",
@@ -104,6 +121,9 @@ export const OPPORTUNITIES: Opportunity[] = [
     url: "https://www.summerofbitcoin.org/",
     tags: ["bitcoin", "mentorship", "stipend"],
     stipend: "$3000–$5000",
+    status: "Closed",
+    region: "Global",
+    statusNote: "2025 cohort closed — applications typically reopen Feb",
   },
   {
     id: "hacktoberfest",
@@ -333,6 +353,221 @@ export const OPPORTUNITIES: Opportunity[] = [
     url: "https://education.github.com/experts",
     tags: ["leadership", "community", "training"],
   },
+
+  // ───────────────────────── Pakistan-focused ─────────────────────────
+  {
+    id: "bytewise-fellowship",
+    title: "Bytewise Fellowship",
+    org: "Bytewise Limited",
+    category: "Fellowships",
+    field: "Software / Data / Web",
+    blurb:
+      "Free 3-month remote fellowship for Pakistani students — structured tracks in MERN, Python, Data Science, Flutter, and more with mentor support.",
+    difficulty: "Beginner",
+    timing: "Cohorts announced ~once a year",
+    eligibility: "Pakistani students & fresh graduates",
+    url: "https://www.bytewise.com.pk/",
+    tags: ["pakistan", "remote", "mentorship", "free"],
+    status: "Upcoming",
+    region: "Pakistan",
+    statusNote: "Watch their LinkedIn for the next cohort",
+  },
+  {
+    id: "digiskills",
+    title: "DigiSkills.pk",
+    org: "Govt. of Pakistan / VU",
+    category: "Bootcamps",
+    field: "Freelancing / Digital Skills",
+    blurb:
+      "Government-funded free online training in freelancing, web/mobile development, data analytics, digital marketing and more — with certificates.",
+    difficulty: "Beginner",
+    timing: "Rolling batches year-round",
+    eligibility: "Pakistani nationals (free registration)",
+    url: "https://digiskills.pk/",
+    tags: ["pakistan", "free", "certificate", "freelancing"],
+    status: "Open",
+    region: "Pakistan",
+  },
+  {
+    id: "atomcamp",
+    title: "atomcamp Data Science Bootcamp",
+    org: "atomcamp",
+    category: "Bootcamps",
+    field: "Data Science / AI",
+    blurb:
+      "Pakistan-based intensive bootcamps in Data Science, Data Analytics and AI with hands-on projects and job-prep support.",
+    difficulty: "Intermediate",
+    timing: "Multiple cohorts per year",
+    eligibility: "Students & professionals in Pakistan",
+    url: "https://atomcamp.com/",
+    tags: ["pakistan", "data-science", "cohort"],
+    status: "Open",
+    region: "Pakistan",
+  },
+  {
+    id: "10pearls-shine",
+    title: "10Pearls Shine Internship",
+    org: "10Pearls",
+    category: "Internships",
+    field: "Software Engineering",
+    blurb:
+      "Paid internship & training program at one of Pakistan's leading software houses, spanning engineering, QA, design and data.",
+    difficulty: "Intermediate",
+    timing: "Summer & rolling intakes",
+    eligibility: "Pakistani undergrads & fresh grads",
+    url: "https://10pearls.com/shine/",
+    tags: ["pakistan", "paid", "industry"],
+    status: "Upcoming",
+    region: "Pakistan",
+    stipend: "Paid",
+  },
+  {
+    id: "arbisoft-internship",
+    title: "Arbisoft Internship",
+    org: "Arbisoft",
+    category: "Internships",
+    field: "Software / Data / ML",
+    blurb:
+      "Competitive paid internships at a top Lahore-based product & services company working with global clients like Edx and Quizlet.",
+    difficulty: "Intermediate",
+    timing: "Summer intake",
+    eligibility: "Pakistani students (strong fundamentals)",
+    url: "https://arbisoft.com/careers",
+    tags: ["pakistan", "paid", "product"],
+    status: "Upcoming",
+    region: "Pakistan",
+    stipend: "Paid",
+  },
+  {
+    id: "gdgoc",
+    title: "Google Developer Groups on Campus (GDGoC)",
+    org: "Google",
+    category: "Fellowships",
+    field: "Community / All Domains",
+    blurb:
+      "Campus chapters across Pakistani universities running workshops, study jams and hackathons — a launchpad for leadership and networking.",
+    difficulty: "Beginner",
+    timing: "Lead applications mid-year; events year-round",
+    eligibility: "University students in Pakistan",
+    url: "https://developers.google.com/community/gdg",
+    tags: ["pakistan", "community", "leadership"],
+    status: "Open",
+    region: "Pakistan",
+  },
+  {
+    id: "nascon",
+    title: "NaSCon (FAST-NUCES)",
+    org: "FAST-NUCES Islamabad",
+    category: "Hackathons",
+    field: "Software / Tech Olympiad",
+    blurb:
+      "One of Pakistan's largest student tech & science conventions — competitive programming, hackathons, gaming and more.",
+    difficulty: "Intermediate",
+    timing: "Annual (spring)",
+    eligibility: "Students across Pakistan",
+    url: "https://nascon.pk/",
+    tags: ["pakistan", "competition", "networking"],
+    status: "Upcoming",
+    region: "Pakistan",
+  },
+  {
+    id: "softec",
+    title: "SOFTEC",
+    org: "FAST-NUCES Lahore",
+    category: "Hackathons",
+    field: "Software / Tech Competitions",
+    blurb:
+      "Flagship international tech event with software competitions, speed programming, app design and a job fair.",
+    difficulty: "Intermediate",
+    timing: "Annual",
+    eligibility: "Students across Pakistan & abroad",
+    url: "https://softec.org.pk/",
+    tags: ["pakistan", "competition", "job-fair"],
+    status: "Upcoming",
+    region: "Pakistan",
+  },
+  {
+    id: "hec-scholarships",
+    title: "HEC Scholarships",
+    org: "Higher Education Commission",
+    category: "Scholarships",
+    field: "Higher Education",
+    blurb:
+      "National & international scholarships for Pakistani students — need-based, merit and overseas PhD/MS funding.",
+    difficulty: "Beginner",
+    timing: "Various deadlines year-round",
+    eligibility: "Pakistani students (varies by program)",
+    url: "https://www.hec.gov.pk/english/scholarshipsgrants/Pages/default.aspx",
+    tags: ["pakistan", "funding", "education"],
+    status: "Open",
+    region: "Pakistan",
+  },
+
+  // ───────────────────────── More domains (global) ─────────────────────────
+  {
+    id: "headstarter",
+    title: "Headstarter Fellowship",
+    org: "Headstarter AI",
+    category: "Fellowships",
+    field: "AI / Software Engineering",
+    blurb:
+      "7-week remote fellowship building 5 AI projects with mentorship from engineers at Google, Amazon and Meta.",
+    difficulty: "Intermediate",
+    timing: "Multiple cohorts per year",
+    eligibility: "Students & early-career devs worldwide",
+    url: "https://headstarter.co/",
+    tags: ["ai", "remote", "projects"],
+    status: "Open",
+    region: "Global",
+  },
+  {
+    id: "datacamp-donates",
+    title: "DataCamp Donates",
+    org: "DataCamp",
+    category: "Scholarships",
+    field: "Data Science / Analytics",
+    blurb:
+      "Free access to DataCamp's full data science, analytics and engineering curriculum for eligible learners via nonprofits.",
+    difficulty: "Beginner",
+    timing: "Rolling",
+    eligibility: "Learners via partner nonprofits",
+    url: "https://www.datacamp.com/donates",
+    tags: ["data-science", "free", "courses"],
+    status: "Open",
+    region: "Global",
+  },
+  {
+    id: "kaggle-competitions",
+    title: "Kaggle Competitions",
+    org: "Kaggle (Google)",
+    category: "Competitive Programming",
+    field: "Data Science / ML",
+    blurb:
+      "Real-world ML competitions with prizes and a path to Kaggle ranks — the best way to build a data science portfolio.",
+    difficulty: "Intermediate",
+    timing: "New competitions year-round",
+    eligibility: "Open to everyone",
+    url: "https://www.kaggle.com/competitions",
+    tags: ["data-science", "ml", "portfolio"],
+    status: "Open",
+    region: "Global",
+  },
+  {
+    id: "aws-cloud-club",
+    title: "AWS Cloud Clubs & Certs",
+    org: "Amazon Web Services",
+    category: "Bootcamps",
+    field: "Cloud / DevOps",
+    blurb:
+      "Student-led cloud clubs plus free learning paths toward AWS certifications — ideal for Cloud, DevOps and Data Architect tracks.",
+    difficulty: "Beginner",
+    timing: "Rolling",
+    eligibility: "Students worldwide",
+    url: "https://aws.amazon.com/training/awsacademy/",
+    tags: ["cloud", "devops", "certification"],
+    status: "Open",
+    region: "Global",
+  },
 ];
 
 export interface RoadmapStage {
@@ -461,7 +696,7 @@ export interface Resource {
   title: string;
   provider: string;
   topic: string;
-  type: "Course" | "Practice" | "Docs" | "Roadmap" | "Community";
+  type: "Course" | "Practice" | "Docs" | "Roadmap" | "Community" | "Video";
   free: boolean;
   url: string;
 }
@@ -481,6 +716,22 @@ export const RESOURCES: Resource[] = [
   { id: "tryhackme", title: "TryHackMe", provider: "TryHackMe", topic: "Cybersecurity", type: "Practice", free: true, url: "https://tryhackme.com/" },
   { id: "theodinproject", title: "The Odin Project", provider: "The Odin Project", topic: "Full Stack", type: "Course", free: true, url: "https://www.theodinproject.com/" },
   { id: "missing-semester", title: "The Missing Semester", provider: "MIT", topic: "Dev Tools", type: "Course", free: true, url: "https://missing.csail.mit.edu/" },
+
+  // ───────────────────── Free YouTube channels & playlists ─────────────────────
+  { id: "yt-freecodecamp", title: "freeCodeCamp.org (full courses)", provider: "YouTube · freeCodeCamp", topic: "Web Development", type: "Video", free: true, url: "https://www.youtube.com/@freecodecamp" },
+  { id: "yt-codewithharry", title: "CodeWithHarry (Web, Python, DSA)", provider: "YouTube · CodeWithHarry", topic: "Full Stack", type: "Video", free: true, url: "https://www.youtube.com/@CodeWithHarry" },
+  { id: "yt-apnacollege", title: "Apna College (DSA + Dev)", provider: "YouTube · Apna College", topic: "DSA / Interviews", type: "Video", free: true, url: "https://www.youtube.com/@ApnaCollegeOfficial" },
+  { id: "yt-neetcode", title: "NeetCode (LeetCode patterns)", provider: "YouTube · NeetCode", topic: "DSA / Interviews", type: "Video", free: true, url: "https://www.youtube.com/@NeetCode" },
+  { id: "yt-abdulbari", title: "Abdul Bari (Algorithms)", provider: "YouTube · Abdul Bari", topic: "Competitive Programming", type: "Video", free: true, url: "https://www.youtube.com/@abdul_bari" },
+  { id: "yt-mosh", title: "Programming with Mosh", provider: "YouTube · Mosh", topic: "Software Engineering", type: "Video", free: true, url: "https://www.youtube.com/@programmingwithmosh" },
+  { id: "yt-netninja", title: "The Net Ninja (Frontend)", provider: "YouTube · Net Ninja", topic: "Web Development", type: "Video", free: true, url: "https://www.youtube.com/@NetNinja" },
+  { id: "yt-fireship", title: "Fireship (quick deep-dives)", provider: "YouTube · Fireship", topic: "Software Engineering", type: "Video", free: true, url: "https://www.youtube.com/@Fireship" },
+  { id: "yt-coreyschafer", title: "Corey Schafer (Python)", provider: "YouTube · Corey Schafer", topic: "Data Science / ML", type: "Video", free: true, url: "https://www.youtube.com/@coreyms" },
+  { id: "yt-krishnaik", title: "Krish Naik (Data Science & ML)", provider: "YouTube · Krish Naik", topic: "Data Science / ML", type: "Video", free: true, url: "https://www.youtube.com/@krishnaik06" },
+  { id: "yt-statquest", title: "StatQuest (ML & Stats)", provider: "YouTube · StatQuest", topic: "Machine Learning", type: "Video", free: true, url: "https://www.youtube.com/@statquest" },
+  { id: "yt-nana", title: "TechWorld with Nana (DevOps)", provider: "YouTube · Nana", topic: "DevOps / Cloud", type: "Video", free: true, url: "https://www.youtube.com/@TechWorldwithNana" },
+  { id: "yt-networkchuck", title: "NetworkChuck (Cloud & Networking)", provider: "YouTube · NetworkChuck", topic: "DevOps / Cloud", type: "Video", free: true, url: "https://www.youtube.com/@NetworkChuck" },
+  { id: "yt-alextheanalyst", title: "Alex The Analyst (Data Analytics)", provider: "YouTube · Alex The Analyst", topic: "Data Science / ML", type: "Video", free: true, url: "https://www.youtube.com/@AlexTheAnalyst" },
 ];
 
 export const FIELDS = [

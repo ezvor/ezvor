@@ -3,6 +3,7 @@ import {
   LayoutDashboard,
   Compass,
   Map,
+  Workflow,
   BookOpen,
   Sparkles,
   Rocket,
@@ -26,6 +27,7 @@ const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Opportunities", url: "/opportunities", icon: Compass },
   { title: "Roadmaps", url: "/roadmaps", icon: Map },
+  { title: "Skill Graphs", url: "/graph", icon: Workflow },
   { title: "Resources", url: "/resources", icon: BookOpen },
   { title: "AI Advisor", url: "/advisor", icon: Sparkles },
 ];

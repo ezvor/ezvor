@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { ArrowUpRight, BookOpen, Dumbbell, FileText, Map, Users } from "lucide-react";
+import { ArrowUpRight, BookOpen, Dumbbell, FileText, Map, Users, Youtube } from "lucide-react";
 
 import { PageHeader } from "@/components/PageHeader";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +27,7 @@ const typeIcon = {
   Docs: FileText,
   Roadmap: Map,
   Community: Users,
+  Video: Youtube,
 } as const;
 
 function ResourcesPage() {
