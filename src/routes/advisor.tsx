@@ -124,10 +124,10 @@ function AdvisorPage() {
       assistant += chunk;
       setMessages((prev) => {
         const last = prev[prev.length - 1];
-        const updated =
+        const updated: Msg[] =
           last?.role === "assistant"
             ? prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistant } : m))
-            : [...prev, { role: "assistant", content: assistant }];
+            : [...prev, { role: "assistant", content: assistant } as Msg];
         finalMsgs = updated;
         return updated;
       });
