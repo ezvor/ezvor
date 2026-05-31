@@ -14,7 +14,17 @@ export interface OppCardData {
   stipend?: string;
   url?: string;
   tags?: string[];
+  status?: "Open" | "Closed" | "Upcoming" | "Rolling";
+  statusNote?: string;
+  region?: "Global" | "Pakistan";
 }
+
+const statusStyle: Record<string, string> = {
+  Open: "bg-success/15 text-success border-success/30",
+  Closed: "bg-destructive/15 text-destructive border-destructive/30",
+  Upcoming: "bg-warning/15 text-warning border-warning/30",
+  Rolling: "bg-primary/15 text-primary-glow border-primary/30",
+};
 
 const difficultyStyle: Record<string, string> = {
   Beginner: "bg-success/15 text-success border-success/30",
