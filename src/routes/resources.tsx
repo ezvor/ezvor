@@ -27,6 +27,7 @@ const typeIcon = {
   Docs: FileText,
   Roadmap: Map,
   Community: Users,
+  Video: Youtube,
 } as const;
 
 function ResourcesPage() {
