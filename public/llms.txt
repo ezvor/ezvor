@@ -1,0 +1,10 @@
+# PathPilot
+
+> Free AI-powered career guidance for students and professionals — personalized advice, learning roadmaps, free resources, and curated opportunities like GSoC, LFX, ICPC, and Meta Hacker Cup.
+
+## Pages
+- [Dashboard](/): Overview, featured opportunities, and quick AI ask.
+- [Opportunities](/opportunities): Curated and AI-discovered tech opportunities across open source, contests, hackathons, internships, scholarships, and fellowships.
+- [Roadmaps](/roadmaps): Step-by-step career roadmaps plus AI-generated custom paths.
+- [Resources](/resources): Hand-picked free learning resources.
+- [AI Advisor](/advisor): Chat-based AI career advisor.

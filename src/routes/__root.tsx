@@ -11,6 +11,9 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
+import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
   return (
@@ -77,13 +80,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "PathPilot — Free AI Career Guidance & Opportunities" },
+      {
+        name: "description",
+        content:
+          "Free AI career copilot for students & professionals. Get personalized guidance, roadmaps, resources, and real opportunities like GSoC, LFX, ICPC, and Meta Hacker Cup.",
+      },
+      { name: "author", content: "PathPilot" },
+      { property: "og:title", content: "PathPilot — Free AI Career Guidance" },
+      {
+        property: "og:description",
+        content:
+          "AI-powered career guidance, roadmaps, and curated opportunities for tech students & professionals.",
+      },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
@@ -118,8 +129,29 @@ function RootComponent() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <Outlet />
+      <SidebarProvider>
+        <div className="flex min-h-screen w-full bg-background">
+          <AppSidebar />
+          <div className="flex min-w-0 flex-1 flex-col">
+            <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border/60 bg-background/80 px-4 backdrop-blur-lg">
+              <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
+              <div className="h-5 w-px bg-border" />
+              <span className="font-display text-sm font-semibold tracking-tight">
+                PathPilot
+              </span>
+              <span className="hidden text-xs text-muted-foreground sm:inline">
+                · Free AI career copilot
+              </span>
+            </header>
+            <main className="min-w-0 flex-1">
+              {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+              <Outlet />
+            </main>
+          </div>
+        </div>
+        <Toaster richColors position="top-center" />
+      </SidebarProvider>
     </QueryClientProvider>
   );
 }
+
