@@ -121,6 +121,9 @@ export const OPPORTUNITIES: Opportunity[] = [
     url: "https://www.summerofbitcoin.org/",
     tags: ["bitcoin", "mentorship", "stipend"],
     stipend: "$3000–$5000",
+    status: "Closed",
+    region: "Global",
+    statusNote: "2025 cohort closed — applications typically reopen Feb",
   },
   {
     id: "hacktoberfest",
