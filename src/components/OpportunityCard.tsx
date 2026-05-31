@@ -52,6 +52,24 @@ export function OpportunityCard({ opp }: { opp: OppCardData }) {
         )}
       </div>
 
+      {(opp.status || opp.region === "Pakistan") && (
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          {opp.status && (
+            <Badge variant="outline" className={cn("rounded-full", statusStyle[opp.status])}>
+              {opp.status}
+            </Badge>
+          )}
+          {opp.region === "Pakistan" && (
+            <Badge variant="secondary" className="rounded-full text-[11px] font-normal">
+              🇵🇰 Pakistan
+            </Badge>
+          )}
+        </div>
+      )}
+      {opp.statusNote && (
+        <p className="mt-1.5 text-xs text-muted-foreground">{opp.statusNote}</p>
+      )}
+
       <p className="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">{opp.blurb}</p>
 
       <div className="mt-4 space-y-1.5 text-xs text-muted-foreground">
