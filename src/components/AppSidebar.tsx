@@ -7,6 +7,7 @@ import {
   BookOpen,
   Sparkles,
   Rocket,
+  Code2,
 } from "lucide-react";
 
 import {
