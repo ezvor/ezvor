@@ -13,6 +13,7 @@ import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as RoadmapsRouteImport } from './routes/roadmaps'
 import { Route as ResourcesRouteImport } from './routes/resources'
 import { Route as OpportunitiesRouteImport } from './routes/opportunities'
+import { Route as GraphRouteImport } from './routes/graph'
 import { Route as AdvisorRouteImport } from './routes/advisor'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
@@ -37,6 +38,11 @@ const OpportunitiesRoute = OpportunitiesRouteImport.update({
   path: '/opportunities',
   getParentRoute: () => rootRouteImport,
 } as any)
+const GraphRoute = GraphRouteImport.update({
+  id: '/graph',
+  path: '/graph',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AdvisorRoute = AdvisorRouteImport.update({
   id: '/advisor',
   path: '/advisor',
@@ -56,6 +62,7 @@ const ApiChatRoute = ApiChatRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/advisor': typeof AdvisorRoute
+  '/graph': typeof GraphRoute
   '/opportunities': typeof OpportunitiesRoute
   '/resources': typeof ResourcesRoute
   '/roadmaps': typeof RoadmapsRoute
@@ -65,6 +72,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/advisor': typeof AdvisorRoute
+  '/graph': typeof GraphRoute
   '/opportunities': typeof OpportunitiesRoute
   '/resources': typeof ResourcesRoute
   '/roadmaps': typeof RoadmapsRoute
@@ -75,6 +83,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/advisor': typeof AdvisorRoute
+  '/graph': typeof GraphRoute
   '/opportunities': typeof OpportunitiesRoute
   '/resources': typeof ResourcesRoute
   '/roadmaps': typeof RoadmapsRoute
@@ -86,6 +95,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/advisor'
+    | '/graph'
     | '/opportunities'
     | '/resources'
     | '/roadmaps'
@@ -95,6 +105,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/advisor'
+    | '/graph'
     | '/opportunities'
     | '/resources'
     | '/roadmaps'
@@ -104,6 +115,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/advisor'
+    | '/graph'
     | '/opportunities'
     | '/resources'
     | '/roadmaps'
@@ -114,6 +126,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdvisorRoute: typeof AdvisorRoute
+  GraphRoute: typeof GraphRoute
   OpportunitiesRoute: typeof OpportunitiesRoute
   ResourcesRoute: typeof ResourcesRoute
   RoadmapsRoute: typeof RoadmapsRoute
@@ -151,6 +164,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof OpportunitiesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/graph': {
+      id: '/graph'
+      path: '/graph'
+      fullPath: '/graph'
+      preLoaderRoute: typeof GraphRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/advisor': {
       id: '/advisor'
       path: '/advisor'
@@ -178,6 +198,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdvisorRoute: AdvisorRoute,
+  GraphRoute: GraphRoute,
   OpportunitiesRoute: OpportunitiesRoute,
   ResourcesRoute: ResourcesRoute,
   RoadmapsRoute: RoadmapsRoute,
@@ -187,3 +208,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
