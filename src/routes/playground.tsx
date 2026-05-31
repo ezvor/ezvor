@@ -325,6 +325,7 @@ function PlaygroundPage() {
           </Tabs>
         </div>
       </div>
+      </div>
     </div>
   );
 }
