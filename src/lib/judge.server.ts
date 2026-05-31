@@ -92,10 +92,12 @@ export async function runCode(opts: {
     const id = created.id;
 
     // 2) Poll for completion (compiled languages may take a few seconds).
-    const deadline = Date.now() + (opts.runTimeoutMs ?? 25000);
+    const deadline = Date.now() + (opts.runTimeoutMs ?? 28000);
     let status = "running";
+    let wait = 350;
     while (Date.now() < deadline) {
-      await sleep(900);
+      await sleep(wait);
+      wait = Math.min(wait + 250, 1200); // gentle backoff
       const statusRes = await fetch(
         `${PAIZA_BASE}/get_status?id=${id}&api_key=${API_KEY}`,
       );
@@ -122,12 +124,16 @@ export async function runCode(opts: {
       build_result?: string | null;
       exit_code?: string | null;
       result?: string | null;
+      time?: string | null;
+      memory?: string | null;
     };
 
     const buildFailed = d.build_result && d.build_result !== "success";
     const compileOutput = buildFailed ? d.build_stderr ?? "Compilation failed." : "";
     const timedOut = d.result === "timeout";
     const exitCode = d.exit_code != null ? parseInt(d.exit_code, 10) : null;
+    const timeSec = d.time != null ? parseFloat(d.time) : NaN;
+    const memBytes = d.memory != null ? parseInt(d.memory, 10) : NaN;
 
     return {
       ok: d.result === "success" && !compileOutput && !timedOut,
@@ -138,6 +144,8 @@ export async function runCode(opts: {
       exitCode: Number.isNaN(exitCode as number) ? null : exitCode,
       signal: null,
       timedOut,
+      timeMs: Number.isNaN(timeSec) ? null : Math.round(timeSec * 1000),
+      memoryKb: Number.isNaN(memBytes) ? null : Math.round(memBytes / 1024),
       error: null,
     };
   } catch (e) {
