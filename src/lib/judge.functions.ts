@@ -34,6 +34,7 @@ export type TestCaseResult = {
   hidden: boolean;
   error: string | null;
   timedOut: boolean;
+  timeMs: number | null;
 };
 
 export type SubmitResult = {
@@ -42,6 +43,8 @@ export type SubmitResult = {
   total: number;
   compileError: string | null;
   cases: TestCaseResult[];
+  runtimeMs: number | null;
+  memoryKb: number | null;
 };
 
 // Run code against a set of test cases (the "Submit" button).
