@@ -87,7 +87,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Free AI career copilot for students & professionals. Get personalized guidance, roadmaps, resources, and real opportunities like GSoC, LFX, ICPC, and Meta Hacker Cup.",
       },
       { name: "author", content: "PathPilot" },
-      { property: "og:title", content: "PathPilot — Free AI Career Guidance" },
+      { property: "og:title", content: "PathPilot — Free AI Career Guidance & Opportunities" },
       {
         property: "og:description",
         content:
@@ -96,6 +96,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "PathPilot — Free AI Career Guidance & Opportunities" },
+      { name: "description", content: "Career Compass AI offers free, AI-powered career guidance with real-time opportunity data and personalized roadmaps." },
+      { property: "og:description", content: "Career Compass AI offers free, AI-powered career guidance with real-time opportunity data and personalized roadmaps." },
+      { name: "twitter:description", content: "Career Compass AI offers free, AI-powered career guidance with real-time opportunity data and personalized roadmaps." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/6883c14c-a82b-461a-917d-8f4fe082b94b/id-preview-a68954bb--eb2301fc-e9d6-41ec-b2b5-c1de8c89a5e0.lovable.app-1780212978188.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/6883c14c-a82b-461a-917d-8f4fe082b94b/id-preview-a68954bb--eb2301fc-e9d6-41ec-b2b5-c1de8c89a5e0.lovable.app-1780212978188.png" },
     ],
     links: [
       {
