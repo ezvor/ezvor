@@ -111,8 +111,16 @@ SUPABASE_PUBLISHABLE_KEY="your-anon-public-key"
 # Service role key — NEVER expose this to the client. Server-side only.
 SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"
 
-# AI advisor & personalized roadmaps
-LOVABLE_API_KEY="your-lovable-ai-gateway-key"
+# --- AI advisor & personalized roadmaps ---
+# Pick ONE of the following:
+#
+# (A) Running INSIDE Lovable: provided automatically — nothing to set.
+# LOVABLE_API_KEY is auto-injected on Lovable hosting (*.lovable.app).
+#
+# (B) Running locally or on Vercel/Netlify: use a FREE Google Gemini key.
+# Get one at https://aistudio.google.com/apikey (free tier is generous).
+# Same Gemini models = same accuracy you saw inside Lovable.
+GEMINI_API_KEY="your-free-google-ai-studio-key"
 
 # Live opportunity scraping + status citations
 FIRECRAWL_API_KEY="your-firecrawl-key"
@@ -120,9 +128,9 @@ FIRECRAWL_API_KEY="your-firecrawl-key"
 
 > **Notes**
 > - `VITE_*` variables are exposed to the browser at build time — only put **public** values there.
-> - Server-only secrets (`SUPABASE_SERVICE_ROLE_KEY`, `LOVABLE_API_KEY`, `FIRECRAWL_API_KEY`) are read via `process.env` inside server functions and must **never** be prefixed with `VITE_`.
-> - `LOVABLE_API_KEY` is provided automatically inside Lovable's hosting. To run the AI advisor **outside** Lovable (locally or on Vercel/Netlify), swap the AI calls in `src/lib/ai.server.ts` for your own OpenAI/Google API key, or keep using Lovable's hosting for free AI.
-> - Get a free Firecrawl key at [firecrawl.dev](https://firecrawl.dev).
+> - Server-only secrets (`SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY`, `LOVABLE_API_KEY`, `FIRECRAWL_API_KEY`) are read via `process.env` inside server functions and must **never** be prefixed with `VITE_`.
+> - **AI provider is automatic.** `src/lib/ai.server.ts` uses `LOVABLE_API_KEY` when present (inside Lovable), otherwise falls back to `GEMINI_API_KEY` (Google's free OpenAI-compatible Gemini API). So locally/on Vercel you only need to set `GEMINI_API_KEY` — no code changes required.
+> - Get a free Gemini key at [aistudio.google.com/apikey](https://aistudio.google.com/apikey) and a free Firecrawl key at [firecrawl.dev](https://firecrawl.dev).
 
 ---
 
@@ -214,7 +222,7 @@ Click **Publish** inside the Lovable editor. AI, scraping, and the database all 
 
 Similar to Vercel — connect the repo, add the environment variables, and deploy. Vercel tends to have smoother SSR support, so it's preferred.
 
-> ⚠️ **AI on external hosts:** `LOVABLE_API_KEY` only works on Lovable's hosting. On Vercel/Netlify, replace it with your own OpenAI/Google key in `src/lib/ai.server.ts`.
+> ⚠️ **AI on external hosts:** `LOVABLE_API_KEY` only works on Lovable's hosting. On Vercel/Netlify, just add a free `GEMINI_API_KEY` (from [aistudio.google.com/apikey](https://aistudio.google.com/apikey)) in your project's environment variables — the code falls back to it automatically. No code changes needed.
 
 ---
 
