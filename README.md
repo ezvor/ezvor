@@ -222,7 +222,7 @@ Click **Publish** inside the Lovable editor. AI, scraping, and the database all 
 
 Similar to Vercel — connect the repo, add the environment variables, and deploy. Vercel tends to have smoother SSR support, so it's preferred.
 
-> ⚠️ **AI on external hosts:** `LOVABLE_API_KEY` only works on Lovable's hosting. On Vercel/Netlify, replace it with your own OpenAI/Google key in `src/lib/ai.server.ts`.
+> ⚠️ **AI on external hosts:** `LOVABLE_API_KEY` only works on Lovable's hosting. On Vercel/Netlify, just add a free `GEMINI_API_KEY` (from [aistudio.google.com/apikey](https://aistudio.google.com/apikey)) in your project's environment variables — the code falls back to it automatically. No code changes needed.
 
 ---
 
