@@ -253,6 +253,7 @@ function PlaygroundPage() {
 
   const runFn = useServerFn(executeCode);
   const submitFn = useServerFn(submitCode);
+  const recordSolvedFn = useServerFn(recordSolved);
 
   useEffect(() => {
     setSolved(loadSet(SOLVED_KEY));
