@@ -41,6 +41,15 @@ export function JobCard({ job }: { job: JobResult }) {
                 {job.workMode}
               </Badge>
             )}
+            {typeof job.confidence === "number" && job.confidence >= 80 && (
+              <Badge
+                variant="outline"
+                className="rounded-full border-success/30 bg-success/15 text-[11px] text-success"
+              >
+                <ShieldCheck className="mr-1 h-3 w-3" />
+                Verified
+              </Badge>
+            )}
           </div>
           <h3 className="mt-2 font-display text-base font-semibold leading-snug group-hover:text-primary-glow">
             {job.title}
