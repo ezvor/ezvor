@@ -198,7 +198,7 @@ function ProofPage() {
             <ShieldCheck className="h-5 w-5 text-success" /> Verified solves
           </h2>
           <div className="overflow-hidden rounded-2xl border border-border/60">
-            {proof.solved.slice(0, 12).map((s, i) => (
+            {proof.solved.slice(0, 12).map((s: PublicProof["solved"][number], i: number) => (
               <div
                 key={`${s.problem_title}-${i}`}
                 className="flex items-center justify-between gap-3 border-b border-border/50 bg-card px-4 py-3 last:border-0"
