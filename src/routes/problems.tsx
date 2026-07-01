@@ -50,7 +50,7 @@ import {
 export const Route = createFileRoute("/problems")({
   head: () => ({
     meta: [
-      { title: "All LeetCode Problems + Free Company Lists | PathPilot" },
+      { title: "All LeetCode Problems + Free Company Lists | Ezvor" },
       {
         name: "description",
         content:

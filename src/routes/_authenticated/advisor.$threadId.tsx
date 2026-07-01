@@ -364,7 +364,7 @@ function ChatPage() {
           </div>
           <p className="mt-2 flex items-center justify-center gap-1.5 text-center text-[11px] text-muted-foreground">
             <Compass className="h-3 w-3" />
-            PathPilot can make mistakes — verify dates & deadlines on official pages.
+            Ezvor can make mistakes — verify dates & deadlines on official pages.
           </p>
         </div>
       </div>

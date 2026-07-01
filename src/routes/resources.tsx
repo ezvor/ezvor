@@ -10,7 +10,7 @@ import { RESOURCES, type Resource } from "@/data/careerData";
 export const Route = createFileRoute("/resources")({
   head: () => ({
     meta: [
-      { title: "Free Learning Resources for Tech | PathPilot" },
+      { title: "Free Learning Resources for Tech | Ezvor" },
       {
         name: "description",
         content:

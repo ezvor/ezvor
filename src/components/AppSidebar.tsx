@@ -3,7 +3,6 @@ import {
   LayoutDashboard,
   Compass,
   Map,
-  Workflow,
   BookOpen,
   Sparkles,
   Rocket,
@@ -33,8 +32,7 @@ import { useAuth } from "@/hooks/useAuth";
 const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Opportunities", url: "/opportunities", icon: Compass },
-  { title: "Roadmaps", url: "/roadmaps", icon: Map },
-  { title: "Skill Graphs", url: "/graph", icon: Workflow },
+  { title: "Roadmaps & Graphs", url: "/roadmaps", icon: Map },
   { title: "DSA Arena", url: "/playground", icon: Code2 },
   { title: "Code Compiler", url: "/compiler", icon: TerminalSquare },
   { title: "Problem Catalog", url: "/problems", icon: ListChecks },
@@ -78,7 +76,7 @@ export function AppSidebar() {
           {!collapsed && (
             <span className="flex flex-col leading-none">
               <span className="font-display text-lg font-bold text-sidebar-foreground">
-                PathPilot
+                Ezvor
               </span>
               <span className="text-[11px] text-muted-foreground">AI Career Guidance</span>
             </span>

@@ -84,7 +84,7 @@ export const Route = createFileRoute("/playground")({
   }),
   head: () => ({
     meta: [
-      { title: "Code Playground — LeetCode-style Online Judge | PathPilot" },
+      { title: "Code Playground — LeetCode-style Online Judge | Ezvor" },
       {
         name: "description",
         content:
@@ -95,9 +95,9 @@ export const Route = createFileRoute("/playground")({
   component: PlaygroundPage,
 });
 
-const CODE_PREFIX = "pathpilot.code.v1";
-const SOLVED_KEY = "pathpilot.solved.v1";
-const SUBS_PREFIX = "pathpilot.subs.v1";
+const CODE_PREFIX = "ezvor.code.v1";
+const SOLVED_KEY = "ezvor.solved.v1";
+const SUBS_PREFIX = "ezvor.subs.v1";
 
 type SubStatus = "Accepted" | "Wrong Answer" | "Compile Error" | "Runtime Error";
 type Submission = {

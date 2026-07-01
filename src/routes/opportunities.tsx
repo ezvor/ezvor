@@ -33,7 +33,7 @@ import { getLiveStatuses, getStatusChangeLog, recheckStatus, type LiveStatus } f
 export const Route = createFileRoute("/opportunities")({
   head: () => ({
     meta: [
-      { title: "Job Search & Opportunities — LinkedIn, Indeed, Glassdoor | PathPilot" },
+      { title: "Job Search & Opportunities — LinkedIn, Indeed, Glassdoor | Ezvor" },
       {
         name: "description",
         content:
