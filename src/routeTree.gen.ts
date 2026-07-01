@@ -17,7 +17,6 @@ import { Route as PlaygroundRouteImport } from './routes/playground'
 import { Route as OpportunitiesRouteImport } from './routes/opportunities'
 import { Route as GraphRouteImport } from './routes/graph'
 import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AdvisorRouteImport } from './routes/advisor'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
@@ -66,11 +65,6 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AdvisorRoute = AdvisorRouteImport.update({
-  id: '/advisor',
-  path: '/advisor',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
@@ -111,7 +105,6 @@ const ApiPublicHooksRefreshStatusesRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/advisor': typeof AuthenticatedAdvisorRouteWithChildren
   '/auth': typeof AuthRoute
   '/graph': typeof GraphRoute
   '/opportunities': typeof OpportunitiesRoute
@@ -120,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/resources': typeof ResourcesRoute
   '/roadmaps': typeof RoadmapsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/advisor': typeof AuthenticatedAdvisorRouteWithChildren
   '/api/chat': typeof ApiChatRoute
   '/advisor/$threadId': typeof AuthenticatedAdvisorThreadIdRoute
   '/advisor/': typeof AuthenticatedAdvisorIndexRoute
@@ -127,7 +121,6 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/advisor': typeof AuthenticatedAdvisorIndexRoute
   '/auth': typeof AuthRoute
   '/graph': typeof GraphRoute
   '/opportunities': typeof OpportunitiesRoute
@@ -138,13 +131,13 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/chat': typeof ApiChatRoute
   '/advisor/$threadId': typeof AuthenticatedAdvisorThreadIdRoute
+  '/advisor': typeof AuthenticatedAdvisorIndexRoute
   '/api/public/hooks/refresh-statuses': typeof ApiPublicHooksRefreshStatusesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
-  '/advisor': typeof AdvisorRoute
   '/auth': typeof AuthRoute
   '/graph': typeof GraphRoute
   '/opportunities': typeof OpportunitiesRoute
@@ -163,7 +156,6 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/advisor'
     | '/auth'
     | '/graph'
     | '/opportunities'
@@ -172,6 +164,7 @@ export interface FileRouteTypes {
     | '/resources'
     | '/roadmaps'
     | '/sitemap.xml'
+    | '/advisor'
     | '/api/chat'
     | '/advisor/$threadId'
     | '/advisor/'
@@ -179,7 +172,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/advisor'
     | '/auth'
     | '/graph'
     | '/opportunities'
@@ -190,12 +182,12 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/api/chat'
     | '/advisor/$threadId'
+    | '/advisor'
     | '/api/public/hooks/refresh-statuses'
   id:
     | '__root__'
     | '/'
     | '/_authenticated'
-    | '/advisor'
     | '/auth'
     | '/graph'
     | '/opportunities'
@@ -214,7 +206,6 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
-  AdvisorRoute: typeof AdvisorRoute
   AuthRoute: typeof AuthRoute
   GraphRoute: typeof GraphRoute
   OpportunitiesRoute: typeof OpportunitiesRoute
@@ -283,13 +274,6 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/advisor': {
-      id: '/advisor'
-      path: '/advisor'
-      fullPath: '/advisor'
-      preLoaderRoute: typeof AdvisorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -371,7 +355,6 @@ const AuthenticatedRouteRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
-  AdvisorRoute: AdvisorRoute,
   AuthRoute: AuthRoute,
   GraphRoute: GraphRoute,
   OpportunitiesRoute: OpportunitiesRoute,
