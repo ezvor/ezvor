@@ -65,6 +65,11 @@ export function JobCard({ job }: { job: JobResult }) {
         <span className="flex items-center gap-2">
           <MapPin className="h-3.5 w-3.5 text-primary/70" /> {job.location}
         </span>
+        {job.postedText && (
+          <span className="flex items-center gap-2">
+            <Clock className="h-3.5 w-3.5 text-primary/70" /> {job.postedText}
+          </span>
+        )}
       </div>
 
       {job.description && (
