@@ -16,6 +16,7 @@ import { Route as ProblemsRouteImport } from './routes/problems'
 import { Route as PlaygroundRouteImport } from './routes/playground'
 import { Route as OpportunitiesRouteImport } from './routes/opportunities'
 import { Route as GraphRouteImport } from './routes/graph'
+import { Route as CompilerRouteImport } from './routes/compiler'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -58,6 +59,11 @@ const OpportunitiesRoute = OpportunitiesRouteImport.update({
 const GraphRoute = GraphRouteImport.update({
   id: '/graph',
   path: '/graph',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompilerRoute = CompilerRouteImport.update({
+  id: '/compiler',
+  path: '/compiler',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -106,6 +112,7 @@ const ApiPublicHooksRefreshStatusesRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/compiler': typeof CompilerRoute
   '/graph': typeof GraphRoute
   '/opportunities': typeof OpportunitiesRoute
   '/playground': typeof PlaygroundRoute
@@ -122,6 +129,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/compiler': typeof CompilerRoute
   '/graph': typeof GraphRoute
   '/opportunities': typeof OpportunitiesRoute
   '/playground': typeof PlaygroundRoute
@@ -139,6 +147,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/compiler': typeof CompilerRoute
   '/graph': typeof GraphRoute
   '/opportunities': typeof OpportunitiesRoute
   '/playground': typeof PlaygroundRoute
@@ -157,6 +166,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/compiler'
     | '/graph'
     | '/opportunities'
     | '/playground'
@@ -173,6 +183,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/compiler'
     | '/graph'
     | '/opportunities'
     | '/playground'
@@ -189,6 +200,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/compiler'
     | '/graph'
     | '/opportunities'
     | '/playground'
@@ -207,6 +219,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  CompilerRoute: typeof CompilerRoute
   GraphRoute: typeof GraphRoute
   OpportunitiesRoute: typeof OpportunitiesRoute
   PlaygroundRoute: typeof PlaygroundRoute
@@ -267,6 +280,13 @@ declare module '@tanstack/react-router' {
       path: '/graph'
       fullPath: '/graph'
       preLoaderRoute: typeof GraphRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/compiler': {
+      id: '/compiler'
+      path: '/compiler'
+      fullPath: '/compiler'
+      preLoaderRoute: typeof CompilerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -356,6 +376,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  CompilerRoute: CompilerRoute,
   GraphRoute: GraphRoute,
   OpportunitiesRoute: OpportunitiesRoute,
   PlaygroundRoute: PlaygroundRoute,
@@ -369,13 +390,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
