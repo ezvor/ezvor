@@ -255,8 +255,9 @@ function JobsSearch() {
           <Briefcase className="mx-auto h-8 w-8 text-primary-glow" />
           <p className="mt-3 font-display text-lg font-semibold">Search live jobs across every major platform</p>
           <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
-            Type a role like “Associate Software Engineer”, pick your filters, and pull fresh postings from LinkedIn,
-            Indeed, Glassdoor and top remote boards.
+            Type a role like “Associate Software Engineer”, pick your filters, and pull fresh, verified postings from
+            LinkedIn, Indeed, Glassdoor, Greenhouse, Lever, Ashby, Y Combinator and top remote boards. Every result is
+            AI-checked to be a real, currently-open listing.
           </p>
         </div>
       )}
