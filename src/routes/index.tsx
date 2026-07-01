@@ -80,10 +80,12 @@ function Dashboard() {
   const reduce = useReducedMotion();
 
   // Pointer-reactive glow in the hero.
-  const glowX = useMotionValue(50);
-  const glowY = useMotionValue(30);
+  const glowX = useMotionValue(28);
+  const glowY = useMotionValue(20);
   const sx = useSpring(glowX, { stiffness: 60, damping: 20 });
   const sy = useSpring(glowY, { stiffness: 60, damping: 20 });
+  const glowLeft = useTransform(sx, (v) => `${v}%`);
+  const glowTop = useTransform(sy, (v) => `${v}%`);
 
   const ask = () => {
     const q = prompt.trim();
