@@ -117,7 +117,7 @@ function JobsSearch() {
 
   const run = useServerFn(searchJobs);
 
-  const toggleSource = (s: string) =>
+  const toggleSource = (s: (typeof SOURCES)[number]) =>
     setActiveSources((prev) => (prev.includes(s) ? prev.filter((x) => x !== s) : [...prev, s]));
 
   const doSearch = async () => {
