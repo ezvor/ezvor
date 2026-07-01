@@ -20,7 +20,15 @@ export const LOCATIONS = [
   "Remote (Worldwide)",
 ] as const;
 
-export const SOURCES = ["LinkedIn", "Indeed", "Glassdoor", "Remote boards"] as const;
+export const SOURCES = [
+  "LinkedIn",
+  "Indeed",
+  "Glassdoor",
+  "Greenhouse",
+  "Lever & Ashby",
+  "Y Combinator",
+  "Remote boards",
+] as const;
 
 const inputSchema = z.object({
   query: z.string().trim().min(2).max(120),
