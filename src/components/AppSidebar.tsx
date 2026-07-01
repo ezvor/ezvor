@@ -3,7 +3,6 @@ import {
   LayoutDashboard,
   Compass,
   Map,
-  Workflow,
   BookOpen,
   Sparkles,
   Rocket,
