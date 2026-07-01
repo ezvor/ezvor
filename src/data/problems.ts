@@ -17,7 +17,18 @@ export type Problem = {
   ioFormat: string;
   examples: { input: string; output: string; explanation?: string }[];
   constraints: string[];
+  /**
+   * Visible editor code — LeetCode style: just the `Solution` class/function.
+   * No imports, no `main`, no stdin parsing.
+   */
   starters: Partial<Record<LangKey, string>>;
+  /**
+   * Hidden wrapper that is injected around the user's `starters` code before
+   * execution. Contains the language preamble (includes/imports), stdin
+   * parsing, the call into `Solution`, and stdout formatting. The token
+   * `__USER_CODE__` is replaced with the editor contents.
+   */
+  harness: Partial<Record<LangKey, string>>;
   tests: TestCase[];
 };
 
@@ -37,47 +48,67 @@ export const PROBLEMS: Problem[] = [
     ],
     constraints: ["2 ≤ n ≤ 10^4", "-10^9 ≤ nums[i], target ≤ 10^9", "Exactly one solution"],
     starters: {
+      python: `class Solution:
+    def twoSum(self, nums: List[int], target: int) -> List[int]:
+        
+`,
+      javascript: `/**
+ * @param {number[]} nums
+ * @param {number} target
+ * @return {number[]}
+ */
+var twoSum = function(nums, target) {
+    
+};
+`,
+      cpp: `class Solution {
+public:
+    vector<int> twoSum(vector<int>& nums, int target) {
+        
+    }
+};
+`,
+      java: `class Solution {
+    public int[] twoSum(int[] nums, int target) {
+        
+    }
+}
+`,
+    },
+    harness: {
       python: `import sys
+from typing import List
 
-def two_sum(nums, target):
-    # TODO: return the two indices whose values sum to target
-    return []
+__USER_CODE__
 
-def main():
+def _run():
     data = sys.stdin.read().split()
     n = int(data[0])
     nums = list(map(int, data[1:1 + n]))
     target = int(data[1 + n])
-    print(*two_sum(nums, target))
+    print(*Solution().twoSum(nums, target))
 
-main()
+_run()
 `,
-      javascript: `const lines = require('fs').readFileSync(0, 'utf8').trim().split('\\n');
+      javascript: `__USER_CODE__
 
-function twoSum(nums, target) {
-  // TODO
-  return [];
-}
-
-const n = parseInt(lines[0]);
-const nums = lines[1].split(/\\s+/).map(Number);
-const target = parseInt(lines[2]);
+const __in = require('fs').readFileSync(0, 'utf8').trim().split(/\\s+/).map(Number);
+const __n = __in[0];
+const nums = __in.slice(1, 1 + __n);
+const target = __in[1 + __n];
 console.log(twoSum(nums, target).join(' '));
 `,
       cpp: `#include <bits/stdc++.h>
 using namespace std;
 
-vector<int> twoSum(vector<int>& nums, int target) {
-    // TODO
-    return {};
-}
+__USER_CODE__
 
 int main() {
     int n; cin >> n;
     vector<int> nums(n);
     for (auto &x : nums) cin >> x;
     int target; cin >> target;
-    auto res = twoSum(nums, target);
+    vector<int> res = Solution().twoSum(nums, target);
     for (size_t i = 0; i < res.size(); i++)
         cout << res[i] << (i + 1 < res.size() ? " " : "");
     cout << endl;
@@ -85,19 +116,16 @@ int main() {
 `,
       java: `import java.util.*;
 
-public class Main {
-    static int[] twoSum(int[] nums, int target) {
-        // TODO
-        return new int[]{};
-    }
+__USER_CODE__
 
+public class Main {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
         int n = sc.nextInt();
         int[] nums = new int[n];
         for (int i = 0; i < n; i++) nums[i] = sc.nextInt();
         int target = sc.nextInt();
-        int[] res = twoSum(nums, target);
+        int[] res = new Solution().twoSum(nums, target);
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < res.length; i++) {
             if (i > 0) sb.append(" ");
@@ -130,50 +158,65 @@ public class Main {
     ],
     constraints: ["1 ≤ s.length ≤ 10^5", "s contains printable ASCII characters (no spaces)"],
     starters: {
+      python: `class Solution:
+    def reverseString(self, s: str) -> str:
+        
+`,
+      javascript: `/**
+ * @param {string} s
+ * @return {string}
+ */
+var reverseString = function(s) {
+    
+};
+`,
+      cpp: `class Solution {
+public:
+    string reverseString(string s) {
+        
+    }
+};
+`,
+      java: `class Solution {
+    public String reverseString(String s) {
+        
+    }
+}
+`,
+    },
+    harness: {
       python: `import sys
 
-def reverse_string(s):
-    # TODO
-    return s
+__USER_CODE__
 
-s = sys.stdin.readline().strip()
-print(reverse_string(s))
+s = sys.stdin.readline().rstrip('\\n').rstrip('\\r')
+print(Solution().reverseString(s))
 `,
-      javascript: `const s = require('fs').readFileSync(0, 'utf8').trim();
+      javascript: `__USER_CODE__
 
-function reverseString(s) {
-  // TODO
-  return s;
-}
-
+const s = require('fs').readFileSync(0, 'utf8').split('\\n')[0].replace(/\\r$/, '');
 console.log(reverseString(s));
 `,
       cpp: `#include <bits/stdc++.h>
 using namespace std;
 
-string reverseString(string s) {
-    // TODO
-    return s;
-}
+__USER_CODE__
 
 int main() {
     string s;
     getline(cin, s);
-    cout << reverseString(s) << endl;
+    cout << Solution().reverseString(s) << endl;
 }
 `,
       java: `import java.util.*;
 
-public class Main {
-    static String reverseString(String s) {
-        // TODO
-        return s;
-    }
+__USER_CODE__
 
+public class Main {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
-        String s = sc.next();
-        System.out.println(reverseString(s));
+        String s = sc.nextLine();
+        System.out.println(new Solution().reverseString(s));
     }
 }
 `,
@@ -192,55 +235,74 @@ public class Main {
     difficulty: "Easy",
     topic: "Math & Simulation",
     description:
-      "Print the numbers from 1 to n, one per line. For multiples of 3 print `Fizz`, for multiples of 5 print `Buzz`, and for multiples of both print `FizzBuzz`.",
+      "Return a string array `answer` (1-indexed) where for each `i` from 1 to n: `answer[i] = \"FizzBuzz\"` if i is divisible by 3 and 5, `\"Fizz\"` if divisible by 3, `\"Buzz\"` if divisible by 5, otherwise the number as a string. The harness prints each element on its own line.",
     ioFormat: "Input: one integer n.\nOutput: n lines following the Fizz Buzz rules.",
     examples: [{ input: "5", output: "1\n2\nFizz\n4\nBuzz" }],
     constraints: ["1 ≤ n ≤ 10^4"],
     starters: {
+      python: `class Solution:
+    def fizzBuzz(self, n: int) -> List[str]:
+        
+`,
+      javascript: `/**
+ * @param {number} n
+ * @return {string[]}
+ */
+var fizzBuzz = function(n) {
+    
+};
+`,
+      cpp: `class Solution {
+public:
+    vector<string> fizzBuzz(int n) {
+        
+    }
+};
+`,
+      java: `class Solution {
+    public List<String> fizzBuzz(int n) {
+        
+    }
+}
+`,
+    },
+    harness: {
       python: `import sys
+from typing import List
 
-def fizzbuzz(n):
-    # TODO: print each line following the Fizz Buzz rules
-    for i in range(1, n + 1):
-        print(i)
+__USER_CODE__
 
 n = int(sys.stdin.readline())
-fizzbuzz(n)
+print('\\n'.join(Solution().fizzBuzz(n)))
 `,
-      javascript: `const n = parseInt(require('fs').readFileSync(0, 'utf8').trim());
+      javascript: `__USER_CODE__
 
-function fizzbuzz(n) {
-  // TODO
-  for (let i = 1; i <= n; i++) console.log(i);
-}
-
-fizzbuzz(n);
+const n = parseInt(require('fs').readFileSync(0, 'utf8').trim());
+console.log(fizzBuzz(n).join('\\n'));
 `,
       cpp: `#include <bits/stdc++.h>
 using namespace std;
 
-void fizzbuzz(int n) {
-    // TODO
-    for (int i = 1; i <= n; i++) cout << i << "\\n";
-}
+__USER_CODE__
 
 int main() {
     int n; cin >> n;
-    fizzbuzz(n);
+    vector<string> res = Solution().fizzBuzz(n);
+    for (size_t i = 0; i < res.size(); i++)
+        cout << res[i] << (i + 1 < res.size() ? "\\n" : "");
+    cout << endl;
 }
 `,
       java: `import java.util.*;
 
-public class Main {
-    static void fizzbuzz(int n) {
-        // TODO
-        for (int i = 1; i <= n; i++) System.out.println(i);
-    }
+__USER_CODE__
 
+public class Main {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
         int n = sc.nextInt();
-        fizzbuzz(n);
+        List<String> res = new Solution().fizzBuzz(n);
+        System.out.println(String.join("\\n", res));
     }
 }
 `,
@@ -273,57 +335,72 @@ public class Main {
     ],
     constraints: ["1 ≤ n ≤ 10^5", "-10^4 ≤ nums[i] ≤ 10^4"],
     starters: {
+      python: `class Solution:
+    def maxSubArray(self, nums: List[int]) -> int:
+        
+`,
+      javascript: `/**
+ * @param {number[]} nums
+ * @return {number}
+ */
+var maxSubArray = function(nums) {
+    
+};
+`,
+      cpp: `class Solution {
+public:
+    int maxSubArray(vector<int>& nums) {
+        
+    }
+};
+`,
+      java: `class Solution {
+    public int maxSubArray(int[] nums) {
+        
+    }
+}
+`,
+    },
+    harness: {
       python: `import sys
+from typing import List
 
-def max_subarray(nums):
-    # TODO
-    return 0
+__USER_CODE__
 
 data = sys.stdin.read().split()
 n = int(data[0])
 nums = list(map(int, data[1:1 + n]))
-print(max_subarray(nums))
+print(Solution().maxSubArray(nums))
 `,
-      javascript: `const data = require('fs').readFileSync(0, 'utf8').trim().split(/\\s+/).map(Number);
-const n = data[0];
-const nums = data.slice(1, 1 + n);
+      javascript: `__USER_CODE__
 
-function maxSubarray(nums) {
-  // TODO
-  return 0;
-}
-
-console.log(maxSubarray(nums));
+const __in = require('fs').readFileSync(0, 'utf8').trim().split(/\\s+/).map(Number);
+const nums = __in.slice(1, 1 + __in[0]);
+console.log(maxSubArray(nums));
 `,
       cpp: `#include <bits/stdc++.h>
 using namespace std;
 
-long long maxSubarray(vector<long long>& nums) {
-    // TODO
-    return 0;
-}
+__USER_CODE__
 
 int main() {
     int n; cin >> n;
-    vector<long long> nums(n);
+    vector<int> nums(n);
     for (auto &x : nums) cin >> x;
-    cout << maxSubarray(nums) << endl;
+    cout << Solution().maxSubArray(nums) << endl;
 }
 `,
       java: `import java.util.*;
 
-public class Main {
-    static long maxSubarray(long[] nums) {
-        // TODO
-        return 0;
-    }
+__USER_CODE__
 
+public class Main {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
         int n = sc.nextInt();
-        long[] nums = new long[n];
-        for (int i = 0; i < n; i++) nums[i] = sc.nextLong();
-        System.out.println(maxSubarray(nums));
+        int[] nums = new int[n];
+        for (int i = 0; i < n; i++) nums[i] = sc.nextInt();
+        System.out.println(new Solution().maxSubArray(nums));
     }
 }
 `,
@@ -351,57 +428,72 @@ public class Main {
     ],
     constraints: ["1 ≤ n ≤ 10^5", "-10^9 ≤ nums[i] ≤ 10^9"],
     starters: {
+      python: `class Solution:
+    def containsDuplicate(self, nums: List[int]) -> bool:
+        
+`,
+      javascript: `/**
+ * @param {number[]} nums
+ * @return {boolean}
+ */
+var containsDuplicate = function(nums) {
+    
+};
+`,
+      cpp: `class Solution {
+public:
+    bool containsDuplicate(vector<int>& nums) {
+        
+    }
+};
+`,
+      java: `class Solution {
+    public boolean containsDuplicate(int[] nums) {
+        
+    }
+}
+`,
+    },
+    harness: {
       python: `import sys
+from typing import List
 
-def contains_duplicate(nums):
-    # TODO
-    return False
+__USER_CODE__
 
 data = sys.stdin.read().split()
 n = int(data[0])
 nums = list(map(int, data[1:1 + n]))
-print(str(contains_duplicate(nums)).lower())
+print(str(Solution().containsDuplicate(nums)).lower())
 `,
-      javascript: `const data = require('fs').readFileSync(0, 'utf8').trim().split(/\\s+/).map(Number);
-const n = data[0];
-const nums = data.slice(1, 1 + n);
+      javascript: `__USER_CODE__
 
-function containsDuplicate(nums) {
-  // TODO
-  return false;
-}
-
+const __in = require('fs').readFileSync(0, 'utf8').trim().split(/\\s+/).map(Number);
+const nums = __in.slice(1, 1 + __in[0]);
 console.log(containsDuplicate(nums) ? 'true' : 'false');
 `,
       cpp: `#include <bits/stdc++.h>
 using namespace std;
 
-bool containsDuplicate(vector<int>& nums) {
-    // TODO
-    return false;
-}
+__USER_CODE__
 
 int main() {
     int n; cin >> n;
     vector<int> nums(n);
     for (auto &x : nums) cin >> x;
-    cout << (containsDuplicate(nums) ? "true" : "false") << endl;
+    cout << (Solution().containsDuplicate(nums) ? "true" : "false") << endl;
 }
 `,
       java: `import java.util.*;
 
-public class Main {
-    static boolean containsDuplicate(int[] nums) {
-        // TODO
-        return false;
-    }
+__USER_CODE__
 
+public class Main {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
         int n = sc.nextInt();
         int[] nums = new int[n];
         for (int i = 0; i < n; i++) nums[i] = sc.nextInt();
-        System.out.println(containsDuplicate(nums) ? "true" : "false");
+        System.out.println(new Solution().containsDuplicate(nums) ? "true" : "false");
     }
 }
 `,
@@ -428,54 +520,69 @@ public class Main {
     ],
     constraints: ["1 ≤ s.length, t.length ≤ 5*10^4", "s and t consist of lowercase English letters"],
     starters: {
+      python: `class Solution:
+    def isAnagram(self, s: str, t: str) -> bool:
+        
+`,
+      javascript: `/**
+ * @param {string} s
+ * @param {string} t
+ * @return {boolean}
+ */
+var isAnagram = function(s, t) {
+    
+};
+`,
+      cpp: `class Solution {
+public:
+    bool isAnagram(string s, string t) {
+        
+    }
+};
+`,
+      java: `class Solution {
+    public boolean isAnagram(String s, String t) {
+        
+    }
+}
+`,
+    },
+    harness: {
       python: `import sys
 
-def is_anagram(s, t):
-    # TODO
-    return False
+__USER_CODE__
 
 lines = sys.stdin.read().split('\\n')
 s, t = lines[0], lines[1]
-print(str(is_anagram(s, t)).lower())
+print(str(Solution().isAnagram(s, t)).lower())
 `,
-      javascript: `const lines = require('fs').readFileSync(0, 'utf8').split('\\n');
-const s = lines[0], t = lines[1];
+      javascript: `__USER_CODE__
 
-function isAnagram(s, t) {
-  // TODO
-  return false;
-}
-
-console.log(isAnagram(s, t) ? 'true' : 'false');
+const __l = require('fs').readFileSync(0, 'utf8').split('\\n');
+console.log(isAnagram(__l[0].replace(/\\r$/, ''), (__l[1] || '').replace(/\\r$/, '')) ? 'true' : 'false');
 `,
       cpp: `#include <bits/stdc++.h>
 using namespace std;
 
-bool isAnagram(string s, string t) {
-    // TODO
-    return false;
-}
+__USER_CODE__
 
 int main() {
     string s, t;
     getline(cin, s);
     getline(cin, t);
-    cout << (isAnagram(s, t) ? "true" : "false") << endl;
+    cout << (Solution().isAnagram(s, t) ? "true" : "false") << endl;
 }
 `,
       java: `import java.util.*;
 
-public class Main {
-    static boolean isAnagram(String s, String t) {
-        // TODO
-        return false;
-    }
+__USER_CODE__
 
+public class Main {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
         String s = sc.nextLine();
         String t = sc.nextLine();
-        System.out.println(isAnagram(s, t) ? "true" : "false");
+        System.out.println(new Solution().isAnagram(s, t) ? "true" : "false");
     }
 }
 `,
@@ -502,50 +609,65 @@ public class Main {
     ],
     constraints: ["1 ≤ s.length ≤ 10^4", "s consists of only the characters ()[]{}"],
     starters: {
+      python: `class Solution:
+    def isValid(self, s: str) -> bool:
+        
+`,
+      javascript: `/**
+ * @param {string} s
+ * @return {boolean}
+ */
+var isValid = function(s) {
+    
+};
+`,
+      cpp: `class Solution {
+public:
+    bool isValid(string s) {
+        
+    }
+};
+`,
+      java: `class Solution {
+    public boolean isValid(String s) {
+        
+    }
+}
+`,
+    },
+    harness: {
       python: `import sys
 
-def is_valid(s):
-    # TODO
-    return False
+__USER_CODE__
 
-s = sys.stdin.readline().strip()
-print(str(is_valid(s)).lower())
+s = sys.stdin.readline().rstrip('\\n').rstrip('\\r')
+print(str(Solution().isValid(s)).lower())
 `,
-      javascript: `const s = require('fs').readFileSync(0, 'utf8').trim();
+      javascript: `__USER_CODE__
 
-function isValid(s) {
-  // TODO
-  return false;
-}
-
+const s = require('fs').readFileSync(0, 'utf8').split('\\n')[0].replace(/\\r$/, '');
 console.log(isValid(s) ? 'true' : 'false');
 `,
       cpp: `#include <bits/stdc++.h>
 using namespace std;
 
-bool isValid(string s) {
-    // TODO
-    return false;
-}
+__USER_CODE__
 
 int main() {
     string s;
     getline(cin, s);
-    cout << (isValid(s) ? "true" : "false") << endl;
+    cout << (Solution().isValid(s) ? "true" : "false") << endl;
 }
 `,
       java: `import java.util.*;
 
-public class Main {
-    static boolean isValid(String s) {
-        // TODO
-        return false;
-    }
+__USER_CODE__
 
+public class Main {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
         String s = sc.nextLine();
-        System.out.println(isValid(s) ? "true" : "false");
+        System.out.println(new Solution().isValid(s) ? "true" : "false");
     }
 }
 `,
@@ -573,61 +695,78 @@ public class Main {
     ],
     constraints: ["1 ≤ n ≤ 10^4", "Array is sorted ascending with distinct values"],
     starters: {
+      python: `class Solution:
+    def search(self, nums: List[int], target: int) -> int:
+        
+`,
+      javascript: `/**
+ * @param {number[]} nums
+ * @param {number} target
+ * @return {number}
+ */
+var search = function(nums, target) {
+    
+};
+`,
+      cpp: `class Solution {
+public:
+    int search(vector<int>& nums, int target) {
+        
+    }
+};
+`,
+      java: `class Solution {
+    public int search(int[] nums, int target) {
+        
+    }
+}
+`,
+    },
+    harness: {
       python: `import sys
+from typing import List
 
-def search(nums, target):
-    # TODO
-    return -1
+__USER_CODE__
 
 data = sys.stdin.read().split()
 n = int(data[0])
 nums = list(map(int, data[1:1 + n]))
 target = int(data[1 + n])
-print(search(nums, target))
+print(Solution().search(nums, target))
 `,
-      javascript: `const data = require('fs').readFileSync(0, 'utf8').trim().split(/\\s+/).map(Number);
-const n = data[0];
-const nums = data.slice(1, 1 + n);
-const target = data[1 + n];
+      javascript: `__USER_CODE__
 
-function search(nums, target) {
-  // TODO
-  return -1;
-}
-
+const __in = require('fs').readFileSync(0, 'utf8').trim().split(/\\s+/).map(Number);
+const __n = __in[0];
+const nums = __in.slice(1, 1 + __n);
+const target = __in[1 + __n];
 console.log(search(nums, target));
 `,
       cpp: `#include <bits/stdc++.h>
 using namespace std;
 
-int search(vector<int>& nums, int target) {
-    // TODO
-    return -1;
-}
+__USER_CODE__
 
 int main() {
     int n; cin >> n;
     vector<int> nums(n);
     for (auto &x : nums) cin >> x;
     int target; cin >> target;
-    cout << search(nums, target) << endl;
+    cout << Solution().search(nums, target) << endl;
 }
 `,
       java: `import java.util.*;
 
-public class Main {
-    static int search(int[] nums, int target) {
-        // TODO
-        return -1;
-    }
+__USER_CODE__
 
+public class Main {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
         int n = sc.nextInt();
         int[] nums = new int[n];
         for (int i = 0; i < n; i++) nums[i] = sc.nextInt();
         int target = sc.nextInt();
-        System.out.println(search(nums, target));
+        System.out.println(new Solution().search(nums, target));
     }
 }
 `,
@@ -655,57 +794,72 @@ public class Main {
     ],
     constraints: ["1 ≤ n ≤ 10^5", "0 ≤ prices[i] ≤ 10^4"],
     starters: {
+      python: `class Solution:
+    def maxProfit(self, prices: List[int]) -> int:
+        
+`,
+      javascript: `/**
+ * @param {number[]} prices
+ * @return {number}
+ */
+var maxProfit = function(prices) {
+    
+};
+`,
+      cpp: `class Solution {
+public:
+    int maxProfit(vector<int>& prices) {
+        
+    }
+};
+`,
+      java: `class Solution {
+    public int maxProfit(int[] prices) {
+        
+    }
+}
+`,
+    },
+    harness: {
       python: `import sys
+from typing import List
 
-def max_profit(prices):
-    # TODO
-    return 0
+__USER_CODE__
 
 data = sys.stdin.read().split()
 n = int(data[0])
 prices = list(map(int, data[1:1 + n]))
-print(max_profit(prices))
+print(Solution().maxProfit(prices))
 `,
-      javascript: `const data = require('fs').readFileSync(0, 'utf8').trim().split(/\\s+/).map(Number);
-const n = data[0];
-const prices = data.slice(1, 1 + n);
+      javascript: `__USER_CODE__
 
-function maxProfit(prices) {
-  // TODO
-  return 0;
-}
-
+const __in = require('fs').readFileSync(0, 'utf8').trim().split(/\\s+/).map(Number);
+const prices = __in.slice(1, 1 + __in[0]);
 console.log(maxProfit(prices));
 `,
       cpp: `#include <bits/stdc++.h>
 using namespace std;
 
-int maxProfit(vector<int>& prices) {
-    // TODO
-    return 0;
-}
+__USER_CODE__
 
 int main() {
     int n; cin >> n;
     vector<int> prices(n);
     for (auto &x : prices) cin >> x;
-    cout << maxProfit(prices) << endl;
+    cout << Solution().maxProfit(prices) << endl;
 }
 `,
       java: `import java.util.*;
 
-public class Main {
-    static int maxProfit(int[] prices) {
-        // TODO
-        return 0;
-    }
+__USER_CODE__
 
+public class Main {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
         int n = sc.nextInt();
         int[] prices = new int[n];
         for (int i = 0; i < n; i++) prices[i] = sc.nextInt();
-        System.out.println(maxProfit(prices));
+        System.out.println(new Solution().maxProfit(prices));
     }
 }
 `,
@@ -732,49 +886,64 @@ public class Main {
     ],
     constraints: ["1 ≤ n ≤ 45"],
     starters: {
+      python: `class Solution:
+    def climbStairs(self, n: int) -> int:
+        
+`,
+      javascript: `/**
+ * @param {number} n
+ * @return {number}
+ */
+var climbStairs = function(n) {
+    
+};
+`,
+      cpp: `class Solution {
+public:
+    int climbStairs(int n) {
+        
+    }
+};
+`,
+      java: `class Solution {
+    public int climbStairs(int n) {
+        
+    }
+}
+`,
+    },
+    harness: {
       python: `import sys
 
-def climb_stairs(n):
-    # TODO
-    return 0
+__USER_CODE__
 
 n = int(sys.stdin.readline())
-print(climb_stairs(n))
+print(Solution().climbStairs(n))
 `,
-      javascript: `const n = parseInt(require('fs').readFileSync(0, 'utf8').trim());
+      javascript: `__USER_CODE__
 
-function climbStairs(n) {
-  // TODO
-  return 0;
-}
-
+const n = parseInt(require('fs').readFileSync(0, 'utf8').trim());
 console.log(climbStairs(n));
 `,
       cpp: `#include <bits/stdc++.h>
 using namespace std;
 
-long long climbStairs(int n) {
-    // TODO
-    return 0;
-}
+__USER_CODE__
 
 int main() {
     int n; cin >> n;
-    cout << climbStairs(n) << endl;
+    cout << Solution().climbStairs(n) << endl;
 }
 `,
       java: `import java.util.*;
 
-public class Main {
-    static long climbStairs(int n) {
-        // TODO
-        return 0;
-    }
+__USER_CODE__
 
+public class Main {
     public static void main(String[] args) {
         Scanner sc = new Scanner(System.in);
         int n = sc.nextInt();
-        System.out.println(climbStairs(n));
+        System.out.println(new Solution().climbStairs(n));
     }
 }
 `,
@@ -792,47 +961,24 @@ public class Main {
 export const LANGUAGES: { key: LangKey; label: string; monaco: string }[] = [
   { key: "python", label: "Python 3", monaco: "python" },
   { key: "javascript", label: "JavaScript (Node)", monaco: "javascript" },
-  { key: "typescript", label: "TypeScript", monaco: "typescript" },
   { key: "cpp", label: "C++", monaco: "cpp" },
-  { key: "c", label: "C", monaco: "c" },
   { key: "java", label: "Java", monaco: "java" },
-  { key: "go", label: "Go", monaco: "go" },
-  { key: "rust", label: "Rust", monaco: "rust" },
 ];
 
+/**
+ * Combine the user's visible `Solution` code with the hidden per-language
+ * harness for a problem. If a problem has no harness for the language (should
+ * not happen for the built-in set), the user code is executed as-is.
+ */
+export function buildSource(problem: Problem, lang: LangKey, userCode: string): string {
+  const harness = problem.harness[lang];
+  if (!harness) return userCode;
+  return harness.replace("__USER_CODE__", userCode);
+}
+
 export const FALLBACK_STARTER: Partial<Record<LangKey, string>> = {
-  typescript: `// Read all of stdin, then write your answer to stdout.
-const input = require('fs').readFileSync(0, 'utf8').trim();
-console.log(input);
-`,
-  c: `#include <stdio.h>
-
-int main() {
-    // Read from stdin, write to stdout
-    return 0;
-}
-`,
-  go: `package main
-
-import (
-    "bufio"
-    "fmt"
-    "os"
-)
-
-func main() {
-    reader := bufio.NewReader(os.Stdin)
-    var s string
-    fmt.Fscan(reader, &s)
-    fmt.Println(s)
-}
-`,
-  rust: `use std::io::{self, Read};
-
-fn main() {
-    let mut input = String::new();
-    io::stdin().read_to_string(&mut input).unwrap();
-    print!("{}", input.trim());
-}
+  python: `class Solution:
+    def solve(self):
+        
 `,
 };
