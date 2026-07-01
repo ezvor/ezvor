@@ -12,8 +12,22 @@ import {
   ShieldCheck,
   GitBranch,
   Trophy,
+  Layers,
+  Bug,
+  LineChart,
+  Database,
+  Boxes,
+  Bot,
+  Smartphone,
+  Palette,
+  CloudCog,
+  DatabaseZap,
+  Network,
+  Briefcase,
+  Gamepad2,
+  Blocks,
   Map as MapIcon,
-  CheckCircle2,
+  ExternalLink,
   type LucideIcon,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -22,7 +36,9 @@ import { PageHeader } from "@/components/PageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ROADMAPS, type Roadmap } from "@/data/careerData";
+import { getDocLink } from "@/data/roadmapDocs";
 import { generateRoadmap } from "@/lib/career.functions";
+
 
 export const Route = createFileRoute("/roadmaps")({
   head: () => ({
