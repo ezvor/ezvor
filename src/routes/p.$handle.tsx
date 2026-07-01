@@ -73,7 +73,7 @@ function diffTone(d: string) {
 }
 
 function ProofPage() {
-  const proof = Route.useLoaderData();
+  const proof = Route.useLoaderData() as PublicProof;
   const { readiness } = proof;
   const roadmap = ROADMAPS.find((r) => r.id === proof.target?.roadmapId);
   const name = proof.displayName || proof.handle;
