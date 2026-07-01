@@ -472,7 +472,3 @@ function TerminalCard() {
   );
 }
 
-// Small helper so the hero glow can subtly follow the pointer without re-rendering.
-function useSpringToPx(mv: ReturnType<typeof useSpring>) {
-  return mv;
-}
