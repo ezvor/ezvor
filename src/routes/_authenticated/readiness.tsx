@@ -480,8 +480,10 @@ function PublishPanel({
   updateProfileFn,
   onSaved,
 }: {
-  profileQuery: ReturnType<typeof useQuery<Awaited<ReturnType<typeof getMyProfile>>>>;
-  updateProfileFn: (args: { data: Parameters<typeof updateProfile>[0]["data"] }) => Promise<{ ok: boolean; error?: string }>;
+  profileQuery: { data?: Awaited<ReturnType<typeof getMyProfile>> | null; refetch: () => void };
+  updateProfileFn: (args: {
+    data: { handle?: string | null; headline?: string | null; isPublic?: boolean; displayName?: string | null; location?: string | null };
+  }) => Promise<{ ok: boolean; error?: string }>;
   onSaved: () => void;
 }) {
   const data = profileQuery.data;
