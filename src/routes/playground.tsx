@@ -422,6 +422,23 @@ function PlaygroundPage() {
           }
           return next;
         });
+        // Record verified proof for the Readiness Engine (only when signed in).
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (!session) return;
+          recordSolvedFn({
+            data: {
+              problemId: problem.id,
+              title: problem.title,
+              difficulty: problem.difficulty,
+              topic: problem.topic ?? null,
+              language: lang,
+              runtimeMs: res.runtimeMs ?? null,
+              memoryKb: res.memoryKb ?? null,
+            },
+          }).catch(() => {
+            /* proof sync is best-effort */
+          });
+        });
       } else {
         toast.error(`${res.passedCount}/${res.total} test cases passed`);
       }
