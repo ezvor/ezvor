@@ -122,15 +122,15 @@ function Dashboard() {
           }}
         />
         <motion.div
-          className="pointer-events-none absolute -z-0 h-[36rem] w-[36rem] rounded-full blur-[120px]"
+          className="pointer-events-none absolute -z-0 h-[34rem] w-[34rem] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[130px]"
           style={{
-            left: sx.get() ? undefined : "20%",
+            left: glowLeft,
+            top: glowTop,
             background:
-              "radial-gradient(circle, oklch(0.6 0.2 285 / 45%), transparent 70%)",
-            top: "-8rem",
-            x: useSpringToPx(sx),
+              "radial-gradient(circle, oklch(0.6 0.2 285 / 40%), transparent 70%)",
           }}
         />
+
 
         <div className="relative mx-auto grid w-full max-w-6xl gap-10 px-5 py-16 sm:px-8 sm:py-20 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
           {/* Left: copy + search */}
