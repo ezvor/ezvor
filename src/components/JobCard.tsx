@@ -1,4 +1,4 @@
-import { ArrowUpRight, Building2, MapPin, Wifi } from "lucide-react";
+import { ArrowUpRight, Building2, Clock, MapPin, ShieldCheck, Wifi } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -8,6 +8,9 @@ const sourceStyle: Record<JobResult["source"], string> = {
   LinkedIn: "bg-[#0a66c2]/15 text-[#0a66c2] border-[#0a66c2]/30",
   Indeed: "bg-primary/15 text-primary-glow border-primary/30",
   Glassdoor: "bg-success/15 text-success border-success/30",
+  Greenhouse: "bg-[#2e9e5b]/15 text-[#3fbf74] border-[#2e9e5b]/30",
+  Lever: "bg-[#6d5ae0]/15 text-[#9b8cff] border-[#6d5ae0]/30",
+  YC: "bg-[#ff6600]/15 text-[#ff8a3d] border-[#ff6600]/30",
   Remote: "bg-warning/15 text-warning border-warning/30",
 };
 
