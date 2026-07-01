@@ -77,6 +77,8 @@ import {
 import type { LangKey } from "@/lib/judge.server";
 import { executeCode, submitCode } from "@/lib/judge.functions";
 import type { SubmitResult } from "@/lib/judge.functions";
+import { recordSolved } from "@/lib/readiness.functions";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/playground")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -251,6 +253,7 @@ function PlaygroundPage() {
 
   const runFn = useServerFn(executeCode);
   const submitFn = useServerFn(submitCode);
+  const recordSolvedFn = useServerFn(recordSolved);
 
   useEffect(() => {
     setSolved(loadSet(SOLVED_KEY));
@@ -418,6 +421,23 @@ function PlaygroundPage() {
             /* ignore */
           }
           return next;
+        });
+        // Record verified proof for the Readiness Engine (only when signed in).
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (!session) return;
+          recordSolvedFn({
+            data: {
+              problemId: problem.id,
+              title: problem.title,
+              difficulty: problem.difficulty,
+              topic: problem.topic ?? null,
+              language: lang,
+              runtimeMs: res.runtimeMs != null ? Math.round(res.runtimeMs) : null,
+              memoryKb: res.memoryKb != null ? Math.round(res.memoryKb) : null,
+            },
+          }).catch(() => {
+            /* proof sync is best-effort */
+          });
         });
       } else {
         toast.error(`${res.passedCount}/${res.total} test cases passed`);

@@ -9,6 +9,7 @@ import {
   Code2,
   ListChecks,
   TerminalSquare,
+  Gauge,
   LogOut,
   LogIn,
 } from "lucide-react";
@@ -31,6 +32,7 @@ import { useAuth } from "@/hooks/useAuth";
 
 const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Readiness", url: "/readiness", icon: Gauge },
   { title: "Opportunities", url: "/opportunities", icon: Compass },
   { title: "Roadmaps & Graphs", url: "/roadmaps", icon: Map },
   { title: "DSA Arena", url: "/playground", icon: Code2 },

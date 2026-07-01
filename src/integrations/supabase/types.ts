@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      career_targets: {
+        Row: {
+          company: string | null
+          created_at: string
+          id: string
+          roadmap_id: string
+          role_label: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company?: string | null
+          created_at?: string
+          id?: string
+          roadmap_id: string
+          role_label: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company?: string | null
+          created_at?: string
+          id?: string
+          roadmap_id?: string
+          role_label?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           content: string
@@ -144,7 +174,11 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           display_name: string | null
+          handle: string | null
+          headline: string | null
           id: string
+          is_public: boolean
+          location: string | null
           updated_at: string
           user_id: string
         }
@@ -152,7 +186,11 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          handle?: string | null
+          headline?: string | null
           id?: string
+          is_public?: boolean
+          location?: string | null
           updated_at?: string
           user_id: string
         }
@@ -160,8 +198,78 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
+          handle?: string | null
+          headline?: string | null
           id?: string
+          is_public?: boolean
+          location?: string | null
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      roadmap_progress: {
+        Row: {
+          completed_at: string
+          id: string
+          item: string
+          roadmap_id: string
+          stage_title: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string
+          id?: string
+          item: string
+          roadmap_id: string
+          stage_title: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string
+          id?: string
+          item?: string
+          roadmap_id?: string
+          stage_title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      solved_problems: {
+        Row: {
+          difficulty: string
+          id: string
+          language: string | null
+          memory_kb: number | null
+          problem_id: string
+          problem_title: string
+          runtime_ms: number | null
+          solved_at: string
+          topic: string | null
+          user_id: string
+        }
+        Insert: {
+          difficulty: string
+          id?: string
+          language?: string | null
+          memory_kb?: number | null
+          problem_id: string
+          problem_title: string
+          runtime_ms?: number | null
+          solved_at?: string
+          topic?: string | null
+          user_id: string
+        }
+        Update: {
+          difficulty?: string
+          id?: string
+          language?: string | null
+          memory_kb?: number | null
+          problem_id?: string
+          problem_title?: string
+          runtime_ms?: number | null
+          solved_at?: string
+          topic?: string | null
           user_id?: string
         }
         Relationships: []
