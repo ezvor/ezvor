@@ -70,6 +70,7 @@ import {
   PROBLEMS,
   LANGUAGES,
   FALLBACK_STARTER,
+  buildSource,
   type Problem,
   type Difficulty,
 } from "@/data/problems";
@@ -312,7 +313,11 @@ function PlaygroundPage() {
     setBottomTab("result");
     try {
       const results = await Promise.all(
-        caseInputs.map((input) => runFn({ data: { language: lang, source: code, stdin: input } })),
+        caseInputs.map((input) =>
+          runFn({
+            data: { language: lang, source: buildSource(problem, lang, code), stdin: input },
+          }),
+        ),
       );
       const outcomes: CaseOutcome[] = results.map((r, i) => {
         const expected = problem.examples[i]?.output ?? null;
@@ -378,7 +383,7 @@ function PlaygroundPage() {
       const res = await submitFn({
         data: {
           language: lang,
-          source: code,
+          source: buildSource(problem, lang, code),
           tests: problem.tests.map((t) => ({
             input: t.input,
             expected: t.expected,
@@ -784,7 +789,7 @@ function PlaygroundPage() {
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {LANGUAGES.map((l) => (
+            {LANGUAGES.filter((l) => problem.starters[l.key]).map((l) => (
               <SelectItem key={l.key} value={l.key}>
                 {l.label}
               </SelectItem>
