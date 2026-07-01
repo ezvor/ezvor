@@ -11,7 +11,8 @@ import {
   Rocket,
 } from "lucide-react";
 
-import { getPublicProof } from "@/lib/readiness.functions";
+import { getPublicProof, type PublicProof } from "@/lib/readiness.functions";
+import type { ReadinessPillar } from "@/lib/readiness";
 import { ROADMAPS } from "@/data/careerData";
 
 export const Route = createFileRoute("/p/$handle")({

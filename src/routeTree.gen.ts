@@ -20,6 +20,7 @@ import { Route as CompilerRouteImport } from './routes/compiler'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PHandleRouteImport } from './routes/p.$handle'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AuthenticatedReadinessRouteImport } from './routes/_authenticated/readiness'
 import { Route as AuthenticatedAdvisorRouteImport } from './routes/_authenticated/advisor'
@@ -81,6 +82,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PHandleRoute = PHandleRouteImport.update({
+  id: '/p/$handle',
+  path: '/p/$handle',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiChatRoute = ApiChatRouteImport.update({
   id: '/api/chat',
   path: '/api/chat',
@@ -129,6 +135,7 @@ export interface FileRoutesByFullPath {
   '/advisor': typeof AuthenticatedAdvisorRouteWithChildren
   '/readiness': typeof AuthenticatedReadinessRoute
   '/api/chat': typeof ApiChatRoute
+  '/p/$handle': typeof PHandleRoute
   '/advisor/$threadId': typeof AuthenticatedAdvisorThreadIdRoute
   '/advisor/': typeof AuthenticatedAdvisorIndexRoute
   '/api/public/hooks/refresh-statuses': typeof ApiPublicHooksRefreshStatusesRoute
@@ -146,6 +153,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/readiness': typeof AuthenticatedReadinessRoute
   '/api/chat': typeof ApiChatRoute
+  '/p/$handle': typeof PHandleRoute
   '/advisor/$threadId': typeof AuthenticatedAdvisorThreadIdRoute
   '/advisor': typeof AuthenticatedAdvisorIndexRoute
   '/api/public/hooks/refresh-statuses': typeof ApiPublicHooksRefreshStatusesRoute
@@ -166,6 +174,7 @@ export interface FileRoutesById {
   '/_authenticated/advisor': typeof AuthenticatedAdvisorRouteWithChildren
   '/_authenticated/readiness': typeof AuthenticatedReadinessRoute
   '/api/chat': typeof ApiChatRoute
+  '/p/$handle': typeof PHandleRoute
   '/_authenticated/advisor/$threadId': typeof AuthenticatedAdvisorThreadIdRoute
   '/_authenticated/advisor/': typeof AuthenticatedAdvisorIndexRoute
   '/api/public/hooks/refresh-statuses': typeof ApiPublicHooksRefreshStatusesRoute
@@ -186,6 +195,7 @@ export interface FileRouteTypes {
     | '/advisor'
     | '/readiness'
     | '/api/chat'
+    | '/p/$handle'
     | '/advisor/$threadId'
     | '/advisor/'
     | '/api/public/hooks/refresh-statuses'
@@ -203,6 +213,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/readiness'
     | '/api/chat'
+    | '/p/$handle'
     | '/advisor/$threadId'
     | '/advisor'
     | '/api/public/hooks/refresh-statuses'
@@ -222,6 +233,7 @@ export interface FileRouteTypes {
     | '/_authenticated/advisor'
     | '/_authenticated/readiness'
     | '/api/chat'
+    | '/p/$handle'
     | '/_authenticated/advisor/$threadId'
     | '/_authenticated/advisor/'
     | '/api/public/hooks/refresh-statuses'
@@ -240,6 +252,7 @@ export interface RootRouteChildren {
   RoadmapsRoute: typeof RoadmapsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiChatRoute: typeof ApiChatRoute
+  PHandleRoute: typeof PHandleRoute
   ApiPublicHooksRefreshStatusesRoute: typeof ApiPublicHooksRefreshStatusesRoute
 }
 
@@ -320,6 +333,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/p/$handle': {
+      id: '/p/$handle'
+      path: '/p/$handle'
+      fullPath: '/p/$handle'
+      preLoaderRoute: typeof PHandleRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/chat': {
@@ -406,6 +426,7 @@ const rootRouteChildren: RootRouteChildren = {
   RoadmapsRoute: RoadmapsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiChatRoute: ApiChatRoute,
+  PHandleRoute: PHandleRoute,
   ApiPublicHooksRefreshStatusesRoute: ApiPublicHooksRefreshStatusesRoute,
 }
 export const routeTree = rootRouteImport
