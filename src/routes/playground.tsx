@@ -256,6 +256,14 @@ function PlaygroundPage() {
     setSolved(loadSet(SOLVED_KEY));
   }, []);
 
+  // Deep-link support: /playground?problem=<slug> selects a matching problem.
+  const search = Route.useSearch();
+  useEffect(() => {
+    if (search.problem && PROBLEMS.some((p) => p.id === search.problem)) {
+      setProblemId(search.problem);
+    }
+  }, [search.problem]);
+
   // Load saved code (or starter) whenever the problem/language changes.
   useEffect(() => {
     let saved: string | null = null;
