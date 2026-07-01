@@ -159,8 +159,9 @@ function ProblemsPage() {
   return (
     <div className="pb-16">
       <PageHeader
+        eyebrow="LeetCode Premium — unlocked, free"
         title="Problem Catalog"
-        subtitle="All 3,977 LeetCode problems — with free company lists (Premium, unlocked)"
+        description="All 3,977 LeetCode problems with topic tags, difficulty and acceptance — plus free company-wise lists (Google, Amazon, Microsoft, Meta and 180+ more)."
       />
 
       <div className="space-y-6 px-4 pt-4 md:px-6">
