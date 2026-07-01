@@ -77,6 +77,8 @@ import {
 import type { LangKey } from "@/lib/judge.server";
 import { executeCode, submitCode } from "@/lib/judge.functions";
 import type { SubmitResult } from "@/lib/judge.functions";
+import { recordSolved } from "@/lib/readiness.functions";
+import { supabase } from "@/integrations/supabase/client";
 
 export const Route = createFileRoute("/playground")({
   validateSearch: (search: Record<string, unknown>) => ({
