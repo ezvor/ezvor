@@ -1,18 +1,20 @@
-import Editor from "@monaco-editor/react";
+import Editor, { type OnMount } from "@monaco-editor/react";
 import { Loader2 } from "lucide-react";
 
 type Props = {
   language: string;
   value: string;
   onChange: (val: string) => void;
+  onMount?: OnMount;
 };
 
-export function CodeEditor({ language, value, onChange }: Props) {
+export function CodeEditor({ language, value, onChange, onMount }: Props) {
   return (
     <Editor
       language={language}
       value={value}
       onChange={(v) => onChange(v ?? "")}
+      onMount={onMount}
       theme="vs-dark"
       loading={
         <div className="flex h-full w-full items-center justify-center text-muted-foreground">
@@ -31,7 +33,9 @@ export function CodeEditor({ language, value, onChange }: Props) {
         lineNumbersMinChars: 3,
         renderLineHighlight: "line",
         cursorBlinking: "smooth",
-        scrollbar: { verticalScrollbarSize: 8, horizontalScrollbarSize: 8 },
+        bracketPairColorization: { enabled: true },
+        guides: { bracketPairs: true, indentation: true },
+        scrollbar: { verticalScrollbarSize: 10, horizontalScrollbarSize: 10 },
       }}
     />
   );
