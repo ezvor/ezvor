@@ -106,9 +106,16 @@ function RoadmapView({ roadmap, icon }: { roadmap: Roadmap; icon: LucideIcon }) 
             <p className="text-sm font-semibold">{stage.title}</p>
             <ul className="mt-1.5 space-y-1">
               {stage.items.map((item) => (
-                <li key={item} className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-success/70" />
-                  {item}
+                <li key={item}>
+                  <a
+                    href={getDocLink(item)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="group flex items-center gap-2 rounded-md px-1.5 py-1 text-sm text-muted-foreground transition-colors hover:bg-primary/10 hover:text-foreground"
+                  >
+                    <ExternalLink className="h-3.5 w-3.5 shrink-0 text-primary-glow/70 transition-colors group-hover:text-primary-glow" />
+                    <span className="underline-offset-4 group-hover:underline">{item}</span>
+                  </a>
                 </li>
               ))}
             </ul>
