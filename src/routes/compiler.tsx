@@ -388,7 +388,7 @@ function CompilerPage() {
                   <div className="flex h-full flex-col">
                     <div className="flex items-center justify-between border-b border-border/40 bg-card/20 px-4 py-1.5">
                       <span className="text-xs font-medium text-muted-foreground">
-                        Input (stdin)
+                        Input
                       </span>
                       {stdin && (
                         <button
