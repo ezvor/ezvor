@@ -217,7 +217,7 @@ function JobsSearch() {
       {/* Results */}
       {loading && (
         <div className="mt-8 flex items-center gap-2 rounded-2xl border border-border/60 bg-card p-6 text-sm text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin" /> Searching LinkedIn, Indeed, Glassdoor and remote boards…
+          <Loader2 className="h-4 w-4 animate-spin" /> Searching LinkedIn, Indeed, Glassdoor, Greenhouse, Lever, Ashby, YC and remote boards…
         </div>
       )}
 
