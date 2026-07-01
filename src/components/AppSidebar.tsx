@@ -9,6 +9,7 @@ import {
   Code2,
   ListChecks,
   TerminalSquare,
+  Gauge,
   LogOut,
   LogIn,
 } from "lucide-react";
