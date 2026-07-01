@@ -110,7 +110,7 @@ function JobsSearch() {
   const [timeframe, setTimeframe] = useState<(typeof TIMEFRAMES)[number]>("Any time");
   const [workMode, setWorkMode] = useState<(typeof WORK_MODES)[number]>("Any");
   const [location, setLocation] = useState<(typeof LOCATIONS)[number]>("Pakistan");
-  const [activeSources, setActiveSources] = useState<string[]>([...SOURCES]);
+  const [activeSources, setActiveSources] = useState<(typeof SOURCES)[number][]>([...SOURCES]);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<JobResult[] | null>(null);
   const [searched, setSearched] = useState("");
