@@ -43,7 +43,7 @@ export const ensureProfile = createServerFn({ method: "POST" })
       .maybeSingle();
 
     if (existing) {
-      const patch: Record<string, unknown> = {};
+      const patch: { display_name?: string | null; avatar_url?: string | null } = {};
       if (!existing.display_name && data.displayName) patch.display_name = data.displayName;
       if (!existing.avatar_url && data.avatarUrl) patch.avatar_url = data.avatarUrl;
       if (Object.keys(patch).length) {
@@ -165,7 +165,9 @@ export const saveExchange = createServerFn({ method: "POST" })
     ]);
     if (insErr) throw new Error(insErr.message);
 
-    const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    const patch: { updated_at: string; title?: string } = {
+      updated_at: new Date().toISOString(),
+    };
     if (!thread.title || thread.title === "New chat") {
       const clean = data.userContent.trim().replace(/\s+/g, " ");
       patch.title = clean.length > 60 ? clean.slice(0, 60) + "…" : clean;
