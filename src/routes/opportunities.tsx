@@ -217,7 +217,7 @@ function JobsSearch() {
       {/* Results */}
       {loading && (
         <div className="mt-8 flex items-center gap-2 rounded-2xl border border-border/60 bg-card p-6 text-sm text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin" /> Searching LinkedIn, Indeed, Glassdoor and remote boards…
+          <Loader2 className="h-4 w-4 animate-spin" /> Searching LinkedIn, Indeed, Glassdoor, Greenhouse, Lever, Ashby, YC and remote boards…
         </div>
       )}
 
@@ -255,8 +255,9 @@ function JobsSearch() {
           <Briefcase className="mx-auto h-8 w-8 text-primary-glow" />
           <p className="mt-3 font-display text-lg font-semibold">Search live jobs across every major platform</p>
           <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
-            Type a role like “Associate Software Engineer”, pick your filters, and pull fresh postings from LinkedIn,
-            Indeed, Glassdoor and top remote boards.
+            Type a role like “Associate Software Engineer”, pick your filters, and pull fresh, verified postings from
+            LinkedIn, Indeed, Glassdoor, Greenhouse, Lever, Ashby, Y Combinator and top remote boards. Every result is
+            AI-checked to be a real, currently-open listing.
           </p>
         </div>
       )}
