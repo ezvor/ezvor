@@ -8,6 +8,7 @@ import {
   Sparkles,
   Rocket,
   Code2,
+  ListChecks,
 } from "lucide-react";
 
 import {
