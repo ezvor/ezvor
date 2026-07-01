@@ -79,6 +79,9 @@ import { executeCode, submitCode } from "@/lib/judge.functions";
 import type { SubmitResult } from "@/lib/judge.functions";
 
 export const Route = createFileRoute("/playground")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    problem: typeof search.problem === "string" ? search.problem : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Code Playground — LeetCode-style Online Judge | PathPilot" },
@@ -252,6 +255,14 @@ function PlaygroundPage() {
   useEffect(() => {
     setSolved(loadSet(SOLVED_KEY));
   }, []);
+
+  // Deep-link support: /playground?problem=<slug> selects a matching problem.
+  const search = Route.useSearch();
+  useEffect(() => {
+    if (search.problem && PROBLEMS.some((p) => p.id === search.problem)) {
+      setProblemId(search.problem);
+    }
+  }, [search.problem]);
 
   // Load saved code (or starter) whenever the problem/language changes.
   useEffect(() => {
