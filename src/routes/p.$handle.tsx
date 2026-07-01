@@ -154,7 +154,7 @@ function ProofPage() {
 
       {/* Pillars */}
       <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        {readiness.pillars.map((p, i) => {
+        {readiness.pillars.map((p: ReadinessPillar, i: number) => {
           const Icon = pillarIcons[p.key];
           return (
             <motion.div
