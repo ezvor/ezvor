@@ -354,7 +354,7 @@ function CompilerPage() {
 
         {/* Editor + output */}
         <div className="min-h-0 flex-1">
-          <ResizablePanelGroup direction="horizontal">
+          <ResizablePanelGroup orientation="horizontal">
             <ResizablePanel defaultSize={58} minSize={30}>
               <div className="flex h-full flex-col">
                 <div className="flex items-center gap-2 border-b border-border/40 bg-card/20 px-4 py-1.5 text-xs text-muted-foreground">
@@ -382,7 +382,7 @@ function CompilerPage() {
             <ResizableHandle withHandle />
 
             <ResizablePanel defaultSize={42} minSize={24}>
-              <ResizablePanelGroup direction="vertical">
+              <ResizablePanelGroup orientation="vertical">
                 {/* Input */}
                 <ResizablePanel defaultSize={35} minSize={12}>
                   <div className="flex h-full flex-col">
