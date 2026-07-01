@@ -225,7 +225,7 @@ function ProofPage() {
             <Layers className="h-5 w-5 text-primary-glow" /> Skills mastered for {roadmap.role}
           </h2>
           <div className="flex flex-wrap gap-2">
-            {proof.completedItems.map((item) => (
+            {proof.completedItems.map((item: string) => (
               <span
                 key={item}
                 className="inline-flex items-center gap-1.5 rounded-full border border-success/30 bg-success/10 px-3 py-1.5 text-xs font-medium"
