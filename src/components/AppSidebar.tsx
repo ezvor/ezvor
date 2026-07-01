@@ -33,8 +33,7 @@ import { useAuth } from "@/hooks/useAuth";
 const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Opportunities", url: "/opportunities", icon: Compass },
-  { title: "Roadmaps", url: "/roadmaps", icon: Map },
-  { title: "Skill Graphs", url: "/graph", icon: Workflow },
+  { title: "Roadmaps & Graphs", url: "/roadmaps", icon: Map },
   { title: "DSA Arena", url: "/playground", icon: Code2 },
   { title: "Code Compiler", url: "/compiler", icon: TerminalSquare },
   { title: "Problem Catalog", url: "/problems", icon: ListChecks },
