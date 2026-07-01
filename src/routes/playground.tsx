@@ -79,6 +79,9 @@ import { executeCode, submitCode } from "@/lib/judge.functions";
 import type { SubmitResult } from "@/lib/judge.functions";
 
 export const Route = createFileRoute("/playground")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    problem: typeof search.problem === "string" ? search.problem : undefined,
+  }),
   head: () => ({
     meta: [
       { title: "Code Playground — LeetCode-style Online Judge | PathPilot" },
