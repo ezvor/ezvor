@@ -23,6 +23,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AuthenticatedAdvisorRouteImport } from './routes/_authenticated/advisor'
 import { Route as AuthenticatedAdvisorIndexRouteImport } from './routes/_authenticated/advisor.index'
+import { Route as AuthenticatedAdvisorThreadIdRouteImport } from './routes/_authenticated/advisor.$threadId'
 import { Route as ApiPublicHooksRefreshStatusesRouteImport } from './routes/api/public/hooks/refresh-statuses'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -95,6 +96,12 @@ const AuthenticatedAdvisorIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedAdvisorRoute,
   } as any)
+const AuthenticatedAdvisorThreadIdRoute =
+  AuthenticatedAdvisorThreadIdRouteImport.update({
+    id: '/$threadId',
+    path: '/$threadId',
+    getParentRoute: () => AuthenticatedAdvisorRoute,
+  } as any)
 const ApiPublicHooksRefreshStatusesRoute =
   ApiPublicHooksRefreshStatusesRouteImport.update({
     id: '/api/public/hooks/refresh-statuses',
@@ -114,6 +121,7 @@ export interface FileRoutesByFullPath {
   '/roadmaps': typeof RoadmapsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/chat': typeof ApiChatRoute
+  '/advisor/$threadId': typeof AuthenticatedAdvisorThreadIdRoute
   '/advisor/': typeof AuthenticatedAdvisorIndexRoute
   '/api/public/hooks/refresh-statuses': typeof ApiPublicHooksRefreshStatusesRoute
 }
@@ -129,6 +137,7 @@ export interface FileRoutesByTo {
   '/roadmaps': typeof RoadmapsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/api/chat': typeof ApiChatRoute
+  '/advisor/$threadId': typeof AuthenticatedAdvisorThreadIdRoute
   '/api/public/hooks/refresh-statuses': typeof ApiPublicHooksRefreshStatusesRoute
 }
 export interface FileRoutesById {
@@ -146,6 +155,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/advisor': typeof AuthenticatedAdvisorRouteWithChildren
   '/api/chat': typeof ApiChatRoute
+  '/_authenticated/advisor/$threadId': typeof AuthenticatedAdvisorThreadIdRoute
   '/_authenticated/advisor/': typeof AuthenticatedAdvisorIndexRoute
   '/api/public/hooks/refresh-statuses': typeof ApiPublicHooksRefreshStatusesRoute
 }
@@ -163,6 +173,7 @@ export interface FileRouteTypes {
     | '/roadmaps'
     | '/sitemap.xml'
     | '/api/chat'
+    | '/advisor/$threadId'
     | '/advisor/'
     | '/api/public/hooks/refresh-statuses'
   fileRoutesByTo: FileRoutesByTo
@@ -178,6 +189,7 @@ export interface FileRouteTypes {
     | '/roadmaps'
     | '/sitemap.xml'
     | '/api/chat'
+    | '/advisor/$threadId'
     | '/api/public/hooks/refresh-statuses'
   id:
     | '__root__'
@@ -194,6 +206,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/_authenticated/advisor'
     | '/api/chat'
+    | '/_authenticated/advisor/$threadId'
     | '/_authenticated/advisor/'
     | '/api/public/hooks/refresh-statuses'
   fileRoutesById: FileRoutesById
@@ -314,6 +327,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdvisorIndexRouteImport
       parentRoute: typeof AuthenticatedAdvisorRoute
     }
+    '/_authenticated/advisor/$threadId': {
+      id: '/_authenticated/advisor/$threadId'
+      path: '/$threadId'
+      fullPath: '/advisor/$threadId'
+      preLoaderRoute: typeof AuthenticatedAdvisorThreadIdRouteImport
+      parentRoute: typeof AuthenticatedAdvisorRoute
+    }
     '/api/public/hooks/refresh-statuses': {
       id: '/api/public/hooks/refresh-statuses'
       path: '/api/public/hooks/refresh-statuses'
@@ -325,10 +345,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAdvisorRouteChildren {
+  AuthenticatedAdvisorThreadIdRoute: typeof AuthenticatedAdvisorThreadIdRoute
   AuthenticatedAdvisorIndexRoute: typeof AuthenticatedAdvisorIndexRoute
 }
 
 const AuthenticatedAdvisorRouteChildren: AuthenticatedAdvisorRouteChildren = {
+  AuthenticatedAdvisorThreadIdRoute: AuthenticatedAdvisorThreadIdRoute,
   AuthenticatedAdvisorIndexRoute: AuthenticatedAdvisorIndexRoute,
 }
 

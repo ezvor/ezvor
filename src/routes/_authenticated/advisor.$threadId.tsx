@@ -11,7 +11,6 @@ import {
   Check,
   Compass,
   LogOut,
-  Sparkles,
   ArrowUp,
 } from "lucide-react";
 import { toast } from "sonner";
