@@ -202,7 +202,14 @@ export const updateProfile = createServerFn({ method: "POST" })
   .handler(async ({ data, context }): Promise<{ ok: boolean; error?: string }> => {
     const { supabase, userId } = context;
 
-    const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    const patch: {
+      updated_at: string;
+      display_name?: string | null;
+      handle?: string | null;
+      headline?: string | null;
+      location?: string | null;
+      is_public?: boolean;
+    } = { updated_at: new Date().toISOString() };
     if (data.displayName !== undefined) patch.display_name = data.displayName;
     if (data.handle !== undefined) patch.handle = data.handle;
     if (data.headline !== undefined) patch.headline = data.headline;
