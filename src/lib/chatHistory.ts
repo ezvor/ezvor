@@ -14,7 +14,7 @@ export interface Conversation {
   updatedAt: number;
 }
 
-const STORAGE_KEY = "pathpilot.chat.history.v1";
+const STORAGE_KEY = "ezvor.chat.history.v1";
 
 function isBrowser() {
   return typeof window !== "undefined" && typeof localStorage !== "undefined";

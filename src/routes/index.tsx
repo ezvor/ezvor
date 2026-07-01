@@ -30,7 +30,7 @@ import { OPPORTUNITIES, ROADMAPS, RESOURCES, CATEGORIES } from "@/data/careerDat
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "PathPilot — Career Platform for Engineers" },
+      { title: "Ezvor — Career Platform for Engineers" },
       {
         name: "description",
         content:
@@ -412,11 +412,11 @@ function SectionHeading({
 }
 
 const terminalLines = [
-  { p: "$", c: "pathpilot init --role backend", muted: false },
+  { p: "$", c: "ezvor init --role backend", muted: false },
   { p: ">", c: "scanning opportunities…", muted: true },
   { p: "✓", c: "3 open programs match your profile", muted: false },
   { p: ">", c: "building roadmap: 4 stages, 5 months", muted: true },
-  { p: "✓", c: "ready. run `pathpilot start`", muted: false },
+  { p: "✓", c: "ready. run `ezvor start`", muted: false },
 ];
 
 function TerminalCard() {
@@ -439,7 +439,7 @@ function TerminalCard() {
         <span className="h-3 w-3 rounded-full bg-destructive/70" />
         <span className="h-3 w-3 rounded-full bg-warning/70" />
         <span className="h-3 w-3 rounded-full bg-success/70" />
-        <span className="ml-2 font-mono text-xs text-muted-foreground">pathpilot — zsh</span>
+        <span className="ml-2 font-mono text-xs text-muted-foreground">ezvor — zsh</span>
       </div>
       <div className="space-y-2 p-5 font-mono text-sm">
         {terminalLines.slice(0, shown).map((l, i) => (

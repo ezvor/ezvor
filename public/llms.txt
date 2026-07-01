@@ -1,4 +1,4 @@
-# PathPilot
+# Ezvor
 
 > Free AI-powered career guidance for students and professionals — personalized advice, learning roadmaps, free resources, and curated opportunities like GSoC, LFX, ICPC, and Meta Hacker Cup.
 

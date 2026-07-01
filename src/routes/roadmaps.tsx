@@ -43,7 +43,7 @@ import { generateRoadmap } from "@/lib/career.functions";
 export const Route = createFileRoute("/roadmaps")({
   head: () => ({
     meta: [
-      { title: "Career Roadmaps — Step-by-Step Tech Paths | PathPilot" },
+      { title: "Career Roadmaps — Step-by-Step Tech Paths | Ezvor" },
       {
         name: "description",
         content:

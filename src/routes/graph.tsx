@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/graph")({
   head: () => ({
     meta: [
-      { title: "Interactive Skill Graphs — Visual Roadmaps | PathPilot" },
+      { title: "Interactive Skill Graphs — Visual Roadmaps | Ezvor" },
       {
         name: "description",
         content:

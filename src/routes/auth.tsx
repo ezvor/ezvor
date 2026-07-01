@@ -19,11 +19,11 @@ export const Route = createFileRoute("/auth")({
   }),
   head: () => ({
     meta: [
-      { title: "Sign in · PathPilot AI Advisor" },
+      { title: "Sign in · Ezvor AI Advisor" },
       {
         name: "description",
         content:
-          "Sign in to PathPilot to save your AI career conversations, track history, and pick up where you left off.",
+          "Sign in to Ezvor to save your AI career conversations, track history, and pick up where you left off.",
       },
     ],
   }),
@@ -119,13 +119,13 @@ function AuthPage() {
           <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-primary shadow-glow">
             <Rocket className="h-5 w-5 text-primary-foreground" />
           </span>
-          <span className="font-display text-lg font-bold">PathPilot</span>
+          <span className="font-display text-lg font-bold">Ezvor</span>
         </Link>
 
         <div className="relative">
           <motion.img
             src={advisorOrb}
-            alt="PathPilot AI advisor"
+            alt="Ezvor AI advisor"
             width={220}
             height={220}
             loading="lazy"
@@ -169,7 +169,7 @@ function AuthPage() {
             <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-primary shadow-glow">
               <Rocket className="h-5 w-5 text-primary-foreground" />
             </span>
-            <span className="font-display text-lg font-bold">PathPilot</span>
+            <span className="font-display text-lg font-bold">Ezvor</span>
           </div>
 
           <h2 className="font-display text-2xl font-bold">
@@ -267,7 +267,7 @@ function AuthPage() {
           </form>
 
           <p className="mt-6 text-center text-sm text-muted-foreground">
-            {mode === "signin" ? "New to PathPilot?" : "Already have an account?"}{" "}
+            {mode === "signin" ? "New to Ezvor?" : "Already have an account?"}{" "}
             <button
               type="button"
               onClick={() => setMode(mode === "signin" ? "signup" : "signin")}

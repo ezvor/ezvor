@@ -78,7 +78,7 @@ export function AppSidebar() {
           {!collapsed && (
             <span className="flex flex-col leading-none">
               <span className="font-display text-lg font-bold text-sidebar-foreground">
-                PathPilot
+                Ezvor
               </span>
               <span className="text-[11px] text-muted-foreground">AI Career Guidance</span>
             </span>

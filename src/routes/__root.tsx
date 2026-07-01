@@ -81,14 +81,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "PathPilot — Free AI Career Guidance & Opportunities" },
+      { title: "Ezvor — Free AI Career Guidance & Opportunities" },
       {
         name: "description",
         content:
           "Free AI career copilot for students & professionals. Get personalized guidance, roadmaps, resources, and real opportunities like GSoC, LFX, ICPC, and Meta Hacker Cup.",
       },
-      { name: "author", content: "PathPilot" },
-      { property: "og:title", content: "PathPilot — Free AI Career Guidance & Opportunities" },
+      { name: "author", content: "Ezvor" },
+      { property: "og:title", content: "Ezvor — Free AI Career Guidance & Opportunities" },
       {
         property: "og:description",
         content:
@@ -97,7 +97,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:site", content: "@Lovable" },
-      { name: "twitter:title", content: "PathPilot — Free AI Career Guidance & Opportunities" },
+      { name: "twitter:title", content: "Ezvor — Free AI Career Guidance & Opportunities" },
       { name: "description", content: "Career Compass AI offers free, AI-powered career guidance with real-time opportunity data and personalized roadmaps." },
       { property: "og:description", content: "Career Compass AI offers free, AI-powered career guidance with real-time opportunity data and personalized roadmaps." },
       { name: "twitter:description", content: "Career Compass AI offers free, AI-powered career guidance with real-time opportunity data and personalized roadmaps." },
@@ -155,7 +155,7 @@ function RootComponent() {
                 <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
                 <div className="h-5 w-px bg-border" />
                 <span className="font-display text-sm font-semibold tracking-tight">
-                  PathPilot
+                  Ezvor
                 </span>
                 <span className="hidden text-xs text-muted-foreground sm:inline">
                   · Free AI career copilot

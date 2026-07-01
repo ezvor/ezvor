@@ -451,7 +451,7 @@ export const GRAPH_ROADMAPS: GraphRoadmap[] = [
         col: 0.5,
         desc: "GSoC, LFX, Outreachy, Summer of Bitcoin.",
         resources: [
-          { label: "Browse Opportunities", provider: "PathPilot", url: "/opportunities", kind: "Practice" },
+          { label: "Browse Opportunities", provider: "Ezvor", url: "/opportunities", kind: "Practice" },
         ],
       },
     ],
