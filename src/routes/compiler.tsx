@@ -403,7 +403,7 @@ function CompilerPage() {
                     <Textarea
                       value={stdin}
                       onChange={(e) => handleStdin(e.target.value)}
-                      placeholder="Type the input your program reads (optional)…"
+                      placeholder="Type input here before running (e.g. values your program reads with cin / input() / scanf)…"
                       className="min-h-0 flex-1 resize-none rounded-none border-0 bg-transparent font-mono text-sm focus-visible:ring-0"
                     />
                   </div>
