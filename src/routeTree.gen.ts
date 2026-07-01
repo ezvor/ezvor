@@ -21,6 +21,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
+import { Route as AuthenticatedReadinessRouteImport } from './routes/_authenticated/readiness'
 import { Route as AuthenticatedAdvisorRouteImport } from './routes/_authenticated/advisor'
 import { Route as AuthenticatedAdvisorIndexRouteImport } from './routes/_authenticated/advisor.index'
 import { Route as AuthenticatedAdvisorThreadIdRouteImport } from './routes/_authenticated/advisor.$threadId'
@@ -85,6 +86,11 @@ const ApiChatRoute = ApiChatRouteImport.update({
   path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedReadinessRoute = AuthenticatedReadinessRouteImport.update({
+  id: '/readiness',
+  path: '/readiness',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAdvisorRoute = AuthenticatedAdvisorRouteImport.update({
   id: '/advisor',
   path: '/advisor',
@@ -121,6 +127,7 @@ export interface FileRoutesByFullPath {
   '/roadmaps': typeof RoadmapsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/advisor': typeof AuthenticatedAdvisorRouteWithChildren
+  '/readiness': typeof AuthenticatedReadinessRoute
   '/api/chat': typeof ApiChatRoute
   '/advisor/$threadId': typeof AuthenticatedAdvisorThreadIdRoute
   '/advisor/': typeof AuthenticatedAdvisorIndexRoute
@@ -137,6 +144,7 @@ export interface FileRoutesByTo {
   '/resources': typeof ResourcesRoute
   '/roadmaps': typeof RoadmapsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/readiness': typeof AuthenticatedReadinessRoute
   '/api/chat': typeof ApiChatRoute
   '/advisor/$threadId': typeof AuthenticatedAdvisorThreadIdRoute
   '/advisor': typeof AuthenticatedAdvisorIndexRoute
@@ -156,6 +164,7 @@ export interface FileRoutesById {
   '/roadmaps': typeof RoadmapsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/advisor': typeof AuthenticatedAdvisorRouteWithChildren
+  '/_authenticated/readiness': typeof AuthenticatedReadinessRoute
   '/api/chat': typeof ApiChatRoute
   '/_authenticated/advisor/$threadId': typeof AuthenticatedAdvisorThreadIdRoute
   '/_authenticated/advisor/': typeof AuthenticatedAdvisorIndexRoute
@@ -175,6 +184,7 @@ export interface FileRouteTypes {
     | '/roadmaps'
     | '/sitemap.xml'
     | '/advisor'
+    | '/readiness'
     | '/api/chat'
     | '/advisor/$threadId'
     | '/advisor/'
@@ -191,6 +201,7 @@ export interface FileRouteTypes {
     | '/resources'
     | '/roadmaps'
     | '/sitemap.xml'
+    | '/readiness'
     | '/api/chat'
     | '/advisor/$threadId'
     | '/advisor'
@@ -209,6 +220,7 @@ export interface FileRouteTypes {
     | '/roadmaps'
     | '/sitemap.xml'
     | '/_authenticated/advisor'
+    | '/_authenticated/readiness'
     | '/api/chat'
     | '/_authenticated/advisor/$threadId'
     | '/_authenticated/advisor/'
@@ -317,6 +329,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/readiness': {
+      id: '/_authenticated/readiness'
+      path: '/readiness'
+      fullPath: '/readiness'
+      preLoaderRoute: typeof AuthenticatedReadinessRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/advisor': {
       id: '/_authenticated/advisor'
       path: '/advisor'
@@ -363,10 +382,12 @@ const AuthenticatedAdvisorRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdvisorRoute: typeof AuthenticatedAdvisorRouteWithChildren
+  AuthenticatedReadinessRoute: typeof AuthenticatedReadinessRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdvisorRoute: AuthenticatedAdvisorRouteWithChildren,
+  AuthenticatedReadinessRoute: AuthenticatedReadinessRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
