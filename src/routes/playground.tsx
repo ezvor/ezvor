@@ -432,8 +432,8 @@ function PlaygroundPage() {
               difficulty: problem.difficulty,
               topic: problem.topic ?? null,
               language: lang,
-              runtimeMs: res.runtimeMs ?? null,
-              memoryKb: res.memoryKb ?? null,
+              runtimeMs: res.runtimeMs != null ? Math.round(res.runtimeMs) : null,
+              memoryKb: res.memoryKb != null ? Math.round(res.memoryKb) : null,
             },
           }).catch(() => {
             /* proof sync is best-effort */
