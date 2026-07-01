@@ -63,6 +63,20 @@ const iconMap: Record<string, LucideIcon> = {
   ShieldCheck,
   GitBranch,
   Trophy,
+  Layers,
+  Bug,
+  LineChart,
+  Database,
+  Boxes,
+  Bot,
+  Smartphone,
+  Palette,
+  CloudCog,
+  DatabaseZap,
+  Network,
+  Briefcase,
+  Gamepad2,
+  Blocks,
 };
 
 function RoadmapView({ roadmap, icon }: { roadmap: Roadmap; icon: LucideIcon }) {
