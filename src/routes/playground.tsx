@@ -371,12 +371,35 @@ function PlaygroundPage() {
     return () => clearInterval(id);
   }, [timerOn]);
 
-  const goToProblem = useCallback((id: string) => {
-    setProblemId(id);
-    setListOpen(false);
-    setMobileTab("desc");
-    setLeftTab("description");
-  }, []);
+  const goToProblem = useCallback(
+    async (id: string) => {
+      setProblemId(id);
+      setListOpen(false);
+      setMobileTab("desc");
+      setLeftTab("description");
+      setRemoteError(null);
+
+      // Local curated problem → full in-app judge, no fetch needed.
+      if (PROBLEMS.some((p) => p.id === id)) {
+        setRemote(null);
+        return;
+      }
+
+      // Any other problem → fetch its full statement + starters and open in-app.
+      setRemote(null);
+      setRemoteLoading(true);
+      try {
+        const data = await getLeetFn({ data: { slug: id } });
+        setRemote(data);
+      } catch {
+        setRemoteError("Couldn't load this problem right now. Please try again.");
+      } finally {
+        setRemoteLoading(false);
+      }
+    },
+    [getLeetFn],
+  );
+
 
   const resetCode = () => {
     setCode(starterFor(problem, lang));
