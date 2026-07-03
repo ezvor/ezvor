@@ -259,6 +259,15 @@ function PlaygroundPage() {
     setSolved(loadSet(SOLVED_KEY));
   }, []);
 
+  // Load the full problem catalog (all problems) for the problem list.
+  useEffect(() => {
+    loadCatalog()
+      .then(setCatalog)
+      .catch(() => {
+        /* list falls back to the locally solvable problems */
+      });
+  }, []);
+
   // Deep-link support: /playground?problem=<slug> selects a matching problem.
   const search = Route.useSearch();
   useEffect(() => {
