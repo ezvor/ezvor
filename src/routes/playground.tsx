@@ -437,8 +437,19 @@ function PlaygroundPage() {
       const slug = problem.id;
       listSubsFn({ data: { slug } })
         .then((rows) => {
+          const mapped: Submission[] = rows.map((r) => ({
+            id: r.id,
+            status: r.status as SubStatus,
+            lang: r.language as LangKey,
+            langLabel: LANGUAGES.find((l) => l.key === r.language)?.label ?? r.language,
+            passed: r.passed,
+            total: r.total,
+            runtimeMs: r.runtimeMs,
+            memoryKb: r.memoryKb,
+            when: r.when,
+          }));
           setSubs((local) => {
-            const merged = [...rows, ...local];
+            const merged: Submission[] = [...mapped, ...local];
             const seen = new Set<string>();
             const dedup = merged.filter((s) => {
               const k = `${s.status}|${s.when}|${s.passed}|${s.total}`;
