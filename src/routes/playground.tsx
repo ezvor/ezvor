@@ -251,6 +251,11 @@ function PlaygroundPage() {
   const [topic, setTopic] = useState<string>("All");
   const [company, setCompany] = useState<string>("All");
 
+  // Remote problem (any of the 3,977) fetched from LeetCode and opened in-app.
+  const [remote, setRemote] = useState<LeetProblem | null>(null);
+  const [remoteLoading, setRemoteLoading] = useState(false);
+  const [remoteError, setRemoteError] = useState<string | null>(null);
+
   // Editable custom test cases (LeetCode "Case 1 / Case 2").
   const [caseInputs, setCaseInputs] = useState<string[]>(
     () => PROBLEMS[0].examples.map((e) => e.input),
