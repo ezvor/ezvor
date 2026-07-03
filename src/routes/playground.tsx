@@ -794,7 +794,8 @@ function PlaygroundPage() {
     <div className="h-full overflow-y-auto p-5">
       <div className="flex flex-wrap items-center gap-2">
         <h1 className="font-display text-xl font-bold">
-          {problemIndex + 1}. {problem.title}
+          {displayNo ? `${displayNo}. ` : ""}
+          {problem.title}
         </h1>
         {solved.has(problem.id) && (
           <span className="inline-flex items-center gap-1 rounded-full bg-success/15 px-2 py-0.5 text-xs font-medium text-success">
@@ -818,49 +819,129 @@ function PlaygroundPage() {
         <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground">
           {problem.topic}
         </span>
+        {isLocal ? (
+          <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-0.5 text-xs font-medium text-primary">
+            <CheckCircle2 className="h-3 w-3" /> Verified judge
+          </span>
+        ) : (
+          <a
+            href={`https://leetcode.com/problems/${problem.id}/`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground hover:text-foreground"
+          >
+            <ExternalLink className="h-3 w-3" /> View on LeetCode
+          </a>
+        )}
       </div>
 
-      <p className="mt-4 text-sm leading-relaxed text-foreground/90">
-        <Inline text={problem.description} />
-      </p>
-
-      <div className="mt-6 space-y-4">
-        {problem.examples.map((ex, i) => (
-          <div key={i}>
-            <p className="text-sm font-semibold">Example {i + 1}:</p>
-            <div className="mt-2 rounded-lg border-l-4 border-border bg-muted/30 p-3 text-xs">
-              <p>
-                <span className="font-semibold">Input:</span>
-                <pre className="mt-1 whitespace-pre-wrap font-mono text-foreground/90">{ex.input}</pre>
-              </p>
-              <p className="mt-2">
-                <span className="font-semibold">Output:</span>
-                <pre className="mt-1 whitespace-pre-wrap font-mono text-foreground/90">{ex.output}</pre>
-              </p>
-              {ex.explanation && (
-                <p className="mt-2 text-muted-foreground">
-                  <span className="font-semibold text-foreground/80">Explanation: </span>
-                  {ex.explanation}
-                </p>
-              )}
+      {/* ---- Remote (any LeetCode problem, opened in-app) ---- */}
+      {!isLocal && remoteLoading && (
+        <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" /> Loading problem…
+        </div>
+      )}
+      {!isLocal && !remoteLoading && remoteError && (
+        <div className="mt-6 rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+          {remoteError}
+        </div>
+      )}
+      {!isLocal && !remoteLoading && remote && (
+        <>
+          <div
+            className="lc-content mt-4"
+            // Content is fetched from LeetCode and sanitized server-side.
+            dangerouslySetInnerHTML={{ __html: remote.contentHtml }}
+          />
+          {remote.tags.length > 0 && (
+            <div className="mt-6 flex flex-wrap gap-1.5">
+              {remote.tags.map((t) => (
+                <span
+                  key={t.slug}
+                  className="rounded-full bg-muted px-2.5 py-0.5 text-[11px] text-muted-foreground"
+                >
+                  {t.name}
+                </span>
+              ))}
             </div>
+          )}
+          {remote.hints.length > 0 && (
+            <div className="mt-5">
+              <h3 className="text-sm font-semibold">Hints</h3>
+              <div className="mt-2 space-y-2">
+                {remote.hints.map((h, i) => (
+                  <details
+                    key={i}
+                    className="rounded-lg border border-border/60 bg-muted/20 p-3 text-xs"
+                  >
+                    <summary className="cursor-pointer font-medium text-foreground">
+                      Hint {i + 1}
+                    </summary>
+                    <div
+                      className="lc-content mt-2"
+                      dangerouslySetInnerHTML={{ __html: h }}
+                    />
+                  </details>
+                ))}
+              </div>
+            </div>
+          )}
+          <div className="mt-6 rounded-lg border border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground">
+            The official starter code is loaded in the editor. Write your solution
+            and <span className="font-medium text-foreground">Run</span> it against
+            your own inputs. Verified auto-judging + shareable proof is available on
+            the curated{" "}
+            <span className="font-medium text-primary">Solve here</span> problems.
           </div>
-        ))}
-      </div>
+        </>
+      )}
 
-      <h3 className="mt-6 text-sm font-semibold">I/O Format</h3>
-      <pre className="mt-2 whitespace-pre-wrap rounded-lg bg-muted/40 p-3 text-xs text-muted-foreground">
-        {problem.ioFormat}
-      </pre>
+      {/* ---- Local curated problem (full verified judge) ---- */}
+      {isLocal && (
+        <>
+          <p className="mt-4 text-sm leading-relaxed text-foreground/90">
+            <Inline text={problem.description} />
+          </p>
 
-      <h3 className="mt-6 text-sm font-semibold">Constraints:</h3>
-      <ul className="mt-2 list-inside list-disc space-y-1 text-xs text-muted-foreground">
-        {problem.constraints.map((c, i) => (
-          <li key={i} className="font-mono">
-            {c}
-          </li>
-        ))}
-      </ul>
+          <div className="mt-6 space-y-4">
+            {problem.examples.map((ex, i) => (
+              <div key={i}>
+                <p className="text-sm font-semibold">Example {i + 1}:</p>
+                <div className="mt-2 rounded-lg border-l-4 border-border bg-muted/30 p-3 text-xs">
+                  <p>
+                    <span className="font-semibold">Input:</span>
+                    <pre className="mt-1 whitespace-pre-wrap font-mono text-foreground/90">{ex.input}</pre>
+                  </p>
+                  <p className="mt-2">
+                    <span className="font-semibold">Output:</span>
+                    <pre className="mt-1 whitespace-pre-wrap font-mono text-foreground/90">{ex.output}</pre>
+                  </p>
+                  {ex.explanation && (
+                    <p className="mt-2 text-muted-foreground">
+                      <span className="font-semibold text-foreground/80">Explanation: </span>
+                      {ex.explanation}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <h3 className="mt-6 text-sm font-semibold">I/O Format</h3>
+          <pre className="mt-2 whitespace-pre-wrap rounded-lg bg-muted/40 p-3 text-xs text-muted-foreground">
+            {problem.ioFormat}
+          </pre>
+
+          <h3 className="mt-6 text-sm font-semibold">Constraints:</h3>
+          <ul className="mt-2 list-inside list-disc space-y-1 text-xs text-muted-foreground">
+            {problem.constraints.map((c, i) => (
+              <li key={i} className="font-mono">
+                {c}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
     </div>
   );
 
