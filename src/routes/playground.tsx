@@ -495,6 +495,12 @@ function PlaygroundPage() {
   );
 
   const handleSubmit = useCallback(async () => {
+    if (!isLocal) {
+      toast.info(
+        "Verified auto-judging is available on “Solve here” problems. Use Run to test your code on this one.",
+      );
+      return;
+    }
     setSubmitting(true);
     setBottomTab("result");
     try {
