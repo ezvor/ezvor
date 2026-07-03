@@ -647,9 +647,29 @@ function PlaygroundPage() {
         saveSubs(problem.id, next);
         return next;
       });
+      // Persist durable history to the cloud + refresh streak (signed-in).
+      if (signedIn) {
+        recordSubFn({
+          data: {
+            problemSlug: problem.id,
+            problemTitle: problem.title,
+            status,
+            language: lang,
+            passed: res.passedCount,
+            total: res.total,
+            runtimeMs: res.runtimeMs != null ? Math.round(res.runtimeMs) : null,
+            memoryKb: res.memoryKb != null ? Math.round(res.memoryKb) : null,
+          },
+        })
+          .then(() => refreshStreak())
+          .catch(() => {
+            /* history sync is best-effort */
+          });
+      }
     },
-    [lang, langLabel, problem.id],
+    [lang, langLabel, problem.id, problem.title, signedIn, recordSubFn, refreshStreak],
   );
+
 
   const handleSubmit = useCallback(async () => {
     if (!isLocal) {
