@@ -1387,7 +1387,8 @@ function PlaygroundPage() {
       <div className="fixed inset-0 z-50 flex flex-col bg-background">
         <div className="flex items-center justify-between border-b border-border/60 px-3 py-2">
           <span className="text-sm font-semibold">
-            {problemIndex + 1}. {problem.title}
+            {displayNo ? `${displayNo}. ` : ""}
+            {problem.title}
           </span>
           <div className="flex items-center gap-2">
             {RunSubmit}
