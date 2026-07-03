@@ -273,6 +273,40 @@ function PlaygroundPage() {
     () => PROBLEMS.findIndex((p) => p.id === problemId),
     [problemId],
   );
+  const localProblem = useMemo(
+    () => PROBLEMS.find((p) => p.id === problemId),
+    [problemId],
+  );
+  const isLocal = !!localProblem;
+
+  // Unified problem view-model: local (full judge) or a synthesized shell for a
+  // remote LeetCode problem opened in-app.
+  const problem = useMemo<Problem>(() => {
+    if (localProblem) return localProblem;
+    return {
+      id: problemId,
+      title: remote?.title ?? prettyFromSlug(problemId),
+      difficulty: remote?.difficulty ?? "Medium",
+      topic: remote?.tags?.[0]?.name ?? "LeetCode",
+      description: "",
+      ioFormat:
+        "Write your solution in the editor. Use the Input box (and add a driver/print if needed) to Run against your own cases.",
+      examples: [],
+      constraints: [],
+      starters: remote?.snippets ?? {},
+      harness: {},
+      tests: [],
+    };
+  }, [localProblem, remote, problemId]);
+
+  const problemIndex = useMemo(
+    () => PROBLEMS.findIndex((p) => p.id === problemId),
+    [problemId],
+  );
+  // Human-facing problem number (LeetCode frontend id for remote problems).
+  const displayNo = isLocal
+    ? String(problemIndex + 1)
+    : remote?.frontendId || "";
   const monacoLang = LANGUAGES.find((l) => l.key === lang)?.monaco ?? "plaintext";
   const langLabel = LANGUAGES.find((l) => l.key === lang)?.label ?? lang;
   const storageKey = `${CODE_PREFIX}.${problemId}.${lang}`;
@@ -280,6 +314,7 @@ function PlaygroundPage() {
   const runFn = useServerFn(executeCode);
   const submitFn = useServerFn(submitCode);
   const recordSolvedFn = useServerFn(recordSolved);
+  const getLeetFn = useServerFn(getLeetProblem);
 
   useEffect(() => {
     setSolved(loadSet(SOLVED_KEY));
