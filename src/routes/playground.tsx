@@ -268,11 +268,6 @@ function PlaygroundPage() {
 
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
 
-  const problem = useMemo(() => PROBLEMS.find((p) => p.id === problemId)!, [problemId]);
-  const problemIndex = useMemo(
-    () => PROBLEMS.findIndex((p) => p.id === problemId),
-    [problemId],
-  );
   const localProblem = useMemo(
     () => PROBLEMS.find((p) => p.id === problemId),
     [problemId],
