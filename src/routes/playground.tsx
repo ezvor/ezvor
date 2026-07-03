@@ -1697,6 +1697,83 @@ function PlaygroundPage() {
       <div className="mx-auto">{RunSubmit}</div>
 
       <div className="ml-auto flex items-center gap-1">
+        <Sheet open={streakOpen} onOpenChange={setStreakOpen}>
+          <SheetTrigger asChild>
+            <button
+              className={cn(
+                "flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold transition-colors hover:bg-muted/50",
+                streak && streak.current > 0
+                  ? "text-orange-500"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+              title="Practice streak"
+            >
+              <Flame
+                className={cn(
+                  "h-3.5 w-3.5",
+                  streak && streak.current > 0 && "fill-orange-500/20",
+                )}
+              />
+              <span className="tabular-nums">{streak?.current ?? 0}</span>
+            </button>
+          </SheetTrigger>
+          <SheetContent className="w-[320px] sm:w-[360px]">
+            <SheetHeader>
+              <SheetTitle className="flex items-center gap-2">
+                <Flame className="h-5 w-5 text-orange-500" /> Practice Streak
+              </SheetTitle>
+            </SheetHeader>
+            {signedIn ? (
+              <div className="mt-6 space-y-4">
+                <div className="rounded-xl border border-orange-500/30 bg-orange-500/5 p-5 text-center">
+                  <div className="flex items-center justify-center gap-2">
+                    <Flame className="h-8 w-8 fill-orange-500/20 text-orange-500" />
+                    <span className="font-display text-4xl font-bold text-orange-500">
+                      {streak?.current ?? 0}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    day{(streak?.current ?? 0) === 1 ? "" : "s"} in a row
+                  </p>
+                  {(streak?.todayCount ?? 0) === 0 ? (
+                    <p className="mt-3 text-xs text-warning">
+                      Submit a solution today to keep your streak alive 🔥
+                    </p>
+                  ) : (
+                    <p className="mt-3 text-xs text-success">
+                      ✓ {streak?.todayCount} submission{streak?.todayCount === 1 ? "" : "s"} today
+                    </p>
+                  )}
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
+                    <p className="font-display text-xl font-bold">{streak?.longest ?? 0}</p>
+                    <p className="text-[11px] text-muted-foreground">Longest</p>
+                  </div>
+                  <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
+                    <p className="font-display text-xl font-bold">{streak?.totalDays ?? 0}</p>
+                    <p className="text-[11px] text-muted-foreground">Active days</p>
+                  </div>
+                  <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
+                    <p className="font-display text-xl font-bold">{streak?.todayCount ?? 0}</p>
+                    <p className="text-[11px] text-muted-foreground">Today</p>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Your streak counts each day you submit at least one solution. Submit on the
+                  curated “Solve here” problems to build it up.
+                </p>
+              </div>
+            ) : (
+              <div className="mt-6 rounded-lg border border-border/60 bg-muted/20 p-4 text-sm text-muted-foreground">
+                Sign in to track your daily practice streak across all your devices.
+              </div>
+            )}
+          </SheetContent>
+        </Sheet>
+
+        <div className="mx-0.5 h-5 w-px bg-border" />
+
         <button
           onClick={() => setTimerOn((t) => !t)}
           className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
@@ -1705,6 +1782,7 @@ function PlaygroundPage() {
           {timerOn ? <Pause className="h-3.5 w-3.5" /> : <TimerIcon className="h-3.5 w-3.5" />}
           <span className="tabular-nums">{mm}:{ss}</span>
         </button>
+
         {seconds > 0 && (
           <IconBtn
             label="Reset timer"
