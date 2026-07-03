@@ -485,6 +485,65 @@ function PlaygroundPage() {
     return () => clearInterval(id);
   }, [timerOn]);
 
+  // Build a plain-text statement to feed the editorial generator.
+  const buildStatement = useCallback((): string => {
+    if (!isLocal) return remote?.contentHtml ?? "";
+    const parts: string[] = [problem.description];
+    problem.examples.forEach((ex, i) => {
+      parts.push(
+        `Example ${i + 1}:\nInput: ${ex.input}\nOutput: ${ex.output}${
+          ex.explanation ? `\nExplanation: ${ex.explanation}` : ""
+        }`,
+      );
+    });
+    if (problem.constraints.length) {
+      parts.push(`Constraints:\n${problem.constraints.join("\n")}`);
+    }
+    return parts.join("\n\n");
+  }, [isLocal, remote, problem]);
+
+  const loadEditorial = useCallback(
+    async (refresh = false) => {
+      // Wait for a remote problem's statement before generating.
+      if (!isLocal && !remote) return;
+      const slug = problem.id;
+      if (!refresh && editorialSlugRef.current === slug && editorial) return;
+      setEditorialLoading(true);
+      setEditorialError(null);
+      try {
+        const data = await getEditorialFn({
+          data: {
+            slug,
+            title: problem.title,
+            difficulty: problem.difficulty,
+            statement: buildStatement(),
+            refresh,
+          },
+        });
+        setEditorial(data);
+        editorialSlugRef.current = slug;
+        setSolApproach(0);
+      } catch {
+        setEditorialError(
+          "Couldn't generate the editorial right now. Please try again in a moment.",
+        );
+      } finally {
+        setEditorialLoading(false);
+      }
+    },
+    [isLocal, remote, problem, editorial, getEditorialFn, buildStatement],
+  );
+
+  // Auto-load the editorial when the user opens Editorial or Solutions.
+  useEffect(() => {
+    if (leftTab !== "editorial" && leftTab !== "solutions") return;
+    if (editorialLoading) return;
+    if (editorialSlugRef.current === problem.id && editorial) return;
+    void loadEditorial(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leftTab, problemId, remote]);
+
+
   const goToProblem = useCallback(
     async (id: string) => {
       setProblemId(id);
