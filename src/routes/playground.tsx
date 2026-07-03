@@ -351,6 +351,7 @@ function PlaygroundPage() {
   const recordSolvedFn = useServerFn(recordSolved);
   const getLeetFn = useServerFn(getLeetProblem);
   const getEditorialFn = useServerFn(getProblemEditorial);
+  const getHarnessFn = useServerFn(getProblemHarness);
   const recordSubFn = useServerFn(recordSubmissionDb);
   const listSubsFn = useServerFn(listSubmissions);
   const getStreakFn = useServerFn(getStreak);
