@@ -230,6 +230,11 @@ function PlaygroundPage() {
   const [mobileTab, setMobileTab] = useState<"desc" | "code" | "console">("desc");
   const [fullscreen, setFullscreen] = useState(false);
 
+  // Full catalog (all problems) + topic-wise / company-wise practice filters.
+  const [catalog, setCatalog] = useState<LcCatalog | null>(null);
+  const [topic, setTopic] = useState<string>("All");
+  const [company, setCompany] = useState<string>("All");
+
   // Editable custom test cases (LeetCode "Case 1 / Case 2").
   const [caseInputs, setCaseInputs] = useState<string[]>(
     () => PROBLEMS[0].examples.map((e) => e.input),
