@@ -349,7 +349,8 @@ function PlaygroundPage() {
   }, [storageKey]);
 
   // When a remote problem finishes loading, drop in its official starter code
-  // for the current language (unless the user already has saved code).
+  // for the current language — unless the user has real saved work (i.e. not the
+  // generic placeholder we may have written while the fetch was in flight).
   useEffect(() => {
     if (!remote) return;
     let saved: string | null = null;
@@ -358,7 +359,10 @@ function PlaygroundPage() {
     } catch {
       saved = null;
     }
-    if (!saved) setCode(starterFor(problem, lang));
+    const placeholder = (FALLBACK_STARTER[lang] ?? "// Write your solution here\n").trim();
+    if (!saved || saved.trim() === placeholder) {
+      setCode(starterFor(problem, lang));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [remote]);
 
