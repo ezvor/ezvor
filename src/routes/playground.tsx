@@ -25,6 +25,7 @@ import {
   Bookmark,
   History,
   BookOpen,
+  ExternalLink,
   Lightbulb,
   FileText,
   CloudUpload,
@@ -79,6 +80,13 @@ import { executeCode, submitCode } from "@/lib/judge.functions";
 import type { SubmitResult } from "@/lib/judge.functions";
 import { recordSolved } from "@/lib/readiness.functions";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  loadCatalog,
+  prettyTag,
+  SOLVABLE_SLUGS,
+  type LcCatalog,
+  type LcProblem,
+} from "@/data/leetcodeCatalog";
 
 export const Route = createFileRoute("/playground")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -86,7 +94,7 @@ export const Route = createFileRoute("/playground")({
   }),
   head: () => ({
     meta: [
-      { title: "Code Playground — LeetCode-style Online Judge | Ezvor" },
+      { title: "Practice — LeetCode-style Online Judge | Ezvor" },
       {
         name: "description",
         content:
@@ -230,6 +238,11 @@ function PlaygroundPage() {
   const [mobileTab, setMobileTab] = useState<"desc" | "code" | "console">("desc");
   const [fullscreen, setFullscreen] = useState(false);
 
+  // Full catalog (all problems) + topic-wise / company-wise practice filters.
+  const [catalog, setCatalog] = useState<LcCatalog | null>(null);
+  const [topic, setTopic] = useState<string>("All");
+  const [company, setCompany] = useState<string>("All");
+
   // Editable custom test cases (LeetCode "Case 1 / Case 2").
   const [caseInputs, setCaseInputs] = useState<string[]>(
     () => PROBLEMS[0].examples.map((e) => e.input),
@@ -257,6 +270,15 @@ function PlaygroundPage() {
 
   useEffect(() => {
     setSolved(loadSet(SOLVED_KEY));
+  }, []);
+
+  // Load the full problem catalog (all problems) for the problem list.
+  useEffect(() => {
+    loadCatalog()
+      .then(setCatalog)
+      .catch(() => {
+        /* list falls back to the locally solvable problems */
+      });
   }, []);
 
   // Deep-link support: /playground?problem=<slug> selects a matching problem.
@@ -463,14 +485,45 @@ function PlaygroundPage() {
     return () => window.removeEventListener("keydown", onKey);
   }, [handleRun, handleSubmit]);
 
-  const filtered = useMemo(() => {
+  const topics = useMemo(() => {
+    if (!catalog) return [] as string[];
+    const s = new Set<string>();
+    for (const p of catalog.problems) for (const t of p.tags) s.add(t);
+    return [...s].sort();
+  }, [catalog]);
+
+  const companies = useMemo(
+    () => (catalog ? [...catalog.companies].sort() : ([] as string[])),
+    [catalog],
+  );
+
+  // The full, filtered problem list — powers topic-wise & company-wise practice.
+  const catalogFiltered = useMemo(() => {
+    if (!catalog) return [] as LcProblem[];
     const q = query.trim().toLowerCase();
-    return PROBLEMS.filter((p) => {
+    const list = catalog.problems.filter((p) => {
       if (filter !== "All" && p.difficulty !== filter) return false;
-      if (!q) return true;
-      return p.title.toLowerCase().includes(q) || p.topic.toLowerCase().includes(q);
+      if (topic !== "All" && !p.tags.includes(topic)) return false;
+      if (company !== "All" && !p.companies.includes(company)) return false;
+      if (q && !`${p.id} ${p.title}`.toLowerCase().includes(q)) return false;
+      return true;
     });
-  }, [query, filter]);
+    return [...list].sort((a, b) => {
+      const sa = SOLVABLE_SLUGS.has(a.slug) ? 0 : 1;
+      const sb = SOLVABLE_SLUGS.has(b.slug) ? 0 : 1;
+      if (sa !== sb) return sa - sb;
+      return a.id - b.id;
+    });
+  }, [catalog, query, filter, topic, company]);
+
+  // Slugs the user can actually solve here, in current list order — this drives
+  // the "next relevant problem" navigation.
+  const solvableQueue = useMemo(
+    () => catalogFiltered.filter((p) => SOLVABLE_SLUGS.has(p.slug)).map((p) => p.slug),
+    [catalogFiltered],
+  );
+  const navQueue = solvableQueue.length ? solvableQueue : PROBLEMS.map((p) => p.id);
+  const navIndex = navQueue.indexOf(problemId);
 
   const busy = running || submitting;
 
@@ -491,17 +544,17 @@ function PlaygroundPage() {
 
   const ProblemList = (
     <div className="flex h-full flex-col">
-      <div className="border-b border-border/60 p-3">
+      <div className="space-y-2.5 border-b border-border/60 p-3">
         <div className="relative">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search problems…"
+            placeholder="Search all problems…"
             className="h-9 pl-8"
           />
         </div>
-        <div className="mt-2.5 flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1.5">
           {(["All", "Easy", "Medium", "Hard"] as const).map((f) => (
             <button
               key={f}
@@ -517,45 +570,118 @@ function PlaygroundPage() {
             </button>
           ))}
         </div>
-        <p className="mt-2 text-[11px] text-muted-foreground">
-          {solved.size}/{PROBLEMS.length} solved · {filtered.length} shown
+        <div className="grid grid-cols-2 gap-2">
+          <Select value={topic} onValueChange={setTopic}>
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue placeholder="Topic" />
+            </SelectTrigger>
+            <SelectContent className="max-h-72">
+              <SelectItem value="All">All topics</SelectItem>
+              {topics.map((t) => (
+                <SelectItem key={t} value={t}>
+                  {prettyTag(t)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={company} onValueChange={setCompany}>
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue placeholder="Company" />
+            </SelectTrigger>
+            <SelectContent className="max-h-72">
+              <SelectItem value="All">All companies</SelectItem>
+              {companies.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        {(topic !== "All" || company !== "All") && (
+          <button
+            onClick={() => {
+              setTopic("All");
+              setCompany("All");
+            }}
+            className="text-[11px] font-medium text-primary hover:underline"
+          >
+            Clear list filters
+          </button>
+        )}
+        <p className="text-[11px] text-muted-foreground">
+          {!catalog
+            ? "Loading full problem set…"
+            : `${catalogFiltered.length.toLocaleString()} problems · ${solvableQueue.length} solvable here`}
         </p>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto p-2">
-        {filtered.map((p, i) => {
-          const isActive = p.id === problemId;
-          const isSolved = solved.has(p.id);
-          return (
-            <button
-              key={p.id}
-              onClick={() => goToProblem(p.id)}
-              className={cn(
-                "mb-1 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors",
-                isActive ? "bg-accent/60" : "hover:bg-muted/50",
-              )}
-            >
+        {!catalog && (
+          <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" /> Loading problems…
+          </div>
+        )}
+        {(catalog ? catalogFiltered.slice(0, 250) : []).map((p) => {
+          const solvable = SOLVABLE_SLUGS.has(p.slug);
+          const isActive = solvable && p.slug === problemId;
+          const isSolved = solved.has(p.slug);
+          const inner = (
+            <>
               <span className="w-5 shrink-0 text-center">
                 {isSolved ? (
                   <CheckCircle2 className="h-4 w-4 text-success" />
-                ) : (
+                ) : solvable ? (
                   <Circle className="mx-auto h-3.5 w-3.5 text-muted-foreground/40" />
+                ) : (
+                  <ExternalLink className="mx-auto h-3.5 w-3.5 text-muted-foreground/40" />
                 )}
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-medium text-foreground">
-                  {i + 1}. {p.title}
+                  {p.id}. {p.title}
                 </span>
-                <span className="block truncate text-[11px] text-muted-foreground">{p.topic}</span>
+                <span className="flex items-center gap-1.5 truncate text-[11px] text-muted-foreground">
+                  {p.tags.slice(0, 2).map(prettyTag).join(" · ") || "General"}
+                  {solvable && (
+                    <span className="rounded bg-primary/15 px-1 py-0.5 text-[9px] font-semibold uppercase text-primary">
+                      Solve here
+                    </span>
+                  )}
+                </span>
               </span>
               <span className={cn("shrink-0 text-xs font-semibold", diffColor(p.difficulty))}>
                 {p.difficulty}
               </span>
+            </>
+          );
+          const cls = cn(
+            "mb-1 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors",
+            isActive ? "bg-accent/60" : "hover:bg-muted/50",
+          );
+          return solvable ? (
+            <button key={p.slug} onClick={() => goToProblem(p.slug)} className={cls}>
+              {inner}
             </button>
+          ) : (
+            <a
+              key={p.slug}
+              href={`https://leetcode.com/problems/${p.slug}/`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cls}
+            >
+              {inner}
+            </a>
           );
         })}
-        {filtered.length === 0 && (
+        {catalog && catalogFiltered.length === 0 && (
           <p className="px-3 py-6 text-center text-sm text-muted-foreground">
             No problems match your search.
+          </p>
+        )}
+        {catalog && catalogFiltered.length > 250 && (
+          <p className="px-3 py-3 text-center text-[11px] text-muted-foreground">
+            Showing first 250 — refine filters to narrow the list.
           </p>
         )}
       </div>
@@ -957,8 +1083,9 @@ function PlaygroundPage() {
   const ss = String(seconds % 60).padStart(2, "0");
 
   const shuffleProblem = () => {
-    const others = PROBLEMS.filter((p) => p.id !== problemId);
-    goToProblem(others[Math.floor(Math.random() * others.length)].id);
+    const pool = navQueue.filter((id) => id !== problemId);
+    if (!pool.length) return;
+    goToProblem(pool[Math.floor(Math.random() * pool.length)]);
   };
 
   const RunSubmit = (
@@ -1013,15 +1140,19 @@ function PlaygroundPage() {
       <div className="hidden items-center gap-0.5 sm:flex">
         <IconBtn
           label="Previous problem"
-          onClick={() => goToProblem(PROBLEMS[problemIndex - 1].id)}
-          disabled={problemIndex === 0}
+          onClick={() => navIndex > 0 && goToProblem(navQueue[navIndex - 1])}
+          disabled={navIndex <= 0}
         >
           <ChevronLeft className="h-4 w-4" />
         </IconBtn>
         <IconBtn
           label="Next problem"
-          onClick={() => goToProblem(PROBLEMS[problemIndex + 1].id)}
-          disabled={problemIndex === PROBLEMS.length - 1}
+          onClick={() =>
+            navIndex >= 0 &&
+            navIndex < navQueue.length - 1 &&
+            goToProblem(navQueue[navIndex + 1])
+          }
+          disabled={navIndex === -1 || navIndex >= navQueue.length - 1}
         >
           <ChevronRight className="h-4 w-4" />
         </IconBtn>
