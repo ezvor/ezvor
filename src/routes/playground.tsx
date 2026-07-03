@@ -139,6 +139,13 @@ function starterFor(problem: Problem, lang: LangKey): string {
   return problem.starters[lang] ?? FALLBACK_STARTER[lang] ?? "// Write your solution here\n";
 }
 
+function prettyFromSlug(slug: string): string {
+  return slug
+    .split("-")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
 function diffColor(d: Difficulty) {
   if (d === "Easy") return "text-success";
   if (d === "Medium") return "text-warning";
