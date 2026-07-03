@@ -733,9 +733,11 @@ function PlaygroundPage() {
 
 
   const handleSubmit = useCallback(async () => {
-    if (!isLocal) {
+    if (!judgeable) {
       toast.info(
-        "Verified auto-judging is available on “Solve here” problems. Use Run to test your code on this one.",
+        harnessLoading
+          ? "Preparing the judge for this problem — try again in a moment."
+          : "Auto-judging isn't ready for this problem yet. Use Run to test your code.",
       );
       return;
     }
