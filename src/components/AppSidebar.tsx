@@ -34,7 +34,7 @@ const items = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Readiness", url: "/readiness", icon: Gauge },
   { title: "Roadmaps & Graphs", url: "/roadmaps", icon: Map },
-  { title: "Practice", url: "/playground", icon: Code2 },
+  { title: "EzCode", url: "/playground", icon: Code2 },
   { title: "Compiler", url: "/compiler", icon: TerminalSquare },
   { title: "Problem Catalog", url: "/problems", icon: ListChecks },
   { title: "Opportunities", url: "/opportunities", icon: Compass },
