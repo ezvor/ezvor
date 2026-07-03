@@ -567,6 +567,7 @@ function PlaygroundPage() {
       setMobileTab("desc");
       setLeftTab("description");
       setRemoteError(null);
+      setHarness(null);
 
       // Local curated problem → full in-app judge, no fetch needed.
       if (PROBLEMS.some((p) => p.id === id)) {
