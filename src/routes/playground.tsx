@@ -491,17 +491,17 @@ function PlaygroundPage() {
 
   const ProblemList = (
     <div className="flex h-full flex-col">
-      <div className="border-b border-border/60 p-3">
+      <div className="space-y-2.5 border-b border-border/60 p-3">
         <div className="relative">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search problems…"
+            placeholder="Search all problems…"
             className="h-9 pl-8"
           />
         </div>
-        <div className="mt-2.5 flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1.5">
           {(["All", "Easy", "Medium", "Hard"] as const).map((f) => (
             <button
               key={f}
@@ -517,45 +517,118 @@ function PlaygroundPage() {
             </button>
           ))}
         </div>
-        <p className="mt-2 text-[11px] text-muted-foreground">
-          {solved.size}/{PROBLEMS.length} solved · {filtered.length} shown
+        <div className="grid grid-cols-2 gap-2">
+          <Select value={topic} onValueChange={setTopic}>
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue placeholder="Topic" />
+            </SelectTrigger>
+            <SelectContent className="max-h-72">
+              <SelectItem value="All">All topics</SelectItem>
+              {topics.map((t) => (
+                <SelectItem key={t} value={t}>
+                  {prettyTag(t)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Select value={company} onValueChange={setCompany}>
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue placeholder="Company" />
+            </SelectTrigger>
+            <SelectContent className="max-h-72">
+              <SelectItem value="All">All companies</SelectItem>
+              {companies.map((c) => (
+                <SelectItem key={c} value={c}>
+                  {c}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        {(topic !== "All" || company !== "All") && (
+          <button
+            onClick={() => {
+              setTopic("All");
+              setCompany("All");
+            }}
+            className="text-[11px] font-medium text-primary hover:underline"
+          >
+            Clear list filters
+          </button>
+        )}
+        <p className="text-[11px] text-muted-foreground">
+          {!catalog
+            ? "Loading full problem set…"
+            : `${catalogFiltered.length.toLocaleString()} problems · ${solvableQueue.length} solvable here`}
         </p>
       </div>
       <div className="min-h-0 flex-1 overflow-y-auto p-2">
-        {filtered.map((p, i) => {
-          const isActive = p.id === problemId;
-          const isSolved = solved.has(p.id);
-          return (
-            <button
-              key={p.id}
-              onClick={() => goToProblem(p.id)}
-              className={cn(
-                "mb-1 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors",
-                isActive ? "bg-accent/60" : "hover:bg-muted/50",
-              )}
-            >
+        {!catalog && (
+          <div className="flex items-center justify-center gap-2 py-10 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" /> Loading problems…
+          </div>
+        )}
+        {(catalog ? catalogFiltered.slice(0, 250) : []).map((p) => {
+          const solvable = SOLVABLE_SLUGS.has(p.slug);
+          const isActive = solvable && p.slug === problemId;
+          const isSolved = solved.has(p.slug);
+          const inner = (
+            <>
               <span className="w-5 shrink-0 text-center">
                 {isSolved ? (
                   <CheckCircle2 className="h-4 w-4 text-success" />
-                ) : (
+                ) : solvable ? (
                   <Circle className="mx-auto h-3.5 w-3.5 text-muted-foreground/40" />
+                ) : (
+                  <ExternalLink className="mx-auto h-3.5 w-3.5 text-muted-foreground/40" />
                 )}
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-medium text-foreground">
-                  {i + 1}. {p.title}
+                  {p.id}. {p.title}
                 </span>
-                <span className="block truncate text-[11px] text-muted-foreground">{p.topic}</span>
+                <span className="flex items-center gap-1.5 truncate text-[11px] text-muted-foreground">
+                  {p.tags.slice(0, 2).map(prettyTag).join(" · ") || "General"}
+                  {solvable && (
+                    <span className="rounded bg-primary/15 px-1 py-0.5 text-[9px] font-semibold uppercase text-primary">
+                      Solve here
+                    </span>
+                  )}
+                </span>
               </span>
               <span className={cn("shrink-0 text-xs font-semibold", diffColor(p.difficulty))}>
                 {p.difficulty}
               </span>
+            </>
+          );
+          const cls = cn(
+            "mb-1 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors",
+            isActive ? "bg-accent/60" : "hover:bg-muted/50",
+          );
+          return solvable ? (
+            <button key={p.slug} onClick={() => goToProblem(p.slug)} className={cls}>
+              {inner}
             </button>
+          ) : (
+            <a
+              key={p.slug}
+              href={`https://leetcode.com/problems/${p.slug}/`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={cls}
+            >
+              {inner}
+            </a>
           );
         })}
-        {filtered.length === 0 && (
+        {catalog && catalogFiltered.length === 0 && (
           <p className="px-3 py-6 text-center text-sm text-muted-foreground">
             No problems match your search.
+          </p>
+        )}
+        {catalog && catalogFiltered.length > 250 && (
+          <p className="px-3 py-3 text-center text-[11px] text-muted-foreground">
+            Showing first 250 — refine filters to narrow the list.
           </p>
         )}
       </div>
