@@ -324,12 +324,13 @@ function PlaygroundPage() {
       });
   }, []);
 
-  // Deep-link support: /playground?problem=<slug> selects a matching problem.
+  // Deep-link support: /playground?problem=<slug> opens that problem (local or
+  // remote) directly, no redirect.
   const search = Route.useSearch();
   useEffect(() => {
-    if (search.problem && PROBLEMS.some((p) => p.id === search.problem)) {
-      setProblemId(search.problem);
-    }
+    if (!search.problem || search.problem === problemId) return;
+    void goToProblem(search.problem);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search.problem]);
 
   // Load saved code (or starter) whenever the problem/language changes.
@@ -347,13 +348,28 @@ function PlaygroundPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storageKey]);
 
+  // When a remote problem finishes loading, drop in its official starter code
+  // for the current language (unless the user already has saved code).
+  useEffect(() => {
+    if (!remote) return;
+    let saved: string | null = null;
+    try {
+      saved = localStorage.getItem(storageKey);
+    } catch {
+      saved = null;
+    }
+    if (!saved) setCode(starterFor(problem, lang));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [remote]);
+
   // Reset editable cases + submissions when problem changes.
   useEffect(() => {
-    setCaseInputs(problem.examples.map((e) => e.input));
+    const ex = problem.examples.map((e) => e.input);
+    setCaseInputs(ex.length ? ex : [""]);
     setActiveCase(0);
     setSubs(loadSubs(problem.id));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [problemId]);
+  }, [problemId, remote]);
 
   // Persist code on change.
   useEffect(() => {
