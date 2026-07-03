@@ -253,5 +253,63 @@
     color: var(--color-muted-foreground);
     margin: 0.6rem 0;
   }
+
+  /* LeetCode problem statement HTML (EzCode remote problems) */
+  .lc-content {
+    font-size: 0.875rem;
+    line-height: 1.65;
+    color: color-mix(in oklab, var(--color-foreground) 92%, transparent);
+  }
+  .lc-content p {
+    margin: 0.7rem 0;
+  }
+  .lc-content strong,
+  .lc-content b {
+    color: var(--color-foreground);
+    font-weight: 600;
+  }
+  .lc-content code {
+    background: var(--color-muted);
+    border-radius: 0.3rem;
+    padding: 0.1rem 0.35rem;
+    font-family: var(--font-mono, monospace);
+    font-size: 0.82em;
+  }
+  .lc-content pre {
+    background: var(--color-muted);
+    border-radius: 0.6rem;
+    padding: 0.85rem;
+    overflow-x: auto;
+    margin: 0.7rem 0;
+    white-space: pre-wrap;
+    font-size: 0.8rem;
+  }
+  .lc-content ul {
+    list-style: disc;
+    padding-left: 1.3rem;
+    margin: 0.6rem 0;
+  }
+  .lc-content ol {
+    list-style: decimal;
+    padding-left: 1.3rem;
+    margin: 0.6rem 0;
+  }
+  .lc-content li {
+    margin: 0.3rem 0;
+  }
+  .lc-content a {
+    color: var(--color-primary-glow);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+  }
+  .lc-content img {
+    max-width: 100%;
+    border-radius: 0.5rem;
+    margin: 0.6rem 0;
+  }
+  .lc-content sup {
+    font-size: 0.7em;
+    vertical-align: super;
+  }
 }
 
