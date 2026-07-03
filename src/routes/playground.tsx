@@ -798,7 +798,7 @@ function PlaygroundPage() {
       setSubmitting(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lang, code, problem, recordSubmission]);
+  }, [lang, code, problem, recordSubmission, judgeable, harnessLoading]);
 
   // Keyboard shortcuts: Ctrl/Cmd+Enter = Run, Ctrl/Cmd+Shift+Enter = Submit.
   useEffect(() => {
