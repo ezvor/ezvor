@@ -91,6 +91,7 @@ import {
 } from "@/data/leetcodeCatalog";
 import { getLeetProblem, type LeetProblem } from "@/lib/leetcode.functions";
 import { getProblemEditorial, type EditorialData } from "@/lib/editorial.functions";
+import { getProblemHarness, type HarnessData } from "@/lib/harness.functions";
 import {
   recordSubmissionDb,
   listSubmissions,
@@ -265,6 +266,11 @@ function PlaygroundPage() {
   const [remoteLoading, setRemoteLoading] = useState(false);
   const [remoteError, setRemoteError] = useState<string | null>(null);
 
+  // AI-generated + cached execution harness for a remote problem, so it can be
+  // Run and auto-judged in-app exactly like the curated set.
+  const [harness, setHarness] = useState<HarnessData | null>(null);
+  const [harnessLoading, setHarnessLoading] = useState(false);
+
   // Editable custom test cases (LeetCode "Case 1 / Case 2").
   const [caseInputs, setCaseInputs] = useState<string[]>(
     () => PROBLEMS[0].examples.map((e) => e.input),
@@ -300,9 +306,12 @@ function PlaygroundPage() {
   const isLocal = !!localProblem;
 
   // Unified problem view-model: local (full judge) or a synthesized shell for a
-  // remote LeetCode problem opened in-app.
+  // remote LeetCode problem opened in-app. When an AI harness is available the
+  // remote problem gains real tests + a runnable wrapper, so Run/Submit work
+  // exactly like the curated set.
   const problem = useMemo<Problem>(() => {
     if (localProblem) return localProblem;
+    const tests = harness?.tests ?? [];
     return {
       id: problemId,
       title: remote?.title ?? prettyFromSlug(problemId),
@@ -310,14 +319,20 @@ function PlaygroundPage() {
       topic: remote?.tags?.[0]?.name ?? "LeetCode",
       description: "",
       ioFormat:
+        harness?.ioFormat ||
         "Write your solution in the editor. Use the Input box (and add a driver/print if needed) to Run against your own cases.",
-      examples: [],
+      examples: tests
+        .filter((t) => !t.hidden)
+        .map((t) => ({ input: t.input, output: t.expected })),
       constraints: [],
       starters: remote?.snippets ?? {},
-      harness: {},
-      tests: [],
+      harness: harness?.harness ?? {},
+      tests,
     };
-  }, [localProblem, remote, problemId]);
+  }, [localProblem, remote, harness, problemId]);
+
+  // A problem is auto-judgeable in-app when it's curated OR we have a harness.
+  const judgeable = isLocal || (!!harness && harness.tests.length > 0);
 
   const problemIndex = useMemo(
     () => PROBLEMS.findIndex((p) => p.id === problemId),
