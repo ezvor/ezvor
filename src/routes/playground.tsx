@@ -713,17 +713,19 @@ function PlaygroundPage() {
         )}
         {(catalog ? catalogFiltered.slice(0, 250) : []).map((p) => {
           const solvable = SOLVABLE_SLUGS.has(p.slug);
-          const isActive = solvable && p.slug === problemId;
+          const isActive = p.slug === problemId;
           const isSolved = solved.has(p.slug);
-          const inner = (
-            <>
+          const cls = cn(
+            "mb-1 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors",
+            isActive ? "bg-accent/60" : "hover:bg-muted/50",
+          );
+          return (
+            <button key={p.slug} onClick={() => goToProblem(p.slug)} className={cls}>
               <span className="w-5 shrink-0 text-center">
                 {isSolved ? (
                   <CheckCircle2 className="h-4 w-4 text-success" />
-                ) : solvable ? (
-                  <Circle className="mx-auto h-3.5 w-3.5 text-muted-foreground/40" />
                 ) : (
-                  <ExternalLink className="mx-auto h-3.5 w-3.5 text-muted-foreground/40" />
+                  <Circle className="mx-auto h-3.5 w-3.5 text-muted-foreground/40" />
                 )}
               </span>
               <span className="min-w-0 flex-1">
@@ -742,26 +744,7 @@ function PlaygroundPage() {
               <span className={cn("shrink-0 text-xs font-semibold", diffColor(p.difficulty))}>
                 {p.difficulty}
               </span>
-            </>
-          );
-          const cls = cn(
-            "mb-1 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors",
-            isActive ? "bg-accent/60" : "hover:bg-muted/50",
-          );
-          return solvable ? (
-            <button key={p.slug} onClick={() => goToProblem(p.slug)} className={cls}>
-              {inner}
             </button>
-          ) : (
-            <a
-              key={p.slug}
-              href={`https://leetcode.com/problems/${p.slug}/`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={cls}
-            >
-              {inner}
-            </a>
           );
         })}
         {catalog && catalogFiltered.length === 0 && (
