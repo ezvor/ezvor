@@ -1013,15 +1013,19 @@ function PlaygroundPage() {
       <div className="hidden items-center gap-0.5 sm:flex">
         <IconBtn
           label="Previous problem"
-          onClick={() => goToProblem(PROBLEMS[problemIndex - 1].id)}
-          disabled={problemIndex === 0}
+          onClick={() => navIndex > 0 && goToProblem(navQueue[navIndex - 1])}
+          disabled={navIndex <= 0}
         >
           <ChevronLeft className="h-4 w-4" />
         </IconBtn>
         <IconBtn
           label="Next problem"
-          onClick={() => goToProblem(PROBLEMS[problemIndex + 1].id)}
-          disabled={problemIndex === PROBLEMS.length - 1}
+          onClick={() =>
+            navIndex >= 0 &&
+            navIndex < navQueue.length - 1 &&
+            goToProblem(navQueue[navIndex + 1])
+          }
+          disabled={navIndex === -1 || navIndex >= navQueue.length - 1}
         >
           <ChevronRight className="h-4 w-4" />
         </IconBtn>
