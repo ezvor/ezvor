@@ -908,14 +908,14 @@ function PlaygroundPage() {
               <div key={i}>
                 <p className="text-sm font-semibold">Example {i + 1}:</p>
                 <div className="mt-2 rounded-lg border-l-4 border-border bg-muted/30 p-3 text-xs">
-                  <p>
+                  <div>
                     <span className="font-semibold">Input:</span>
                     <pre className="mt-1 whitespace-pre-wrap font-mono text-foreground/90">{ex.input}</pre>
-                  </p>
-                  <p className="mt-2">
+                  </div>
+                  <div className="mt-2">
                     <span className="font-semibold">Output:</span>
                     <pre className="mt-1 whitespace-pre-wrap font-mono text-foreground/90">{ex.output}</pre>
-                  </p>
+                  </div>
                   {ex.explanation && (
                     <p className="mt-2 text-muted-foreground">
                       <span className="font-semibold text-foreground/80">Explanation: </span>
