@@ -1257,10 +1257,19 @@ function PlaygroundPage() {
       </Button>
       <Button
         size="sm"
-        className="h-8 gap-1.5 bg-success text-success-foreground hover:bg-success/90"
+        className={cn(
+          "h-8 gap-1.5",
+          isLocal
+            ? "bg-success text-success-foreground hover:bg-success/90"
+            : "bg-muted text-muted-foreground hover:bg-muted/80",
+        )}
         onClick={handleSubmit}
         disabled={busy}
-        title="Submit (⌘/Ctrl + Shift + Enter)"
+        title={
+          isLocal
+            ? "Submit (⌘/Ctrl + Shift + Enter)"
+            : "Verified judging is available on “Solve here” problems"
+        }
       >
         {submitting ? (
           <Loader2 className="h-3.5 w-3.5 animate-spin" />
