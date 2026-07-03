@@ -1712,16 +1712,18 @@ function PlaygroundPage() {
         size="sm"
         className={cn(
           "h-8 gap-1.5",
-          isLocal
+          judgeable
             ? "bg-success text-success-foreground hover:bg-success/90"
             : "bg-muted text-muted-foreground hover:bg-muted/80",
         )}
         onClick={handleSubmit}
-        disabled={busy}
+        disabled={busy || harnessLoading}
         title={
-          isLocal
+          judgeable
             ? "Submit (⌘/Ctrl + Shift + Enter)"
-            : "Verified judging is available on “Solve here” problems"
+            : harnessLoading
+              ? "Preparing the judge for this problem…"
+              : "Auto-judging isn't available for this problem"
         }
       >
         {submitting ? (
