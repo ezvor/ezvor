@@ -33,6 +33,8 @@ import {
   X,
   Timer as TimerIcon,
   Pause,
+  Flame,
+  Copy,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -88,6 +90,13 @@ import {
   type LcProblem,
 } from "@/data/leetcodeCatalog";
 import { getLeetProblem, type LeetProblem } from "@/lib/leetcode.functions";
+import { getProblemEditorial, type EditorialData } from "@/lib/editorial.functions";
+import {
+  recordSubmissionDb,
+  listSubmissions,
+  getStreak,
+  type StreakInfo,
+} from "@/lib/submissions.functions";
 
 export const Route = createFileRoute("/playground")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -266,7 +275,23 @@ function PlaygroundPage() {
   const [seconds, setSeconds] = useState(0);
   const [timerOn, setTimerOn] = useState(false);
 
+  // Editorial + worked solutions (AI-generated, cached per problem).
+  const [editorial, setEditorial] = useState<EditorialData | null>(null);
+  const [editorialLoading, setEditorialLoading] = useState(false);
+  const [editorialError, setEditorialError] = useState<string | null>(null);
+  const editorialSlugRef = useRef<string | null>(null);
+  // Solutions tab: which approach + which language (C++ by default).
+  const [solApproach, setSolApproach] = useState(0);
+  const [solLang, setSolLang] = useState<LangKey>("cpp");
+  const [copied, setCopied] = useState(false);
+
+  // Practice streak (signed-in users).
+  const [streak, setStreak] = useState<StreakInfo | null>(null);
+  const [streakOpen, setStreakOpen] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
+
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+
 
   const localProblem = useMemo(
     () => PROBLEMS.find((p) => p.id === problemId),
@@ -310,10 +335,41 @@ function PlaygroundPage() {
   const submitFn = useServerFn(submitCode);
   const recordSolvedFn = useServerFn(recordSolved);
   const getLeetFn = useServerFn(getLeetProblem);
+  const getEditorialFn = useServerFn(getProblemEditorial);
+  const recordSubFn = useServerFn(recordSubmissionDb);
+  const listSubsFn = useServerFn(listSubmissions);
+  const getStreakFn = useServerFn(getStreak);
 
   useEffect(() => {
     setSolved(loadSet(SOLVED_KEY));
   }, []);
+
+  const refreshStreak = useCallback(() => {
+    getStreakFn()
+      .then((s) => setStreak(s))
+      .catch(() => {
+        /* streak is best-effort */
+      });
+  }, [getStreakFn]);
+
+  // Detect sign-in and load the practice streak.
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setSignedIn(true);
+        refreshStreak();
+      } else {
+        setSignedIn(false);
+      }
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      setSignedIn(!!session);
+      if (session) refreshStreak();
+      else setStreak(null);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, [refreshStreak]);
+
 
   // Load the full problem catalog (all problems) for the problem list.
   useEffect(() => {
