@@ -957,8 +957,9 @@ function PlaygroundPage() {
   const ss = String(seconds % 60).padStart(2, "0");
 
   const shuffleProblem = () => {
-    const others = PROBLEMS.filter((p) => p.id !== problemId);
-    goToProblem(others[Math.floor(Math.random() * others.length)].id);
+    const pool = navQueue.filter((id) => id !== problemId);
+    if (!pool.length) return;
+    goToProblem(pool[Math.floor(Math.random() * pool.length)]);
   };
 
   const RunSubmit = (
