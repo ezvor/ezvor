@@ -25,6 +25,7 @@ import {
   Bookmark,
   History,
   BookOpen,
+  ExternalLink,
   Lightbulb,
   FileText,
   CloudUpload,
