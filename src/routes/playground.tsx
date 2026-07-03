@@ -1059,11 +1059,16 @@ function PlaygroundPage() {
         <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground">
           {problem.topic}
         </span>
-        {isLocal ? (
+        {judgeable ? (
           <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-0.5 text-xs font-medium text-primary">
-            <CheckCircle2 className="h-3 w-3" /> Verified judge
+            <CheckCircle2 className="h-3 w-3" /> Auto-judge ready
           </span>
-        ) : (
+        ) : harnessLoading ? (
+          <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+            <Loader2 className="h-3 w-3 animate-spin" /> Preparing judge…
+          </span>
+        ) : null}
+        {!isLocal && (
           <a
             href={`https://leetcode.com/problems/${problem.id}/`}
             target="_blank"
