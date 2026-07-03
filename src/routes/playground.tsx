@@ -463,14 +463,45 @@ function PlaygroundPage() {
     return () => window.removeEventListener("keydown", onKey);
   }, [handleRun, handleSubmit]);
 
-  const filtered = useMemo(() => {
+  const topics = useMemo(() => {
+    if (!catalog) return [] as string[];
+    const s = new Set<string>();
+    for (const p of catalog.problems) for (const t of p.tags) s.add(t);
+    return [...s].sort();
+  }, [catalog]);
+
+  const companies = useMemo(
+    () => (catalog ? [...catalog.companies].sort() : ([] as string[])),
+    [catalog],
+  );
+
+  // The full, filtered problem list — powers topic-wise & company-wise practice.
+  const catalogFiltered = useMemo(() => {
+    if (!catalog) return [] as LcProblem[];
     const q = query.trim().toLowerCase();
-    return PROBLEMS.filter((p) => {
+    const list = catalog.problems.filter((p) => {
       if (filter !== "All" && p.difficulty !== filter) return false;
-      if (!q) return true;
-      return p.title.toLowerCase().includes(q) || p.topic.toLowerCase().includes(q);
+      if (topic !== "All" && !p.tags.includes(topic)) return false;
+      if (company !== "All" && !p.companies.includes(company)) return false;
+      if (q && !`${p.id} ${p.title}`.toLowerCase().includes(q)) return false;
+      return true;
     });
-  }, [query, filter]);
+    return [...list].sort((a, b) => {
+      const sa = SOLVABLE_SLUGS.has(a.slug) ? 0 : 1;
+      const sb = SOLVABLE_SLUGS.has(b.slug) ? 0 : 1;
+      if (sa !== sb) return sa - sb;
+      return a.id - b.id;
+    });
+  }, [catalog, query, filter, topic, company]);
+
+  // Slugs the user can actually solve here, in current list order — this drives
+  // the "next relevant problem" navigation.
+  const solvableQueue = useMemo(
+    () => catalogFiltered.filter((p) => SOLVABLE_SLUGS.has(p.slug)).map((p) => p.slug),
+    [catalogFiltered],
+  );
+  const navQueue = solvableQueue.length ? solvableQueue : PROBLEMS.map((p) => p.id);
+  const navIndex = navQueue.indexOf(problemId);
 
   const busy = running || submitting;
 
