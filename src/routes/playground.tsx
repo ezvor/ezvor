@@ -94,7 +94,7 @@ export const Route = createFileRoute("/playground")({
   }),
   head: () => ({
     meta: [
-      { title: "Code Playground — LeetCode-style Online Judge | Ezvor" },
+      { title: "Practice — LeetCode-style Online Judge | Ezvor" },
       {
         name: "description",
         content:
