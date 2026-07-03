@@ -79,6 +79,13 @@ import { executeCode, submitCode } from "@/lib/judge.functions";
 import type { SubmitResult } from "@/lib/judge.functions";
 import { recordSolved } from "@/lib/readiness.functions";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  loadCatalog,
+  prettyTag,
+  SOLVABLE_SLUGS,
+  type LcCatalog,
+  type LcProblem,
+} from "@/data/leetcodeCatalog";
 
 export const Route = createFileRoute("/playground")({
   validateSearch: (search: Record<string, unknown>) => ({
