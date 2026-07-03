@@ -211,6 +211,24 @@ export type Database = {
         }
         Relationships: []
       }
+      problem_harnesses: {
+        Row: {
+          created_at: string
+          data: Json
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          data: Json
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          slug?: string
+        }
+        Relationships: []
+      }
       problem_solutions: {
         Row: {
           created_at: string

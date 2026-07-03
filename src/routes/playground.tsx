@@ -91,6 +91,7 @@ import {
 } from "@/data/leetcodeCatalog";
 import { getLeetProblem, type LeetProblem } from "@/lib/leetcode.functions";
 import { getProblemEditorial, type EditorialData } from "@/lib/editorial.functions";
+import { getProblemHarness, type HarnessData } from "@/lib/harness.functions";
 import {
   recordSubmissionDb,
   listSubmissions,
@@ -265,6 +266,11 @@ function PlaygroundPage() {
   const [remoteLoading, setRemoteLoading] = useState(false);
   const [remoteError, setRemoteError] = useState<string | null>(null);
 
+  // AI-generated + cached execution harness for a remote problem, so it can be
+  // Run and auto-judged in-app exactly like the curated set.
+  const [harness, setHarness] = useState<HarnessData | null>(null);
+  const [harnessLoading, setHarnessLoading] = useState(false);
+
   // Editable custom test cases (LeetCode "Case 1 / Case 2").
   const [caseInputs, setCaseInputs] = useState<string[]>(
     () => PROBLEMS[0].examples.map((e) => e.input),
@@ -300,9 +306,12 @@ function PlaygroundPage() {
   const isLocal = !!localProblem;
 
   // Unified problem view-model: local (full judge) or a synthesized shell for a
-  // remote LeetCode problem opened in-app.
+  // remote LeetCode problem opened in-app. When an AI harness is available the
+  // remote problem gains real tests + a runnable wrapper, so Run/Submit work
+  // exactly like the curated set.
   const problem = useMemo<Problem>(() => {
     if (localProblem) return localProblem;
+    const tests = harness?.tests ?? [];
     return {
       id: problemId,
       title: remote?.title ?? prettyFromSlug(problemId),
@@ -310,14 +319,20 @@ function PlaygroundPage() {
       topic: remote?.tags?.[0]?.name ?? "LeetCode",
       description: "",
       ioFormat:
+        harness?.ioFormat ||
         "Write your solution in the editor. Use the Input box (and add a driver/print if needed) to Run against your own cases.",
-      examples: [],
+      examples: tests
+        .filter((t) => !t.hidden)
+        .map((t) => ({ input: t.input, output: t.expected })),
       constraints: [],
       starters: remote?.snippets ?? {},
-      harness: {},
-      tests: [],
+      harness: harness?.harness ?? {},
+      tests,
     };
-  }, [localProblem, remote, problemId]);
+  }, [localProblem, remote, harness, problemId]);
+
+  // A problem is auto-judgeable in-app when it's curated OR we have a harness.
+  const judgeable = isLocal || (!!harness && harness.tests.length > 0);
 
   const problemIndex = useMemo(
     () => PROBLEMS.findIndex((p) => p.id === problemId),
@@ -336,6 +351,7 @@ function PlaygroundPage() {
   const recordSolvedFn = useServerFn(recordSolved);
   const getLeetFn = useServerFn(getLeetProblem);
   const getEditorialFn = useServerFn(getProblemEditorial);
+  const getHarnessFn = useServerFn(getProblemHarness);
   const recordSubFn = useServerFn(recordSubmissionDb);
   const listSubsFn = useServerFn(listSubmissions);
   const getStreakFn = useServerFn(getStreak);
@@ -421,6 +437,50 @@ function PlaygroundPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [remote]);
+
+  // When a remote problem loads, generate (or fetch cached) its execution
+  // harness + tests so it can be Run and auto-judged in-app like the curated set.
+  useEffect(() => {
+    if (!remote) return;
+    const slug = remote.slug;
+    let cancelled = false;
+    setHarnessLoading(true);
+    setHarness(null);
+    getHarnessFn({
+      data: {
+        slug,
+        title: remote.title,
+        difficulty: remote.difficulty,
+        statement: remote.contentHtml,
+        exampleTestcases: remote.exampleTestcases,
+        pythonSignature: remote.snippets.python ?? "",
+      },
+    })
+      .then((h) => {
+        if (!cancelled && h.slug === slug) setHarness(h);
+      })
+      .catch(() => {
+        /* fall back to Run-only mode for this problem */
+      })
+      .finally(() => {
+        if (!cancelled) setHarnessLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [remote]);
+
+  // When a harness arrives, seed the editable test cases from its visible tests.
+  useEffect(() => {
+    if (!harness) return;
+    const ex = harness.tests.filter((t) => !t.hidden).map((t) => t.input);
+    if (ex.length) {
+      setCaseInputs(ex);
+      setActiveCase(0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [harness]);
 
   // Reset editable cases + submissions + editorial when problem changes.
   useEffect(() => {
@@ -551,6 +611,7 @@ function PlaygroundPage() {
       setMobileTab("desc");
       setLeftTab("description");
       setRemoteError(null);
+      setHarness(null);
 
       // Local curated problem → full in-app judge, no fetch needed.
       if (PROBLEMS.some((p) => p.id === id)) {
@@ -672,9 +733,11 @@ function PlaygroundPage() {
 
 
   const handleSubmit = useCallback(async () => {
-    if (!isLocal) {
+    if (!judgeable) {
       toast.info(
-        "Verified auto-judging is available on “Solve here” problems. Use Run to test your code on this one.",
+        harnessLoading
+          ? "Preparing the judge for this problem — try again in a moment."
+          : "Auto-judging isn't ready for this problem yet. Use Run to test your code.",
       );
       return;
     }
@@ -735,7 +798,7 @@ function PlaygroundPage() {
       setSubmitting(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lang, code, problem, recordSubmission]);
+  }, [lang, code, problem, recordSubmission, judgeable, harnessLoading]);
 
   // Keyboard shortcuts: Ctrl/Cmd+Enter = Run, Ctrl/Cmd+Shift+Enter = Submit.
   useEffect(() => {
@@ -996,11 +1059,16 @@ function PlaygroundPage() {
         <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground">
           {problem.topic}
         </span>
-        {isLocal ? (
+        {judgeable ? (
           <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-0.5 text-xs font-medium text-primary">
-            <CheckCircle2 className="h-3 w-3" /> Verified judge
+            <CheckCircle2 className="h-3 w-3" /> Auto-judge ready
           </span>
-        ) : (
+        ) : harnessLoading ? (
+          <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground">
+            <Loader2 className="h-3 w-3 animate-spin" /> Preparing judge…
+          </span>
+        ) : null}
+        {!isLocal && (
           <a
             href={`https://leetcode.com/problems/${problem.id}/`}
             target="_blank"
@@ -1064,11 +1132,29 @@ function PlaygroundPage() {
             </div>
           )}
           <div className="mt-6 rounded-lg border border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground">
-            The official starter code is loaded in the editor. Write your solution
-            and <span className="font-medium text-foreground">Run</span> it against
-            your own inputs. Verified auto-judging + shareable proof is available on
-            the curated{" "}
-            <span className="font-medium text-primary">Solve here</span> problems.
+            {judgeable ? (
+              <>
+                The official starter is loaded in the editor. Press{" "}
+                <span className="font-medium text-foreground">Run</span> to test the
+                sample cases, or <span className="font-medium text-foreground">Submit</span>{" "}
+                to auto-judge against the full hidden test set — solved problems count
+                toward your streak &amp; readiness proof.
+              </>
+            ) : harnessLoading ? (
+              <>
+                Preparing the in-app judge for this problem… you can start writing your
+                solution now — <span className="font-medium text-foreground">Run</span>{" "}
+                and <span className="font-medium text-foreground">Submit</span> unlock
+                the moment it's ready.
+              </>
+            ) : (
+              <>
+                The official starter is loaded in the editor. Auto-judging couldn't be
+                prepared for this problem — use{" "}
+                <span className="font-medium text-foreground">Run</span> with your own
+                inputs to test your solution.
+              </>
+            )}
           </div>
         </>
       )}
@@ -1626,16 +1712,18 @@ function PlaygroundPage() {
         size="sm"
         className={cn(
           "h-8 gap-1.5",
-          isLocal
+          judgeable
             ? "bg-success text-success-foreground hover:bg-success/90"
             : "bg-muted text-muted-foreground hover:bg-muted/80",
         )}
         onClick={handleSubmit}
-        disabled={busy}
+        disabled={busy || harnessLoading}
         title={
-          isLocal
+          judgeable
             ? "Submit (⌘/Ctrl + Shift + Enter)"
-            : "Verified judging is available on “Solve here” problems"
+            : harnessLoading
+              ? "Preparing the judge for this problem…"
+              : "Auto-judging isn't available for this problem"
         }
       >
         {submitting ? (
