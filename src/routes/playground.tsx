@@ -1132,11 +1132,29 @@ function PlaygroundPage() {
             </div>
           )}
           <div className="mt-6 rounded-lg border border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground">
-            The official starter code is loaded in the editor. Write your solution
-            and <span className="font-medium text-foreground">Run</span> it against
-            your own inputs. Verified auto-judging + shareable proof is available on
-            the curated{" "}
-            <span className="font-medium text-primary">Solve here</span> problems.
+            {judgeable ? (
+              <>
+                The official starter is loaded in the editor. Press{" "}
+                <span className="font-medium text-foreground">Run</span> to test the
+                sample cases, or <span className="font-medium text-foreground">Submit</span>{" "}
+                to auto-judge against the full hidden test set — solved problems count
+                toward your streak &amp; readiness proof.
+              </>
+            ) : harnessLoading ? (
+              <>
+                Preparing the in-app judge for this problem… you can start writing your
+                solution now — <span className="font-medium text-foreground">Run</span>{" "}
+                and <span className="font-medium text-foreground">Submit</span> unlock
+                the moment it's ready.
+              </>
+            ) : (
+              <>
+                The official starter is loaded in the editor. Auto-judging couldn't be
+                prepared for this problem — use{" "}
+                <span className="font-medium text-foreground">Run</span> with your own
+                inputs to test your solution.
+              </>
+            )}
           </div>
         </>
       )}
