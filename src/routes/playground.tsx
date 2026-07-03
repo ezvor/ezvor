@@ -438,6 +438,50 @@ function PlaygroundPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [remote]);
 
+  // When a remote problem loads, generate (or fetch cached) its execution
+  // harness + tests so it can be Run and auto-judged in-app like the curated set.
+  useEffect(() => {
+    if (!remote) return;
+    const slug = remote.slug;
+    let cancelled = false;
+    setHarnessLoading(true);
+    setHarness(null);
+    getHarnessFn({
+      data: {
+        slug,
+        title: remote.title,
+        difficulty: remote.difficulty,
+        statement: remote.contentHtml,
+        exampleTestcases: remote.exampleTestcases,
+        pythonSignature: remote.snippets.python ?? "",
+      },
+    })
+      .then((h) => {
+        if (!cancelled && h.slug === slug) setHarness(h);
+      })
+      .catch(() => {
+        /* fall back to Run-only mode for this problem */
+      })
+      .finally(() => {
+        if (!cancelled) setHarnessLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [remote]);
+
+  // When a harness arrives, seed the editable test cases from its visible tests.
+  useEffect(() => {
+    if (!harness) return;
+    const ex = harness.tests.filter((t) => !t.hidden).map((t) => t.input);
+    if (ex.length) {
+      setCaseInputs(ex);
+      setActiveCase(0);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [harness]);
+
   // Reset editable cases + submissions + editorial when problem changes.
   useEffect(() => {
     const ex = problem.examples.map((e) => e.input);
