@@ -282,7 +282,7 @@ function CompilerPage() {
               <Terminal className="h-4 w-4 text-primary-foreground" />
             </span>
             <div className="leading-tight">
-              <p className="text-sm font-semibold">Code Compiler</p>
+              <p className="text-sm font-semibold">Compiler</p>
               <p className="text-[11px] text-muted-foreground">
                 Write, compile &amp; run — 8 languages
               </p>
