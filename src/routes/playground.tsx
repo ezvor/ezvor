@@ -422,14 +422,41 @@ function PlaygroundPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [remote]);
 
-  // Reset editable cases + submissions when problem changes.
+  // Reset editable cases + submissions + editorial when problem changes.
   useEffect(() => {
     const ex = problem.examples.map((e) => e.input);
     setCaseInputs(ex.length ? ex : [""]);
     setActiveCase(0);
     setSubs(loadSubs(problem.id));
+    setEditorial(null);
+    setEditorialError(null);
+    setSolApproach(0);
+    editorialSlugRef.current = null;
+    // Pull durable submission history from the cloud (signed-in users).
+    if (signedIn) {
+      const slug = problem.id;
+      listSubsFn({ data: { slug } })
+        .then((rows) => {
+          setSubs((local) => {
+            const merged = [...rows, ...local];
+            const seen = new Set<string>();
+            const dedup = merged.filter((s) => {
+              const k = `${s.status}|${s.when}|${s.passed}|${s.total}`;
+              if (seen.has(k)) return false;
+              seen.add(k);
+              return true;
+            });
+            dedup.sort((a, b) => b.when - a.when);
+            return dedup.slice(0, 50);
+          });
+        })
+        .catch(() => {
+          /* fall back to local history */
+        });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [problemId, remote]);
+  }, [problemId, remote, signedIn]);
+
 
   // Persist code on change.
   useEffect(() => {
