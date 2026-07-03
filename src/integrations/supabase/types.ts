@@ -103,6 +103,48 @@ export type Database = {
         }
         Relationships: []
       }
+      code_submissions: {
+        Row: {
+          created_at: string
+          id: string
+          language: string
+          memory_kb: number | null
+          passed: number
+          problem_slug: string
+          problem_title: string | null
+          runtime_ms: number | null
+          status: string
+          total: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          language: string
+          memory_kb?: number | null
+          passed?: number
+          problem_slug: string
+          problem_title?: string | null
+          runtime_ms?: number | null
+          status: string
+          total?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          language?: string
+          memory_kb?: number | null
+          passed?: number
+          problem_slug?: string
+          problem_title?: string | null
+          runtime_ms?: number | null
+          status?: string
+          total?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       opportunity_status: {
         Row: {
           checked_at: string
@@ -166,6 +208,24 @@ export type Database = {
           opp_id?: string
           reason?: string | null
           source_url?: string | null
+        }
+        Relationships: []
+      }
+      problem_solutions: {
+        Row: {
+          created_at: string
+          data: Json
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          data: Json
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          slug?: string
         }
         Relationships: []
       }

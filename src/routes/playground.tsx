@@ -33,6 +33,8 @@ import {
   X,
   Timer as TimerIcon,
   Pause,
+  Flame,
+  Copy,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -88,6 +90,13 @@ import {
   type LcProblem,
 } from "@/data/leetcodeCatalog";
 import { getLeetProblem, type LeetProblem } from "@/lib/leetcode.functions";
+import { getProblemEditorial, type EditorialData } from "@/lib/editorial.functions";
+import {
+  recordSubmissionDb,
+  listSubmissions,
+  getStreak,
+  type StreakInfo,
+} from "@/lib/submissions.functions";
 
 export const Route = createFileRoute("/playground")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -266,7 +275,23 @@ function PlaygroundPage() {
   const [seconds, setSeconds] = useState(0);
   const [timerOn, setTimerOn] = useState(false);
 
+  // Editorial + worked solutions (AI-generated, cached per problem).
+  const [editorial, setEditorial] = useState<EditorialData | null>(null);
+  const [editorialLoading, setEditorialLoading] = useState(false);
+  const [editorialError, setEditorialError] = useState<string | null>(null);
+  const editorialSlugRef = useRef<string | null>(null);
+  // Solutions tab: which approach + which language (C++ by default).
+  const [solApproach, setSolApproach] = useState(0);
+  const [solLang, setSolLang] = useState<LangKey>("cpp");
+  const [copied, setCopied] = useState(false);
+
+  // Practice streak (signed-in users).
+  const [streak, setStreak] = useState<StreakInfo | null>(null);
+  const [streakOpen, setStreakOpen] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
+
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
+
 
   const localProblem = useMemo(
     () => PROBLEMS.find((p) => p.id === problemId),
@@ -310,10 +335,41 @@ function PlaygroundPage() {
   const submitFn = useServerFn(submitCode);
   const recordSolvedFn = useServerFn(recordSolved);
   const getLeetFn = useServerFn(getLeetProblem);
+  const getEditorialFn = useServerFn(getProblemEditorial);
+  const recordSubFn = useServerFn(recordSubmissionDb);
+  const listSubsFn = useServerFn(listSubmissions);
+  const getStreakFn = useServerFn(getStreak);
 
   useEffect(() => {
     setSolved(loadSet(SOLVED_KEY));
   }, []);
+
+  const refreshStreak = useCallback(() => {
+    getStreakFn()
+      .then((s) => setStreak(s))
+      .catch(() => {
+        /* streak is best-effort */
+      });
+  }, [getStreakFn]);
+
+  // Detect sign-in and load the practice streak.
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        setSignedIn(true);
+        refreshStreak();
+      } else {
+        setSignedIn(false);
+      }
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      setSignedIn(!!session);
+      if (session) refreshStreak();
+      else setStreak(null);
+    });
+    return () => sub.subscription.unsubscribe();
+  }, [refreshStreak]);
+
 
   // Load the full problem catalog (all problems) for the problem list.
   useEffect(() => {
@@ -366,14 +422,52 @@ function PlaygroundPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [remote]);
 
-  // Reset editable cases + submissions when problem changes.
+  // Reset editable cases + submissions + editorial when problem changes.
   useEffect(() => {
     const ex = problem.examples.map((e) => e.input);
     setCaseInputs(ex.length ? ex : [""]);
     setActiveCase(0);
     setSubs(loadSubs(problem.id));
+    setEditorial(null);
+    setEditorialError(null);
+    setSolApproach(0);
+    editorialSlugRef.current = null;
+    // Pull durable submission history from the cloud (signed-in users).
+    if (signedIn) {
+      const slug = problem.id;
+      listSubsFn({ data: { slug } })
+        .then((rows) => {
+          const mapped: Submission[] = rows.map((r) => ({
+            id: r.id,
+            status: r.status as SubStatus,
+            lang: r.language as LangKey,
+            langLabel: LANGUAGES.find((l) => l.key === r.language)?.label ?? r.language,
+            passed: r.passed,
+            total: r.total,
+            runtimeMs: r.runtimeMs,
+            memoryKb: r.memoryKb,
+            when: r.when,
+          }));
+          setSubs((local) => {
+            const merged: Submission[] = [...mapped, ...local];
+            const seen = new Set<string>();
+            const dedup = merged.filter((s) => {
+              const k = `${s.status}|${s.when}|${s.passed}|${s.total}`;
+              if (seen.has(k)) return false;
+              seen.add(k);
+              return true;
+            });
+            dedup.sort((a, b) => b.when - a.when);
+            return dedup.slice(0, 50);
+          });
+        })
+        .catch(() => {
+          /* fall back to local history */
+        });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [problemId, remote]);
+  }, [problemId, remote, signedIn]);
+
 
   // Persist code on change.
   useEffect(() => {
@@ -390,6 +484,65 @@ function PlaygroundPage() {
     const id = setInterval(() => setSeconds((s) => s + 1), 1000);
     return () => clearInterval(id);
   }, [timerOn]);
+
+  // Build a plain-text statement to feed the editorial generator.
+  const buildStatement = useCallback((): string => {
+    if (!isLocal) return remote?.contentHtml ?? "";
+    const parts: string[] = [problem.description];
+    problem.examples.forEach((ex, i) => {
+      parts.push(
+        `Example ${i + 1}:\nInput: ${ex.input}\nOutput: ${ex.output}${
+          ex.explanation ? `\nExplanation: ${ex.explanation}` : ""
+        }`,
+      );
+    });
+    if (problem.constraints.length) {
+      parts.push(`Constraints:\n${problem.constraints.join("\n")}`);
+    }
+    return parts.join("\n\n");
+  }, [isLocal, remote, problem]);
+
+  const loadEditorial = useCallback(
+    async (refresh = false) => {
+      // Wait for a remote problem's statement before generating.
+      if (!isLocal && !remote) return;
+      const slug = problem.id;
+      if (!refresh && editorialSlugRef.current === slug && editorial) return;
+      setEditorialLoading(true);
+      setEditorialError(null);
+      try {
+        const data = await getEditorialFn({
+          data: {
+            slug,
+            title: problem.title,
+            difficulty: problem.difficulty,
+            statement: buildStatement(),
+            refresh,
+          },
+        });
+        setEditorial(data);
+        editorialSlugRef.current = slug;
+        setSolApproach(0);
+      } catch {
+        setEditorialError(
+          "Couldn't generate the editorial right now. Please try again in a moment.",
+        );
+      } finally {
+        setEditorialLoading(false);
+      }
+    },
+    [isLocal, remote, problem, editorial, getEditorialFn, buildStatement],
+  );
+
+  // Auto-load the editorial when the user opens Editorial or Solutions.
+  useEffect(() => {
+    if (leftTab !== "editorial" && leftTab !== "solutions") return;
+    if (editorialLoading) return;
+    if (editorialSlugRef.current === problem.id && editorial) return;
+    void loadEditorial(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leftTab, problemId, remote]);
+
 
   const goToProblem = useCallback(
     async (id: string) => {
@@ -494,9 +647,29 @@ function PlaygroundPage() {
         saveSubs(problem.id, next);
         return next;
       });
+      // Persist durable history to the cloud + refresh streak (signed-in).
+      if (signedIn) {
+        recordSubFn({
+          data: {
+            problemSlug: problem.id,
+            problemTitle: problem.title,
+            status,
+            language: lang,
+            passed: res.passedCount,
+            total: res.total,
+            runtimeMs: res.runtimeMs != null ? Math.round(res.runtimeMs) : null,
+            memoryKb: res.memoryKb != null ? Math.round(res.memoryKb) : null,
+          },
+        })
+          .then(() => refreshStreak())
+          .catch(() => {
+            /* history sync is best-effort */
+          });
+      }
     },
-    [lang, langLabel, problem.id],
+    [lang, langLabel, problem.id, problem.title, signedIn, recordSubFn, refreshStreak],
   );
+
 
   const handleSubmit = useCallback(async () => {
     if (!isLocal) {
@@ -949,62 +1122,252 @@ function PlaygroundPage() {
     </div>
   );
 
-  const EditorialBody = (
-    <div className="h-full overflow-y-auto p-5 text-sm">
-      <div className="flex items-center gap-2">
-        <BookOpen className="h-4 w-4 text-primary" />
-        <h2 className="font-display text-lg font-bold">Approach</h2>
-      </div>
-      <p className="mt-3 text-muted-foreground">
-        This is a <span className="font-semibold text-foreground">{problem.topic}</span> problem.
-        Read the full input from <code className="rounded bg-muted px-1">stdin</code>, compute the
-        answer inside the provided function, and print it to{" "}
-        <code className="rounded bg-muted px-1">stdout</code> exactly as described in the I/O format.
-      </p>
-      <h3 className="mt-5 text-sm font-semibold">Hints</h3>
-      <ul className="mt-2 list-inside list-disc space-y-1.5 text-muted-foreground">
-        <li>Start with the brute-force idea, then optimize.</li>
-        <li>
-          For <span className="font-medium text-foreground">{problem.topic}</span>, a hash map or two
-          pointers often reduces time complexity from O(n²) to O(n).
-        </li>
-        <li>Watch the constraints: {problem.constraints[0]} determines the acceptable complexity.</li>
-        <li>Handle edge cases (empty / single element / all-equal inputs).</li>
-      </ul>
-      <div className="mt-6 rounded-lg border border-border/60 bg-muted/20 p-4">
-        <p className="text-xs text-muted-foreground">
-          Tip: Press <kbd className="rounded bg-muted px-1.5 py-0.5 font-mono">⌘/Ctrl + Enter</kbd> to
-          Run against your visible cases and{" "}
-          <kbd className="rounded bg-muted px-1.5 py-0.5 font-mono">⌘/Ctrl + Shift + Enter</kbd> to
-          Submit against every hidden case.
-        </p>
-      </div>
+  const tagStyle = (tag: string) =>
+    tag === "brute"
+      ? "bg-destructive/15 text-destructive"
+      : tag === "better"
+        ? "bg-warning/15 text-warning"
+        : "bg-success/15 text-success";
+
+  const EditorialLoading = (
+    <div className="flex flex-col items-center justify-center gap-3 py-20 text-sm text-muted-foreground">
+      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      <p>Generating a step-by-step editorial for this problem…</p>
+      <p className="text-xs">Brute force → optimal, with complexity analysis.</p>
     </div>
   );
 
-  const SolutionsBody = (
-    <div className="h-full overflow-y-auto p-5 text-sm">
-      <div className="flex items-center gap-2">
-        <Lightbulb className="h-4 w-4 text-warning" />
-        <h2 className="font-display text-lg font-bold">Solutions</h2>
-      </div>
-      <p className="mt-3 text-muted-foreground">
-        Write your own solution in the editor and Submit to validate it against all hidden tests.
-        Below is the recommended structure for each language — the starter already wires up input
-        parsing so you only implement the core function.
-      </p>
-      <div className="mt-4 space-y-3">
-        {LANGUAGES.filter((l) => problem.starters[l.key]).map((l) => (
-          <details key={l.key} className="rounded-lg border border-border/60 bg-muted/20 p-3">
-            <summary className="cursor-pointer text-sm font-medium">{l.label} template</summary>
-            <pre className="mt-2 max-h-64 overflow-auto whitespace-pre rounded bg-background/60 p-3 font-mono text-[11px] text-foreground/90">
-              {problem.starters[l.key]}
-            </pre>
-          </details>
-        ))}
-      </div>
+  const EditorialErrorState = (
+    <div className="mx-5 mt-8 rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+      <p>{editorialError}</p>
+      <Button size="sm" variant="outline" className="mt-3" onClick={() => loadEditorial(true)}>
+        <RotateCcw className="h-3.5 w-3.5" /> Try again
+      </Button>
     </div>
   );
+
+  const EditorialBody = (
+    <div className="h-full overflow-y-auto p-5 text-sm">
+      {editorialLoading ? (
+        EditorialLoading
+      ) : editorialError ? (
+        EditorialErrorState
+      ) : editorial ? (
+        <>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <BookOpen className="h-4 w-4 text-primary" />
+              <h2 className="font-display text-lg font-bold">Editorial</h2>
+            </div>
+            <button
+              onClick={() => loadEditorial(true)}
+              className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
+              title="Regenerate editorial"
+            >
+              <RotateCcw className="h-3 w-3" /> Regenerate
+            </button>
+          </div>
+
+          {editorial.overview && (
+            <p className="mt-3 leading-relaxed text-foreground/90">{editorial.overview}</p>
+          )}
+
+          {editorial.intuition && (
+            <div className="mt-4 rounded-lg border-l-4 border-primary/50 bg-primary/5 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Intuition</p>
+              <p className="mt-1 text-foreground/90">{editorial.intuition}</p>
+            </div>
+          )}
+
+          {editorial.hints.length > 0 && (
+            <div className="mt-5">
+              <div className="flex items-center gap-2">
+                <Lightbulb className="h-4 w-4 text-warning" />
+                <h3 className="text-sm font-semibold">Hints</h3>
+              </div>
+              <div className="mt-2 space-y-2">
+                {editorial.hints.map((h, i) => (
+                  <details
+                    key={i}
+                    className="rounded-lg border border-border/60 bg-muted/20 p-3 text-xs"
+                  >
+                    <summary className="cursor-pointer font-medium text-foreground">
+                      Hint {i + 1}
+                    </summary>
+                    <p className="mt-2 text-muted-foreground">{h}</p>
+                  </details>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="mt-6 space-y-4">
+            {editorial.approaches.map((a, i) => (
+              <div key={i} className="rounded-xl border border-border/60 bg-muted/10 p-4">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/15 text-xs font-bold text-primary">
+                    {i + 1}
+                  </span>
+                  <h3 className="font-display text-base font-bold">{a.name}</h3>
+                  <span
+                    className={cn(
+                      "rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase",
+                      tagStyle(a.tag),
+                    )}
+                  >
+                    {a.tag}
+                  </span>
+                </div>
+                {a.summary && <p className="mt-2 text-foreground/90">{a.summary}</p>}
+                {a.steps.length > 0 && (
+                  <ol className="mt-3 list-inside list-decimal space-y-1 text-muted-foreground">
+                    {a.steps.map((s, si) => (
+                      <li key={si}>{s}</li>
+                    ))}
+                  </ol>
+                )}
+                <div className="mt-3 flex flex-wrap gap-2 text-xs">
+                  <span className="rounded-md bg-muted px-2 py-1 font-mono">
+                    ⏱ Time: {a.time}
+                  </span>
+                  <span className="rounded-md bg-muted px-2 py-1 font-mono">
+                    💾 Space: {a.space}
+                  </span>
+                </div>
+                <button
+                  onClick={() => {
+                    setSolApproach(i);
+                    setLeftTab("solutions");
+                  }}
+                  className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline"
+                >
+                  <Code2 className="h-3.5 w-3.5" /> View full code in Solutions
+                </button>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : (
+        <div className="flex flex-col items-center justify-center gap-3 py-20 text-center text-sm text-muted-foreground">
+          <BookOpen className="h-8 w-8 text-primary/60" />
+          <p>Get a complete, worked editorial for this problem.</p>
+          <Button size="sm" onClick={() => loadEditorial(false)}>
+            <BookOpen className="h-3.5 w-3.5" /> Generate editorial
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+
+  const solApproachData = editorial?.approaches[solApproach];
+  const solLangsAvailable = solApproachData
+    ? LANGUAGES.filter((l) => solApproachData.code[l.key])
+    : [];
+  const effectiveSolLang = solApproachData
+    ? solApproachData.code[solLang]
+      ? solLang
+      : (solLangsAvailable[0]?.key ?? "cpp")
+    : solLang;
+  const solCode = solApproachData?.code[effectiveSolLang] ?? "";
+
+  const SolutionsBody = (
+    <div className="flex h-full flex-col overflow-hidden">
+      {editorialLoading ? (
+        <div className="flex-1 overflow-y-auto p-5">{EditorialLoading}</div>
+      ) : editorialError ? (
+        <div className="flex-1 overflow-y-auto">{EditorialErrorState}</div>
+      ) : editorial && solApproachData ? (
+        <>
+          <div className="border-b border-border/60 p-3">
+            <div className="flex items-center gap-2">
+              <Lightbulb className="h-4 w-4 text-warning" />
+              <h2 className="font-display text-lg font-bold">Solutions</h2>
+            </div>
+            {/* Approach tabs */}
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              {editorial.approaches.map((a, i) => (
+                <button
+                  key={i}
+                  onClick={() => setSolApproach(i)}
+                  className={cn(
+                    "rounded-md px-2.5 py-1 text-xs font-medium transition-colors",
+                    i === solApproach
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {a.name}
+                </button>
+              ))}
+            </div>
+            {/* Complexity + language picker */}
+            <div className="mt-3 flex items-center justify-between gap-2">
+              <div className="flex flex-wrap gap-2 text-[11px]">
+                <span className="rounded bg-muted px-2 py-1 font-mono">Time {solApproachData.time}</span>
+                <span className="rounded bg-muted px-2 py-1 font-mono">Space {solApproachData.space}</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Select
+                  value={effectiveSolLang}
+                  onValueChange={(v) => setSolLang(v as LangKey)}
+                >
+                  <SelectTrigger className="h-8 w-[150px] text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {solLangsAvailable.map((l) => (
+                      <SelectItem key={l.key} value={l.key} className="text-xs">
+                        {l.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <IconBtn
+                  label="Copy code"
+                  onClick={() => {
+                    navigator.clipboard?.writeText(solCode);
+                    setCopied(true);
+                    toast.success("Solution copied");
+                    setTimeout(() => setCopied(false), 1500);
+                  }}
+                >
+                  {copied ? (
+                    <Check className="h-3.5 w-3.5 text-success" />
+                  ) : (
+                    <Copy className="h-3.5 w-3.5" />
+                  )}
+                </IconBtn>
+                <IconBtn
+                  label="Load into editor"
+                  onClick={() => {
+                    setLang(effectiveSolLang);
+                    setCode(solCode);
+                    toast.success("Loaded into the editor");
+                  }}
+                >
+                  <CloudUpload className="h-3.5 w-3.5" />
+                </IconBtn>
+              </div>
+            </div>
+          </div>
+          <div className="min-h-0 flex-1 overflow-auto bg-[#1e1e1e]">
+            <pre className="whitespace-pre p-4 font-mono text-[12px] leading-relaxed text-[#d4d4d4]">
+              {solCode}
+            </pre>
+          </div>
+        </>
+      ) : (
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 p-5 text-center text-sm text-muted-foreground">
+          <Lightbulb className="h-8 w-8 text-warning/60" />
+          <p>Get complete, accurate solutions (brute force → optimal) in C++, Python, Java &amp; JavaScript.</p>
+          <Button size="sm" onClick={() => loadEditorial(false)}>
+            <Lightbulb className="h-3.5 w-3.5" /> Generate solutions
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+
 
   const SubmissionsBody = (
     <div className="h-full overflow-y-auto p-5 text-sm">
@@ -1334,6 +1697,83 @@ function PlaygroundPage() {
       <div className="mx-auto">{RunSubmit}</div>
 
       <div className="ml-auto flex items-center gap-1">
+        <Sheet open={streakOpen} onOpenChange={setStreakOpen}>
+          <SheetTrigger asChild>
+            <button
+              className={cn(
+                "flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold transition-colors hover:bg-muted/50",
+                streak && streak.current > 0
+                  ? "text-orange-500"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
+              title="Practice streak"
+            >
+              <Flame
+                className={cn(
+                  "h-3.5 w-3.5",
+                  streak && streak.current > 0 && "fill-orange-500/20",
+                )}
+              />
+              <span className="tabular-nums">{streak?.current ?? 0}</span>
+            </button>
+          </SheetTrigger>
+          <SheetContent className="w-[320px] sm:w-[360px]">
+            <SheetHeader>
+              <SheetTitle className="flex items-center gap-2">
+                <Flame className="h-5 w-5 text-orange-500" /> Practice Streak
+              </SheetTitle>
+            </SheetHeader>
+            {signedIn ? (
+              <div className="mt-6 space-y-4">
+                <div className="rounded-xl border border-orange-500/30 bg-orange-500/5 p-5 text-center">
+                  <div className="flex items-center justify-center gap-2">
+                    <Flame className="h-8 w-8 fill-orange-500/20 text-orange-500" />
+                    <span className="font-display text-4xl font-bold text-orange-500">
+                      {streak?.current ?? 0}
+                    </span>
+                  </div>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    day{(streak?.current ?? 0) === 1 ? "" : "s"} in a row
+                  </p>
+                  {(streak?.todayCount ?? 0) === 0 ? (
+                    <p className="mt-3 text-xs text-warning">
+                      Submit a solution today to keep your streak alive 🔥
+                    </p>
+                  ) : (
+                    <p className="mt-3 text-xs text-success">
+                      ✓ {streak?.todayCount} submission{streak?.todayCount === 1 ? "" : "s"} today
+                    </p>
+                  )}
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-center">
+                  <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
+                    <p className="font-display text-xl font-bold">{streak?.longest ?? 0}</p>
+                    <p className="text-[11px] text-muted-foreground">Longest</p>
+                  </div>
+                  <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
+                    <p className="font-display text-xl font-bold">{streak?.totalDays ?? 0}</p>
+                    <p className="text-[11px] text-muted-foreground">Active days</p>
+                  </div>
+                  <div className="rounded-lg border border-border/60 bg-muted/20 p-3">
+                    <p className="font-display text-xl font-bold">{streak?.todayCount ?? 0}</p>
+                    <p className="text-[11px] text-muted-foreground">Today</p>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Your streak counts each day you submit at least one solution. Submit on the
+                  curated “Solve here” problems to build it up.
+                </p>
+              </div>
+            ) : (
+              <div className="mt-6 rounded-lg border border-border/60 bg-muted/20 p-4 text-sm text-muted-foreground">
+                Sign in to track your daily practice streak across all your devices.
+              </div>
+            )}
+          </SheetContent>
+        </Sheet>
+
+        <div className="mx-0.5 h-5 w-px bg-border" />
+
         <button
           onClick={() => setTimerOn((t) => !t)}
           className="flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted/50 hover:text-foreground"
@@ -1342,6 +1782,7 @@ function PlaygroundPage() {
           {timerOn ? <Pause className="h-3.5 w-3.5" /> : <TimerIcon className="h-3.5 w-3.5" />}
           <span className="tabular-nums">{mm}:{ss}</span>
         </button>
+
         {seconds > 0 && (
           <IconBtn
             label="Reset timer"
