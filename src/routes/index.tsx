@@ -262,8 +262,8 @@ function Dashboard() {
             },
             {
               to: "/playground" as const,
-              title: "Practice DSA problems",
-              desc: "Solve, compile and benchmark like the top competitive judges.",
+              title: "EzCode — solve any problem",
+              desc: "Open any of 3,977 problems in-app, write, run and benchmark like the top judges.",
               icon: Cpu,
             },
           ].map((c, i) => (

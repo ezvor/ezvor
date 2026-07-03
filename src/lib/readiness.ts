@@ -216,7 +216,7 @@ export function computeReadiness(
       title: `Solve ${mediumsNeeded} more medium problems`,
       detail: "Each accepted submission is judged and added to your verified proof.",
       impact,
-      ctaLabel: "Open Practice",
+      ctaLabel: "Open EzCode",
       ctaTo: "/playground",
     });
   }

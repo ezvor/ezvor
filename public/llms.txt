@@ -6,7 +6,7 @@
 - [Dashboard](/): Overview, featured opportunities, and quick AI ask.
 - [Opportunities](/opportunities): Live jobs plus curated programs and contests across open source, hackathons, internships, scholarships, and fellowships.
 - [Roadmaps & Graphs](/roadmaps): Interactive skill graphs and step-by-step checklists for every IT domain, plus AI-generated personalized paths.
-- [Practice](/playground): LeetCode-style problems with an online judge, browse the full catalog and practice topic-wise or company-wise.
+- [EzCode](/playground): LeetCode-style arena — open any of 3,977 problems in-app (no redirect), write and run in a polished editor, with verified auto-judging on curated problems and topic-wise / company-wise practice.
 - [Compiler](/compiler): Online multi-language IDE to write, compile, and run code.
 - [Problem Catalog](/problems): All LeetCode problems with free company lists.
 - [Resources](/resources): Hand-picked free learning resources.

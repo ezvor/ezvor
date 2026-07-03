@@ -87,6 +87,7 @@ import {
   type LcCatalog,
   type LcProblem,
 } from "@/data/leetcodeCatalog";
+import { getLeetProblem, type LeetProblem } from "@/lib/leetcode.functions";
 
 export const Route = createFileRoute("/playground")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -94,11 +95,11 @@ export const Route = createFileRoute("/playground")({
   }),
   head: () => ({
     meta: [
-      { title: "Practice — LeetCode-style Online Judge | Ezvor" },
+      { title: "EzCode — LeetCode-style Online Judge | Ezvor" },
       {
         name: "description",
         content:
-          "A LeetCode-style online judge: write, compile and run your DSA solutions in Python, C++, Java, JavaScript and more — with real test-case judging, runtime stats, submissions history and a polished editor.",
+          "EzCode is a LeetCode-style arena: open any of 3,977 problems in-app, write, compile and run solutions in Python, C++, Java, JavaScript and more — with a polished editor, real judging on curated problems, and topic- & company-wise practice.",
       },
     ],
   }),
@@ -136,6 +137,13 @@ type CaseOutcome = {
 
 function starterFor(problem: Problem, lang: LangKey): string {
   return problem.starters[lang] ?? FALLBACK_STARTER[lang] ?? "// Write your solution here\n";
+}
+
+function prettyFromSlug(slug: string): string {
+  return slug
+    .split("-")
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(" ");
 }
 
 function diffColor(d: Difficulty) {
@@ -243,6 +251,11 @@ function PlaygroundPage() {
   const [topic, setTopic] = useState<string>("All");
   const [company, setCompany] = useState<string>("All");
 
+  // Remote problem (any of the 3,977) fetched from LeetCode and opened in-app.
+  const [remote, setRemote] = useState<LeetProblem | null>(null);
+  const [remoteLoading, setRemoteLoading] = useState(false);
+  const [remoteError, setRemoteError] = useState<string | null>(null);
+
   // Editable custom test cases (LeetCode "Case 1 / Case 2").
   const [caseInputs, setCaseInputs] = useState<string[]>(
     () => PROBLEMS[0].examples.map((e) => e.input),
@@ -255,11 +268,40 @@ function PlaygroundPage() {
 
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
 
-  const problem = useMemo(() => PROBLEMS.find((p) => p.id === problemId)!, [problemId]);
+  const localProblem = useMemo(
+    () => PROBLEMS.find((p) => p.id === problemId),
+    [problemId],
+  );
+  const isLocal = !!localProblem;
+
+  // Unified problem view-model: local (full judge) or a synthesized shell for a
+  // remote LeetCode problem opened in-app.
+  const problem = useMemo<Problem>(() => {
+    if (localProblem) return localProblem;
+    return {
+      id: problemId,
+      title: remote?.title ?? prettyFromSlug(problemId),
+      difficulty: remote?.difficulty ?? "Medium",
+      topic: remote?.tags?.[0]?.name ?? "LeetCode",
+      description: "",
+      ioFormat:
+        "Write your solution in the editor. Use the Input box (and add a driver/print if needed) to Run against your own cases.",
+      examples: [],
+      constraints: [],
+      starters: remote?.snippets ?? {},
+      harness: {},
+      tests: [],
+    };
+  }, [localProblem, remote, problemId]);
+
   const problemIndex = useMemo(
     () => PROBLEMS.findIndex((p) => p.id === problemId),
     [problemId],
   );
+  // Human-facing problem number (LeetCode frontend id for remote problems).
+  const displayNo = isLocal
+    ? String(problemIndex + 1)
+    : remote?.frontendId || "";
   const monacoLang = LANGUAGES.find((l) => l.key === lang)?.monaco ?? "plaintext";
   const langLabel = LANGUAGES.find((l) => l.key === lang)?.label ?? lang;
   const storageKey = `${CODE_PREFIX}.${problemId}.${lang}`;
@@ -267,6 +309,7 @@ function PlaygroundPage() {
   const runFn = useServerFn(executeCode);
   const submitFn = useServerFn(submitCode);
   const recordSolvedFn = useServerFn(recordSolved);
+  const getLeetFn = useServerFn(getLeetProblem);
 
   useEffect(() => {
     setSolved(loadSet(SOLVED_KEY));
@@ -281,12 +324,13 @@ function PlaygroundPage() {
       });
   }, []);
 
-  // Deep-link support: /playground?problem=<slug> selects a matching problem.
+  // Deep-link support: /playground?problem=<slug> opens that problem (local or
+  // remote) directly, no redirect.
   const search = Route.useSearch();
   useEffect(() => {
-    if (search.problem && PROBLEMS.some((p) => p.id === search.problem)) {
-      setProblemId(search.problem);
-    }
+    if (!search.problem || search.problem === problemId) return;
+    void goToProblem(search.problem);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search.problem]);
 
   // Load saved code (or starter) whenever the problem/language changes.
@@ -304,13 +348,32 @@ function PlaygroundPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [storageKey]);
 
+  // When a remote problem finishes loading, drop in its official starter code
+  // for the current language — unless the user has real saved work (i.e. not the
+  // generic placeholder we may have written while the fetch was in flight).
+  useEffect(() => {
+    if (!remote) return;
+    let saved: string | null = null;
+    try {
+      saved = localStorage.getItem(storageKey);
+    } catch {
+      saved = null;
+    }
+    const placeholder = (FALLBACK_STARTER[lang] ?? "// Write your solution here\n").trim();
+    if (!saved || saved.trim() === placeholder) {
+      setCode(starterFor(problem, lang));
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [remote]);
+
   // Reset editable cases + submissions when problem changes.
   useEffect(() => {
-    setCaseInputs(problem.examples.map((e) => e.input));
+    const ex = problem.examples.map((e) => e.input);
+    setCaseInputs(ex.length ? ex : [""]);
     setActiveCase(0);
     setSubs(loadSubs(problem.id));
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [problemId]);
+  }, [problemId, remote]);
 
   // Persist code on change.
   useEffect(() => {
@@ -328,12 +391,35 @@ function PlaygroundPage() {
     return () => clearInterval(id);
   }, [timerOn]);
 
-  const goToProblem = useCallback((id: string) => {
-    setProblemId(id);
-    setListOpen(false);
-    setMobileTab("desc");
-    setLeftTab("description");
-  }, []);
+  const goToProblem = useCallback(
+    async (id: string) => {
+      setProblemId(id);
+      setListOpen(false);
+      setMobileTab("desc");
+      setLeftTab("description");
+      setRemoteError(null);
+
+      // Local curated problem → full in-app judge, no fetch needed.
+      if (PROBLEMS.some((p) => p.id === id)) {
+        setRemote(null);
+        return;
+      }
+
+      // Any other problem → fetch its full statement + starters and open in-app.
+      setRemote(null);
+      setRemoteLoading(true);
+      try {
+        const data = await getLeetFn({ data: { slug: id } });
+        setRemote(data);
+      } catch {
+        setRemoteError("Couldn't load this problem right now. Please try again.");
+      } finally {
+        setRemoteLoading(false);
+      }
+    },
+    [getLeetFn],
+  );
+
 
   const resetCode = () => {
     setCode(starterFor(problem, lang));
@@ -413,6 +499,12 @@ function PlaygroundPage() {
   );
 
   const handleSubmit = useCallback(async () => {
+    if (!isLocal) {
+      toast.info(
+        "Verified auto-judging is available on “Solve here” problems. Use Run to test your code on this one.",
+      );
+      return;
+    }
     setSubmitting(true);
     setBottomTab("result");
     try {
@@ -516,13 +608,15 @@ function PlaygroundPage() {
     });
   }, [catalog, query, filter, topic, company]);
 
-  // Slugs the user can actually solve here, in current list order — this drives
-  // the "next relevant problem" navigation.
+  // Slugs that can be solved here with the verified judge (curated set).
   const solvableQueue = useMemo(
     () => catalogFiltered.filter((p) => SOLVABLE_SLUGS.has(p.slug)).map((p) => p.slug),
     [catalogFiltered],
   );
-  const navQueue = solvableQueue.length ? solvableQueue : PROBLEMS.map((p) => p.id);
+  // Next/Prev cycles through the whole filtered list — every problem opens in-app.
+  const navQueue = catalogFiltered.length
+    ? catalogFiltered.map((p) => p.slug)
+    : PROBLEMS.map((p) => p.id);
   const navIndex = navQueue.indexOf(problemId);
 
   const busy = running || submitting;
@@ -623,17 +717,19 @@ function PlaygroundPage() {
         )}
         {(catalog ? catalogFiltered.slice(0, 250) : []).map((p) => {
           const solvable = SOLVABLE_SLUGS.has(p.slug);
-          const isActive = solvable && p.slug === problemId;
+          const isActive = p.slug === problemId;
           const isSolved = solved.has(p.slug);
-          const inner = (
-            <>
+          const cls = cn(
+            "mb-1 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors",
+            isActive ? "bg-accent/60" : "hover:bg-muted/50",
+          );
+          return (
+            <button key={p.slug} onClick={() => goToProblem(p.slug)} className={cls}>
               <span className="w-5 shrink-0 text-center">
                 {isSolved ? (
                   <CheckCircle2 className="h-4 w-4 text-success" />
-                ) : solvable ? (
-                  <Circle className="mx-auto h-3.5 w-3.5 text-muted-foreground/40" />
                 ) : (
-                  <ExternalLink className="mx-auto h-3.5 w-3.5 text-muted-foreground/40" />
+                  <Circle className="mx-auto h-3.5 w-3.5 text-muted-foreground/40" />
                 )}
               </span>
               <span className="min-w-0 flex-1">
@@ -652,26 +748,7 @@ function PlaygroundPage() {
               <span className={cn("shrink-0 text-xs font-semibold", diffColor(p.difficulty))}>
                 {p.difficulty}
               </span>
-            </>
-          );
-          const cls = cn(
-            "mb-1 flex w-full items-center gap-2.5 rounded-lg px-2.5 py-2 text-left transition-colors",
-            isActive ? "bg-accent/60" : "hover:bg-muted/50",
-          );
-          return solvable ? (
-            <button key={p.slug} onClick={() => goToProblem(p.slug)} className={cls}>
-              {inner}
             </button>
-          ) : (
-            <a
-              key={p.slug}
-              href={`https://leetcode.com/problems/${p.slug}/`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={cls}
-            >
-              {inner}
-            </a>
           );
         })}
         {catalog && catalogFiltered.length === 0 && (
@@ -721,7 +798,8 @@ function PlaygroundPage() {
     <div className="h-full overflow-y-auto p-5">
       <div className="flex flex-wrap items-center gap-2">
         <h1 className="font-display text-xl font-bold">
-          {problemIndex + 1}. {problem.title}
+          {displayNo ? `${displayNo}. ` : ""}
+          {problem.title}
         </h1>
         {solved.has(problem.id) && (
           <span className="inline-flex items-center gap-1 rounded-full bg-success/15 px-2 py-0.5 text-xs font-medium text-success">
@@ -745,49 +823,129 @@ function PlaygroundPage() {
         <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs text-muted-foreground">
           {problem.topic}
         </span>
+        {isLocal ? (
+          <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 px-2.5 py-0.5 text-xs font-medium text-primary">
+            <CheckCircle2 className="h-3 w-3" /> Verified judge
+          </span>
+        ) : (
+          <a
+            href={`https://leetcode.com/problems/${problem.id}/`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-0.5 text-xs font-medium text-muted-foreground hover:text-foreground"
+          >
+            <ExternalLink className="h-3 w-3" /> View on LeetCode
+          </a>
+        )}
       </div>
 
-      <p className="mt-4 text-sm leading-relaxed text-foreground/90">
-        <Inline text={problem.description} />
-      </p>
-
-      <div className="mt-6 space-y-4">
-        {problem.examples.map((ex, i) => (
-          <div key={i}>
-            <p className="text-sm font-semibold">Example {i + 1}:</p>
-            <div className="mt-2 rounded-lg border-l-4 border-border bg-muted/30 p-3 text-xs">
-              <p>
-                <span className="font-semibold">Input:</span>
-                <pre className="mt-1 whitespace-pre-wrap font-mono text-foreground/90">{ex.input}</pre>
-              </p>
-              <p className="mt-2">
-                <span className="font-semibold">Output:</span>
-                <pre className="mt-1 whitespace-pre-wrap font-mono text-foreground/90">{ex.output}</pre>
-              </p>
-              {ex.explanation && (
-                <p className="mt-2 text-muted-foreground">
-                  <span className="font-semibold text-foreground/80">Explanation: </span>
-                  {ex.explanation}
-                </p>
-              )}
+      {/* ---- Remote (any LeetCode problem, opened in-app) ---- */}
+      {!isLocal && remoteLoading && (
+        <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin" /> Loading problem…
+        </div>
+      )}
+      {!isLocal && !remoteLoading && remoteError && (
+        <div className="mt-6 rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+          {remoteError}
+        </div>
+      )}
+      {!isLocal && !remoteLoading && remote && (
+        <>
+          <div
+            className="lc-content mt-4"
+            // Content is fetched from LeetCode and sanitized server-side.
+            dangerouslySetInnerHTML={{ __html: remote.contentHtml }}
+          />
+          {remote.tags.length > 0 && (
+            <div className="mt-6 flex flex-wrap gap-1.5">
+              {remote.tags.map((t) => (
+                <span
+                  key={t.slug}
+                  className="rounded-full bg-muted px-2.5 py-0.5 text-[11px] text-muted-foreground"
+                >
+                  {t.name}
+                </span>
+              ))}
             </div>
+          )}
+          {remote.hints.length > 0 && (
+            <div className="mt-5">
+              <h3 className="text-sm font-semibold">Hints</h3>
+              <div className="mt-2 space-y-2">
+                {remote.hints.map((h, i) => (
+                  <details
+                    key={i}
+                    className="rounded-lg border border-border/60 bg-muted/20 p-3 text-xs"
+                  >
+                    <summary className="cursor-pointer font-medium text-foreground">
+                      Hint {i + 1}
+                    </summary>
+                    <div
+                      className="lc-content mt-2"
+                      dangerouslySetInnerHTML={{ __html: h }}
+                    />
+                  </details>
+                ))}
+              </div>
+            </div>
+          )}
+          <div className="mt-6 rounded-lg border border-border/60 bg-muted/20 p-3 text-xs text-muted-foreground">
+            The official starter code is loaded in the editor. Write your solution
+            and <span className="font-medium text-foreground">Run</span> it against
+            your own inputs. Verified auto-judging + shareable proof is available on
+            the curated{" "}
+            <span className="font-medium text-primary">Solve here</span> problems.
           </div>
-        ))}
-      </div>
+        </>
+      )}
 
-      <h3 className="mt-6 text-sm font-semibold">I/O Format</h3>
-      <pre className="mt-2 whitespace-pre-wrap rounded-lg bg-muted/40 p-3 text-xs text-muted-foreground">
-        {problem.ioFormat}
-      </pre>
+      {/* ---- Local curated problem (full verified judge) ---- */}
+      {isLocal && (
+        <>
+          <p className="mt-4 text-sm leading-relaxed text-foreground/90">
+            <Inline text={problem.description} />
+          </p>
 
-      <h3 className="mt-6 text-sm font-semibold">Constraints:</h3>
-      <ul className="mt-2 list-inside list-disc space-y-1 text-xs text-muted-foreground">
-        {problem.constraints.map((c, i) => (
-          <li key={i} className="font-mono">
-            {c}
-          </li>
-        ))}
-      </ul>
+          <div className="mt-6 space-y-4">
+            {problem.examples.map((ex, i) => (
+              <div key={i}>
+                <p className="text-sm font-semibold">Example {i + 1}:</p>
+                <div className="mt-2 rounded-lg border-l-4 border-border bg-muted/30 p-3 text-xs">
+                  <div>
+                    <span className="font-semibold">Input:</span>
+                    <pre className="mt-1 whitespace-pre-wrap font-mono text-foreground/90">{ex.input}</pre>
+                  </div>
+                  <div className="mt-2">
+                    <span className="font-semibold">Output:</span>
+                    <pre className="mt-1 whitespace-pre-wrap font-mono text-foreground/90">{ex.output}</pre>
+                  </div>
+                  {ex.explanation && (
+                    <p className="mt-2 text-muted-foreground">
+                      <span className="font-semibold text-foreground/80">Explanation: </span>
+                      {ex.explanation}
+                    </p>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <h3 className="mt-6 text-sm font-semibold">I/O Format</h3>
+          <pre className="mt-2 whitespace-pre-wrap rounded-lg bg-muted/40 p-3 text-xs text-muted-foreground">
+            {problem.ioFormat}
+          </pre>
+
+          <h3 className="mt-6 text-sm font-semibold">Constraints:</h3>
+          <ul className="mt-2 list-inside list-disc space-y-1 text-xs text-muted-foreground">
+            {problem.constraints.map((c, i) => (
+              <li key={i} className="font-mono">
+                {c}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
     </div>
   );
 
@@ -1103,10 +1261,19 @@ function PlaygroundPage() {
       </Button>
       <Button
         size="sm"
-        className="h-8 gap-1.5 bg-success text-success-foreground hover:bg-success/90"
+        className={cn(
+          "h-8 gap-1.5",
+          isLocal
+            ? "bg-success text-success-foreground hover:bg-success/90"
+            : "bg-muted text-muted-foreground hover:bg-muted/80",
+        )}
         onClick={handleSubmit}
         disabled={busy}
-        title="Submit (⌘/Ctrl + Shift + Enter)"
+        title={
+          isLocal
+            ? "Submit (⌘/Ctrl + Shift + Enter)"
+            : "Verified judging is available on “Solve here” problems"
+        }
       >
         {submitting ? (
           <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -1224,7 +1391,8 @@ function PlaygroundPage() {
       <div className="fixed inset-0 z-50 flex flex-col bg-background">
         <div className="flex items-center justify-between border-b border-border/60 px-3 py-2">
           <span className="text-sm font-semibold">
-            {problemIndex + 1}. {problem.title}
+            {displayNo ? `${displayNo}. ` : ""}
+            {problem.title}
           </span>
           <div className="flex items-center gap-2">
             {RunSubmit}
