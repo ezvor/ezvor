@@ -95,11 +95,11 @@ export const Route = createFileRoute("/playground")({
   }),
   head: () => ({
     meta: [
-      { title: "Practice — LeetCode-style Online Judge | Ezvor" },
+      { title: "EzCode — LeetCode-style Online Judge | Ezvor" },
       {
         name: "description",
         content:
-          "A LeetCode-style online judge: write, compile and run your DSA solutions in Python, C++, Java, JavaScript and more — with real test-case judging, runtime stats, submissions history and a polished editor.",
+          "EzCode is a LeetCode-style arena: open any of 3,977 problems in-app, write, compile and run solutions in Python, C++, Java, JavaScript and more — with a polished editor, real judging on curated problems, and topic- & company-wise practice.",
       },
     ],
   }),
