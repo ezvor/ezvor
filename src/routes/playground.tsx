@@ -604,13 +604,15 @@ function PlaygroundPage() {
     });
   }, [catalog, query, filter, topic, company]);
 
-  // Slugs the user can actually solve here, in current list order — this drives
-  // the "next relevant problem" navigation.
+  // Slugs that can be solved here with the verified judge (curated set).
   const solvableQueue = useMemo(
     () => catalogFiltered.filter((p) => SOLVABLE_SLUGS.has(p.slug)).map((p) => p.slug),
     [catalogFiltered],
   );
-  const navQueue = solvableQueue.length ? solvableQueue : PROBLEMS.map((p) => p.id);
+  // Next/Prev cycles through the whole filtered list — every problem opens in-app.
+  const navQueue = catalogFiltered.length
+    ? catalogFiltered.map((p) => p.slug)
+    : PROBLEMS.map((p) => p.id);
   const navIndex = navQueue.indexOf(problemId);
 
   const busy = running || submitting;
