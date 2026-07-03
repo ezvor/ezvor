@@ -87,6 +87,7 @@ import {
   type LcCatalog,
   type LcProblem,
 } from "@/data/leetcodeCatalog";
+import { getLeetProblem, type LeetProblem } from "@/lib/leetcode.functions";
 
 export const Route = createFileRoute("/playground")({
   validateSearch: (search: Record<string, unknown>) => ({
