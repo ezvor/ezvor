@@ -262,7 +262,7 @@ function Dashboard() {
             },
             {
               to: "/playground" as const,
-              title: "Train in the DSA arena",
+              title: "Practice DSA problems",
               desc: "Solve, compile and benchmark like the top competitive judges.",
               icon: Cpu,
             },
