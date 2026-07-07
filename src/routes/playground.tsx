@@ -2014,7 +2014,7 @@ function PlaygroundPage() {
           {LeftPanel}
         </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel defaultSize="56%" minSize="35%">
+        <ResizablePanel defaultSize="52%" minSize="30%">
           <ResizablePanelGroup orientation="vertical">
             <ResizablePanel defaultSize="60%" minSize="25%">
               {EditorArea}
