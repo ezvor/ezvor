@@ -27,15 +27,36 @@ const LANG_SLUG_MAP: Record<string, LangKey> = {
   rust: "rust",
 };
 
-/** Minimal sanitize: drop scripts, styles, iframes and inline event handlers. */
+/**
+ * Sanitize third-party (LeetCode) problem HTML with a real allowlist-based
+ * parser before it is cached and rendered. A regex approach is bypassable, so
+ * we use `sanitize-html` with a strict tag/attribute allowlist and drop any
+ * dangerous URL schemes (javascript:, data:, vbscript:) from links/images.
+ */
 function sanitizeHtml(html: string): string {
-  return html
-    .replace(/<script[\s\S]*?<\/script>/gi, "")
-    .replace(/<style[\s\S]*?<\/style>/gi, "")
-    .replace(/<iframe[\s\S]*?<\/iframe>/gi, "")
-    .replace(/\son\w+\s*=\s*"[^"]*"/gi, "")
-    .replace(/\son\w+\s*=\s*'[^']*'/gi, "");
+  return sanitizeHtmlLib(html, {
+    allowedTags: [
+      "p", "br", "hr", "b", "strong", "i", "em", "u", "s", "sub", "sup", "small",
+      "code", "pre", "kbd", "samp", "var", "span", "div", "blockquote",
+      "ul", "ol", "li", "dl", "dt", "dd",
+      "table", "thead", "tbody", "tfoot", "tr", "th", "td", "caption",
+      "h1", "h2", "h3", "h4", "h5", "h6", "a", "img", "figure", "figcaption",
+    ],
+    allowedAttributes: {
+      a: ["href", "title", "target", "rel"],
+      img: ["src", "alt", "title", "width", "height"],
+      "*": ["class"],
+    },
+    allowedSchemes: ["http", "https", "mailto"],
+    allowedSchemesByTag: { img: ["http", "https"] },
+    allowProtocolRelative: false,
+    disallowedTagsMode: "discard",
+    transformTags: {
+      a: sanitizeHtmlLib.simpleTransform("a", { rel: "noopener noreferrer nofollow" }),
+    },
+  });
 }
+
 
 const QUERY = `query q($slug: String!) {
   question(titleSlug: $slug) {
