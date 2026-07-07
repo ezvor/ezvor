@@ -1,3 +1,5 @@
+import sanitizeHtmlLib from "sanitize-html";
+
 import type { LangKey } from "./judge.server";
 
 export type LeetProblem = {
