@@ -176,6 +176,24 @@ function ChatPage() {
     }
   };
 
+  // Auto-send a prompt that arrived via the URL (e.g. a "Popular" chip on the
+  // home page). Fire once, then strip ?q from the URL so a refresh won't resend.
+  useEffect(() => {
+    if (!q || autoSentRef.current) return;
+    if (streamingRef.current || loading) return;
+    // Wait until persisted messages have loaded so we don't double up.
+    if (!data) return;
+    autoSentRef.current = true;
+    navigate({
+      to: "/advisor/$threadId",
+      params: { threadId },
+      search: {},
+      replace: true,
+    });
+    send(q);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q, data]);
+
   const handleSignOut = async () => {
     await signOut();
     navigate({ to: "/auth" });
