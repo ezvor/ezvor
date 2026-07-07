@@ -46,7 +46,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/_authenticated/readiness")({
   head: () => ({
     meta: [
-      { title: "Readiness Engine — Am I hireable yet? | Ezvor" },
+      { title: "Readiness Engine: Am I hireable yet? | Ezvor" },
       {
         name: "description",
         content:
