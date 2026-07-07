@@ -216,6 +216,16 @@
 }
 
 @layer utilities {
+  /* Horizontal tab/toolbar strips that may overflow on narrow screens:
+     keep them swipeable but hide the scrollbar chrome. */
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
   .bg-gradient-primary {
     background-image: var(--gradient-primary);
   }
