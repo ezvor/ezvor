@@ -384,7 +384,7 @@ function CompilerPage() {
 
             <ResizableHandle withHandle />
 
-            <ResizablePanel defaultSize={42} minSize={24}>
+            <ResizablePanel defaultSize={stacked ? 55 : 42} minSize={20}>
               <ResizablePanelGroup orientation="vertical">
                 {/* Input */}
                 <ResizablePanel defaultSize={35} minSize={12}>
