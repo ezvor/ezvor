@@ -174,6 +174,11 @@ function ChatPage() {
         }
       }
 
+      if (rafId != null && typeof cancelAnimationFrame !== "undefined") {
+        cancelAnimationFrame(rafId);
+      }
+      flush();
+
       if (assistant.trim()) {
         await saveExchange({
           data: { threadId, userContent: content, assistantContent: assistant },
