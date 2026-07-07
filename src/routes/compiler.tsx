@@ -46,13 +46,13 @@ import type { RunResult } from "@/lib/judge.server";
 export const Route = createFileRoute("/compiler")({
   head: () => ({
     meta: [
-      { title: "Compiler — Write, Compile & Run Online | Ezvor" },
+      { title: "Compiler: Write, Compile & Run Online | Ezvor" },
       {
         name: "description",
         content:
           "A powerful free online compiler for C++, Python, Java, JavaScript, C, Go, Rust & TypeScript. Write code, add input, compile and run instantly with accurate output.",
       },
-      { property: "og:title", content: "Compiler — Online IDE | Ezvor" },
+      { property: "og:title", content: "Compiler: Online IDE | Ezvor" },
       {
         property: "og:description",
         content:

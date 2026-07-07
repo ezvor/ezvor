@@ -49,7 +49,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/roadmaps")({
   head: () => ({
     meta: [
-      { title: "Roadmaps & Skill Graphs — Visual Career Paths | Ezvor" },
+      { title: "Roadmaps & Skill Graphs: Visual Career Paths | Ezvor" },
       {
         name: "description",
         content:

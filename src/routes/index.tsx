@@ -30,7 +30,7 @@ import { OPPORTUNITIES, ROADMAPS, RESOURCES, CATEGORIES } from "@/data/careerDat
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Ezvor — Career Platform for Engineers" },
+      { title: "Ezvor: Career Platform for Engineers" },
       {
         name: "description",
         content:
