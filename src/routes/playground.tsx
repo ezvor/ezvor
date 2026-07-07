@@ -589,6 +589,19 @@ function PlaygroundPage() {
       if (!isLocal && !remote) return;
       const slug = problem.id;
       if (!refresh && editorialSlugRef.current === slug && editorial) return;
+
+      // Instant path: editorial already generated this session.
+      if (!refresh) {
+        const cached = editorialCache.get(slug);
+        if (cached) {
+          setEditorial(cached);
+          editorialSlugRef.current = slug;
+          setSolApproach(0);
+          setEditorialLoading(false);
+          return;
+        }
+      }
+
       setEditorialLoading(true);
       setEditorialError(null);
       try {
@@ -601,6 +614,7 @@ function PlaygroundPage() {
             refresh,
           },
         });
+        editorialCache.set(slug, data);
         setEditorial(data);
         editorialSlugRef.current = slug;
         setSolApproach(0);
@@ -614,6 +628,7 @@ function PlaygroundPage() {
     },
     [isLocal, remote, problem, editorial, getEditorialFn, buildStatement],
   );
+
 
   // Auto-load the editorial when the user opens Editorial or Solutions.
   useEffect(() => {
