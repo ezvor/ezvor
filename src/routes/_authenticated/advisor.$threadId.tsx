@@ -31,6 +31,9 @@ import { getMessages, saveExchange } from "@/lib/threads.functions";
 import advisorOrb from "@/assets/advisor-orb.png";
 
 export const Route = createFileRoute("/_authenticated/advisor/$threadId")({
+  validateSearch: (search: Record<string, unknown>) => ({
+    q: typeof search.q === "string" ? search.q : undefined,
+  }),
   component: ChatPage,
 });
 
@@ -50,6 +53,7 @@ const suggestions = [
 
 function ChatPage() {
   const { threadId } = Route.useParams();
+  const { q } = Route.useSearch();
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -60,6 +64,7 @@ function ChatPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const streamingRef = useRef(false);
+  const autoSentRef = useRef(false);
 
   const { data } = useQuery({
     queryKey: ["messages", threadId],
@@ -105,14 +110,26 @@ function ChatPage() {
     streamingRef.current = true;
 
     let assistant = "";
-    const pushAssistant = (chunk: string) => {
-      assistant += chunk;
+    let rafId: number | null = null;
+    const flush = () => {
+      rafId = null;
       setMessages((prev) => {
         const last = prev[prev.length - 1];
         return last?.role === "assistant"
           ? prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistant } : m))
           : [...prev, { role: "assistant", content: assistant }];
       });
+    };
+    // Coalesce tokens into a single paint per frame so fast streaming stays
+    // buttery instead of thrashing the markdown renderer on every token.
+    const pushAssistant = (chunk: string) => {
+      assistant += chunk;
+      if (rafId == null) {
+        rafId =
+          typeof requestAnimationFrame !== "undefined"
+            ? requestAnimationFrame(flush)
+            : (setTimeout(flush, 16) as unknown as number);
+      }
     };
 
     try {
@@ -157,6 +174,11 @@ function ChatPage() {
         }
       }
 
+      if (rafId != null && typeof cancelAnimationFrame !== "undefined") {
+        cancelAnimationFrame(rafId);
+      }
+      flush();
+
       if (assistant.trim()) {
         await saveExchange({
           data: { threadId, userContent: content, assistantContent: assistant },
@@ -170,6 +192,24 @@ function ChatPage() {
       streamingRef.current = false;
     }
   };
+
+  // Auto-send a prompt that arrived via the URL (e.g. a "Popular" chip on the
+  // home page). Fire once, then strip ?q from the URL so a refresh won't resend.
+  useEffect(() => {
+    if (!q || autoSentRef.current) return;
+    if (streamingRef.current || loading) return;
+    // Wait until persisted messages have loaded so we don't double up.
+    if (!data) return;
+    autoSentRef.current = true;
+    navigate({
+      to: "/advisor/$threadId",
+      params: { threadId },
+      search: {},
+      replace: true,
+    });
+    send(q);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q, data]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -270,53 +310,66 @@ function ChatPage() {
           ) : (
             <div className="space-y-6">
               <AnimatePresence initial={false}>
-                {messages.map((m, i) => (
-                  <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className={cn(
-                      "flex gap-3",
-                      m.role === "user" ? "flex-row-reverse" : "flex-row",
-                    )}
-                  >
-                    {m.role === "assistant" ? (
-                      <img
-                        src={advisorOrb}
-                        alt="AI"
-                        width={32}
-                        height={32}
-                        className="h-8 w-8 shrink-0"
-                      />
-                    ) : (
-                      <Avatar className="h-8 w-8 shrink-0">
-                        {avatarUrl && <AvatarImage src={avatarUrl} alt={displayName} />}
-                        <AvatarFallback className="bg-secondary text-xs">{initials}</AvatarFallback>
-                      </Avatar>
-                    )}
-                    <div
+                {messages.map((m, i) => {
+                  const isLast = i === messages.length - 1;
+                  const streaming = loading && isLast && m.role === "assistant";
+                  return (
+                    <motion.div
+                      key={i}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
                       className={cn(
-                        "max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed",
-                        m.role === "user"
-                          ? "rounded-tr-sm bg-gradient-primary text-primary-foreground shadow-glow"
-                          : "rounded-tl-sm border border-border/60 bg-card",
+                        "flex gap-3",
+                        m.role === "user" ? "flex-row-reverse" : "flex-row",
                       )}
                     >
                       {m.role === "assistant" ? (
-                        <div className="prose-chat">
-                          <ReactMarkdown
-                            remarkPlugins={[remarkGfm]}
-                            components={{ code: CodeBlock }}
-                          >
-                            {m.content}
-                          </ReactMarkdown>
-                        </div>
+                        <img
+                          src={advisorOrb}
+                          alt="AI"
+                          width={32}
+                          height={32}
+                          className={cn(
+                            "h-8 w-8 shrink-0 transition-transform",
+                            streaming && "animate-pulse",
+                          )}
+                        />
                       ) : (
-                        <p className="whitespace-pre-wrap">{m.content}</p>
+                        <Avatar className="h-8 w-8 shrink-0">
+                          {avatarUrl && <AvatarImage src={avatarUrl} alt={displayName} />}
+                          <AvatarFallback className="bg-secondary text-xs">
+                            {initials}
+                          </AvatarFallback>
+                        </Avatar>
                       )}
-                    </div>
-                  </motion.div>
-                ))}
+                      <div
+                        className={cn(
+                          "max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed transition-shadow",
+                          m.role === "user"
+                            ? "rounded-tr-sm bg-gradient-primary text-primary-foreground shadow-glow"
+                            : "rounded-tl-sm border border-border/60 bg-card",
+                        )}
+                      >
+                        {m.role === "assistant" ? (
+                          <div className="prose-chat">
+                            <ReactMarkdown
+                              remarkPlugins={[remarkGfm]}
+                              components={{ code: CodeBlock }}
+                            >
+                              {m.content}
+                            </ReactMarkdown>
+                            {streaming && (
+                              <span className="ml-0.5 inline-block h-4 w-[2px] translate-y-0.5 animate-pulse bg-primary-glow align-middle" />
+                            )}
+                          </div>
+                        ) : (
+                          <p className="whitespace-pre-wrap">{m.content}</p>
+                        )}
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </AnimatePresence>
 
               {loading && messages[messages.length - 1]?.role !== "assistant" && (
