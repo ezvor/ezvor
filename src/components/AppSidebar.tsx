@@ -71,9 +71,16 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon" className="border-sidebar-border">
       <SidebarHeader>
-        <Link to="/" className="flex items-center gap-2.5 px-2 py-3">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-primary shadow-glow">
-            <Rocket className="h-5 w-5 text-primary-foreground" />
+        <Link
+          to="/"
+          className={
+            collapsed
+              ? "flex h-8 w-8 items-center justify-center"
+              : "flex items-center gap-2.5 px-2 py-2"
+          }
+        >
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-gradient-primary shadow-glow">
+            <Rocket className="h-4 w-4 text-primary-foreground" />
           </span>
           {!collapsed && (
             <span className="flex min-w-0 flex-col leading-none">
