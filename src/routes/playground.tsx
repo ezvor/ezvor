@@ -640,6 +640,49 @@ function PlaygroundPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leftTab, problemId, remote]);
 
+  // Background cache-warm: as soon as a problem is ready, pull its editorial
+  // from the DB cache (if it exists) into this session's memory — WITHOUT
+  // triggering a fresh AI generation. This makes the Editorial/Solutions tabs
+  // open instantly for any already-generated problem, with no extra cost.
+  useEffect(() => {
+    if (!isLocal && !remote) return;
+    const slug = problem.id;
+    if (editorialCache.has(slug)) return;
+    let cancelled = false;
+    getEditorialFn({
+      data: {
+        slug,
+        title: problem.title,
+        difficulty: problem.difficulty,
+        statement: "",
+        cachedOnly: true,
+      },
+    })
+      .then((data) => {
+        if (cancelled || !data) return;
+        editorialCache.set(slug, data);
+        // If the user is already looking at Editorial/Solutions, show it now.
+        if (
+          (leftTab === "editorial" || leftTab === "solutions") &&
+          editorialSlugRef.current !== slug
+        ) {
+          setEditorial(data);
+          editorialSlugRef.current = slug;
+          setSolApproach(0);
+          setEditorialLoading(false);
+        }
+      })
+      .catch(() => {
+        /* no cached editorial yet — generated on demand when the tab opens */
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [problemId, remote, isLocal]);
+
+
+
 
   const goToProblem = useCallback(
     async (id: string) => {
