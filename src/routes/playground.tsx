@@ -1075,14 +1075,14 @@ function PlaygroundPage() {
             key={t.key}
             onClick={() => setLeftTab(t.key as typeof leftTab)}
             className={cn(
-              "flex items-center gap-1.5 border-b-2 px-2.5 py-2.5 text-xs font-medium transition-colors",
+              "flex shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 px-2.5 py-2.5 text-xs font-medium transition-colors",
               active
                 ? "border-primary text-foreground"
                 : "border-transparent text-muted-foreground hover:text-foreground",
             )}
           >
-            <Icon className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{t.label}</span>
+            <Icon className="h-3.5 w-3.5 shrink-0" />
+            <span>{t.label}</span>
           </button>
         );
       })}
