@@ -622,19 +622,33 @@ function PlaygroundPage() {
       setMobileTab("desc");
       setLeftTab("description");
       setRemoteError(null);
-      setHarness(null);
 
       // Local curated problem → full in-app judge, no fetch needed.
       if (PROBLEMS.some((p) => p.id === id)) {
         setRemote(null);
+        setHarness(null);
         return;
       }
 
-      // Any other problem → fetch its full statement + starters and open in-app.
+      // Already fetched this session → restore instantly from memory, including
+      // its harness if we have it. Zero network, zero spinner.
+      const cachedRemote = remoteCache.get(id);
+      if (cachedRemote) {
+        setRemote(cachedRemote);
+        setHarness(harnessCache.get(id) ?? null);
+        setRemoteLoading(false);
+        return;
+      }
+
+      // First open this session → fetch its full statement + starters. The
+      // server function serves from the DB cache when available, so this is a
+      // single fast read for any problem opened before by anyone.
       setRemote(null);
+      setHarness(null);
       setRemoteLoading(true);
       try {
         const data = await getLeetFn({ data: { slug: id } });
+        remoteCache.set(id, data);
         setRemote(data);
       } catch {
         setRemoteError("Couldn't load this problem right now. Please try again.");
@@ -644,6 +658,7 @@ function PlaygroundPage() {
     },
     [getLeetFn],
   );
+
 
 
   const resetCode = () => {
