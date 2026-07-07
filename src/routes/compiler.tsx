@@ -357,8 +357,8 @@ function CompilerPage() {
 
         {/* Editor + output */}
         <div className="min-h-0 flex-1">
-          <ResizablePanelGroup orientation="horizontal">
-            <ResizablePanel defaultSize={58} minSize={30}>
+          <ResizablePanelGroup orientation={stacked ? "vertical" : "horizontal"}>
+            <ResizablePanel defaultSize={stacked ? 45 : 58} minSize={20}>
               <div className="flex h-full flex-col">
                 <div className="flex items-center gap-2 border-b border-border/40 bg-card/20 px-4 py-1.5 text-xs text-muted-foreground">
                   <ChevronRight className="h-3.5 w-3.5" />
