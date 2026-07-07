@@ -38,6 +38,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { useMediaQuery } from "@/hooks/use-mobile";
 import type { LangKey } from "@/lib/judge.server";
 import { executeCode } from "@/lib/judge.functions";
 import type { RunResult } from "@/lib/judge.server";
