@@ -53,6 +53,7 @@ const suggestions = [
 
 function ChatPage() {
   const { threadId } = Route.useParams();
+  const { q } = Route.useSearch();
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -63,6 +64,7 @@ function ChatPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const streamingRef = useRef(false);
+  const autoSentRef = useRef(false);
 
   const { data } = useQuery({
     queryKey: ["messages", threadId],
