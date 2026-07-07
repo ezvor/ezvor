@@ -247,6 +247,24 @@ export type Database = {
         }
         Relationships: []
       }
+      problem_statements: {
+        Row: {
+          created_at: string
+          data: Json
+          slug: string
+        }
+        Insert: {
+          created_at?: string
+          data: Json
+          slug: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          slug?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null

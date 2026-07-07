@@ -22,10 +22,15 @@ export const getProblemEditorial = createServerFn({ method: "POST" })
         difficulty: z.string().max(20).default("Medium"),
         statement: z.string().max(30000).default(""),
         refresh: z.boolean().optional(),
+        // When true, return the cached editorial if present, otherwise null —
+        // never trigger a (slow, costly) fresh AI generation. Used to warm the
+        // client cache in the background the instant a problem opens, so the
+        // Editorial/Solutions tabs are instant for already-generated problems.
+        cachedOnly: z.boolean().optional(),
       })
       .parse(input),
   )
-  .handler(async ({ data }): Promise<EditorialData> => {
+  .handler(async ({ data }): Promise<EditorialData | null> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     // 1) Serve from cache unless a refresh was explicitly requested.
@@ -37,6 +42,9 @@ export const getProblemEditorial = createServerFn({ method: "POST" })
         .maybeSingle();
       if (cached?.data) return cached.data as EditorialData;
     }
+
+    // Cache-only prefetch: nothing cached yet, so don't generate — bail out.
+    if (data.cachedOnly) return null;
 
     // 2) Generate fresh.
     const editorial = await generateEditorial({
