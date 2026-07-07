@@ -156,9 +156,12 @@ function RootComponent() {
               <header className="sticky top-0 z-30 flex h-14 items-center gap-3 border-b border-border/60 bg-background/80 px-4 backdrop-blur-lg">
                 <SidebarTrigger className="text-muted-foreground hover:text-foreground" />
                 <div className="h-5 w-px bg-border" />
-                <span className="font-display text-sm font-semibold tracking-tight">
-                  Ezvor
-                </span>
+                <Link to="/" className="flex min-w-0 items-center gap-2">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-gradient-primary shadow-glow">
+                    <Rocket className="h-4 w-4 text-primary-foreground" />
+                  </span>
+                  <span className="font-display text-sm font-semibold tracking-tight">Ezvor</span>
+                </Link>
                 <span className="hidden text-xs text-muted-foreground sm:inline">
                   Free AI career copilot
                 </span>
