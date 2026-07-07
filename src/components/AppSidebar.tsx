@@ -76,11 +76,11 @@ export function AppSidebar() {
             <Rocket className="h-5 w-5 text-primary-foreground" />
           </span>
           {!collapsed && (
-            <span className="flex flex-col leading-none">
-              <span className="font-display text-lg font-bold text-sidebar-foreground">
+            <span className="flex min-w-0 flex-col leading-none">
+              <span className="truncate font-display text-lg font-bold text-sidebar-foreground">
                 Ezvor
               </span>
-              <span className="text-[11px] text-muted-foreground">AI Career Guidance</span>
+              <span className="truncate text-[11px] text-muted-foreground">AI Career Guidance</span>
             </span>
           )}
         </Link>
