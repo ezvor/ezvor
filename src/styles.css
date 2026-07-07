@@ -240,7 +240,90 @@
   .shadow-soft {
     box-shadow: var(--shadow-soft);
   }
-}
+
+  /* Subtle animated grid backdrop — quiet, not busy */
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, oklch(1 0 0 / 4%) 1px, transparent 1px),
+      linear-gradient(to bottom, oklch(1 0 0 / 4%) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+
+  /* Hairline top-highlight used on cards for depth in monochrome */
+  .edge-light {
+    box-shadow: inset 0 1px 0 0 oklch(1 0 0 / 8%);
+  }
+
+  /* Lift on hover — refined, physical, not bouncy */
+  .hover-lift {
+    transition:
+      transform 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+      border-color 0.3s ease;
+    will-change: transform;
+  }
+  .hover-lift:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-elegant);
+  }
+
+  /* White sheen sweep for feature buttons/cards */
+  .sheen {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .sheen::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      110deg,
+      transparent 30%,
+      oklch(1 0 0 / 12%) 48%,
+      transparent 66%
+    );
+    transform: translateX(-120%);
+    transition: transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    pointer-events: none;
+    z-index: 1;
+  }
+  .sheen:hover::after {
+    transform: translateX(120%);
+  }
+
+  .animate-reveal {
+    animation: reveal 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .animate-reveal-slow {
+    animation: reveal 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .animate-blur-in {
+    animation: blur-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  @keyframes reveal {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes blur-in {
+    from {
+      opacity: 0;
+      filter: blur(8px);
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      filter: blur(0);
+      transform: translateY(0);
+    }
+  }
 
 @layer components {
   .prose-chat {
