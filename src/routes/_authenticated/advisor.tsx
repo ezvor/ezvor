@@ -229,10 +229,9 @@ function AdvisorLayout() {
 }
 
 function useActiveThreadId(): string | undefined {
-  try {
-    const params = useParams({ from: "/_authenticated/advisor/$threadId" });
-    return params.threadId;
-  } catch {
-    return undefined;
-  }
+  // `strict: false` reads params without throwing when the current match isn't
+  // the $threadId route. Never wrap a hook in try/catch — a throw mid-hook
+  // changes the hook count between renders and corrupts later hooks.
+  const params = useParams({ strict: false }) as { threadId?: string };
+  return params.threadId;
 }
