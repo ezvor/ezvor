@@ -226,7 +226,9 @@ function timeAgo(ts: number): string {
 }
 
 function PlaygroundPage() {
-  const isMobile = useIsMobile();
+  // The 3-pane resizable IDE only has room from ~1024px up (sidebar eats ~256px).
+  // Below that, fall back to the single-pane tabbed layout so nothing clips.
+  const isMobile = useMediaQuery("(max-width: 1023px)");
   const [problemId, setProblemId] = useState<string>(PROBLEMS[0].id);
   const [lang, setLang] = useState<LangKey>("python");
   const [code, setCode] = useState<string>(() => starterFor(PROBLEMS[0], "python"));
