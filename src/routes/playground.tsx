@@ -49,24 +49,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
-import {
-  ResizableHandle,
-  ResizablePanel,
-  ResizablePanelGroup,
-} from "@/components/ui/resizable";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import {
@@ -128,8 +113,6 @@ const SUBS_PREFIX = "ezvor.subs.v1";
 const remoteCache = new Map<string, LeetProblem>();
 const harnessCache = new Map<string, HarnessData>();
 const editorialCache = new Map<string, EditorialData>();
-
-
 
 type SubStatus = "Accepted" | "Wrong Answer" | "Compile Error" | "Runtime Error";
 type Submission = {
@@ -283,8 +266,8 @@ function PlaygroundPage() {
   const [harnessLoading, setHarnessLoading] = useState(false);
 
   // Editable custom test cases (LeetCode "Case 1 / Case 2").
-  const [caseInputs, setCaseInputs] = useState<string[]>(
-    () => PROBLEMS[0].examples.map((e) => e.input),
+  const [caseInputs, setCaseInputs] = useState<string[]>(() =>
+    PROBLEMS[0].examples.map((e) => e.input),
   );
   const [activeCase, setActiveCase] = useState(0);
 
@@ -309,11 +292,7 @@ function PlaygroundPage() {
 
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null);
 
-
-  const localProblem = useMemo(
-    () => PROBLEMS.find((p) => p.id === problemId),
-    [problemId],
-  );
+  const localProblem = useMemo(() => PROBLEMS.find((p) => p.id === problemId), [problemId]);
   const isLocal = !!localProblem;
 
   // Unified problem view-model: local (full judge) or a synthesized shell for a
@@ -332,9 +311,7 @@ function PlaygroundPage() {
       ioFormat:
         harness?.ioFormat ||
         "Write your solution in the editor. Use the Input box (and add a driver/print if needed) to Run against your own cases.",
-      examples: tests
-        .filter((t) => !t.hidden)
-        .map((t) => ({ input: t.input, output: t.expected })),
+      examples: tests.filter((t) => !t.hidden).map((t) => ({ input: t.input, output: t.expected })),
       constraints: [],
       starters: remote?.snippets ?? {},
       harness: harness?.harness ?? {},
@@ -345,14 +322,9 @@ function PlaygroundPage() {
   // A problem is auto-judgeable in-app when it's curated OR we have a harness.
   const judgeable = isLocal || (!!harness && harness.tests.length > 0);
 
-  const problemIndex = useMemo(
-    () => PROBLEMS.findIndex((p) => p.id === problemId),
-    [problemId],
-  );
+  const problemIndex = useMemo(() => PROBLEMS.findIndex((p) => p.id === problemId), [problemId]);
   // Human-facing problem number (LeetCode frontend id for remote problems).
-  const displayNo = isLocal
-    ? String(problemIndex + 1)
-    : remote?.frontendId || "";
+  const displayNo = isLocal ? String(problemIndex + 1) : remote?.frontendId || "";
   const monacoLang = LANGUAGES.find((l) => l.key === lang)?.monaco ?? "plaintext";
   const langLabel = LANGUAGES.find((l) => l.key === lang)?.label ?? lang;
   const storageKey = `${CODE_PREFIX}.${problemId}.${lang}`;
@@ -396,7 +368,6 @@ function PlaygroundPage() {
     });
     return () => sub.subscription.unsubscribe();
   }, [refreshStreak]);
-
 
   // Load the full problem catalog (all problems) for the problem list.
   useEffect(() => {
@@ -500,7 +471,6 @@ function PlaygroundPage() {
       setCaseInputs(ex);
       setActiveCase(0);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [harness]);
 
   // Reset editable cases + submissions + editorial when problem changes.
@@ -548,7 +518,6 @@ function PlaygroundPage() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [problemId, remote, signedIn]);
-
 
   // Persist code on change.
   useEffect(() => {
@@ -630,7 +599,6 @@ function PlaygroundPage() {
     [isLocal, remote, problem, editorial, getEditorialFn, buildStatement],
   );
 
-
   // Auto-load the editorial when the user opens Editorial or Solutions.
   useEffect(() => {
     if (leftTab !== "editorial" && leftTab !== "solutions") return;
@@ -681,9 +649,6 @@ function PlaygroundPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [problemId, remote, isLocal]);
 
-
-
-
   const goToProblem = useCallback(
     async (id: string) => {
       setProblemId(id);
@@ -727,8 +692,6 @@ function PlaygroundPage() {
     },
     [getLeetFn],
   );
-
-
 
   const resetCode = () => {
     setCode(starterFor(problem, lang));
@@ -825,7 +788,6 @@ function PlaygroundPage() {
     },
     [lang, langLabel, problem.id, problem.title, signedIn, recordSubFn, refreshStreak],
   );
-
 
   const handleSubmit = useCallback(async () => {
     if (!judgeable) {
@@ -1217,10 +1179,7 @@ function PlaygroundPage() {
                     <summary className="cursor-pointer font-medium text-foreground">
                       Hint {i + 1}
                     </summary>
-                    <div
-                      className="lc-content mt-2"
-                      dangerouslySetInnerHTML={{ __html: h }}
-                    />
+                    <div className="lc-content mt-2" dangerouslySetInnerHTML={{ __html: h }} />
                   </details>
                 ))}
               </div>
@@ -1230,24 +1189,23 @@ function PlaygroundPage() {
             {judgeable ? (
               <>
                 The official starter is loaded in the editor. Press{" "}
-                <span className="font-medium text-foreground">Run</span> to test the
-                sample cases, or <span className="font-medium text-foreground">Submit</span>{" "}
-                to auto-judge against the full hidden test set — solved problems count
-                toward your streak &amp; readiness proof.
+                <span className="font-medium text-foreground">Run</span> to test the sample cases,
+                or <span className="font-medium text-foreground">Submit</span> to auto-judge against
+                the full hidden test set — solved problems count toward your streak &amp; readiness
+                proof.
               </>
             ) : harnessLoading ? (
               <>
-                Preparing the in-app judge for this problem… you can start writing your
-                solution now — <span className="font-medium text-foreground">Run</span>{" "}
-                and <span className="font-medium text-foreground">Submit</span> unlock
-                the moment it's ready.
+                Preparing the in-app judge for this problem… you can start writing your solution now
+                — <span className="font-medium text-foreground">Run</span> and{" "}
+                <span className="font-medium text-foreground">Submit</span> unlock the moment it's
+                ready.
               </>
             ) : (
               <>
-                The official starter is loaded in the editor. Auto-judging couldn't be
-                prepared for this problem — use{" "}
-                <span className="font-medium text-foreground">Run</span> with your own
-                inputs to test your solution.
+                The official starter is loaded in the editor. Auto-judging couldn't be prepared for
+                this problem — use <span className="font-medium text-foreground">Run</span> with
+                your own inputs to test your solution.
               </>
             )}
           </div>
@@ -1268,11 +1226,15 @@ function PlaygroundPage() {
                 <div className="mt-2 rounded-lg border-l-4 border-border bg-muted/30 p-3 text-xs">
                   <div>
                     <span className="font-semibold">Input:</span>
-                    <pre className="mt-1 whitespace-pre-wrap font-mono text-foreground/90">{ex.input}</pre>
+                    <pre className="mt-1 whitespace-pre-wrap font-mono text-foreground/90">
+                      {ex.input}
+                    </pre>
                   </div>
                   <div className="mt-2">
                     <span className="font-semibold">Output:</span>
-                    <pre className="mt-1 whitespace-pre-wrap font-mono text-foreground/90">{ex.output}</pre>
+                    <pre className="mt-1 whitespace-pre-wrap font-mono text-foreground/90">
+                      {ex.output}
+                    </pre>
                   </div>
                   {ex.explanation && (
                     <p className="mt-2 text-muted-foreground">
@@ -1355,7 +1317,9 @@ function PlaygroundPage() {
 
           {editorial.intuition && (
             <div className="mt-4 rounded-lg border-l-4 border-primary/50 bg-primary/5 p-3">
-              <p className="text-xs font-semibold uppercase tracking-wide text-primary">Intuition</p>
+              <p className="text-xs font-semibold uppercase tracking-wide text-primary">
+                Intuition
+              </p>
               <p className="mt-1 text-foreground/90">{editorial.intuition}</p>
             </div>
           )}
@@ -1408,9 +1372,7 @@ function PlaygroundPage() {
                   </ol>
                 )}
                 <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                  <span className="rounded-md bg-muted px-2 py-1 font-mono">
-                    ⏱ Time: {a.time}
-                  </span>
+                  <span className="rounded-md bg-muted px-2 py-1 font-mono">⏱ Time: {a.time}</span>
                   <span className="rounded-md bg-muted px-2 py-1 font-mono">
                     💾 Space: {a.space}
                   </span>
@@ -1484,14 +1446,15 @@ function PlaygroundPage() {
             {/* Complexity + language picker */}
             <div className="mt-3 flex items-center justify-between gap-2">
               <div className="flex flex-wrap gap-2 text-[11px]">
-                <span className="rounded bg-muted px-2 py-1 font-mono">Time {solApproachData.time}</span>
-                <span className="rounded bg-muted px-2 py-1 font-mono">Space {solApproachData.space}</span>
+                <span className="rounded bg-muted px-2 py-1 font-mono">
+                  Time {solApproachData.time}
+                </span>
+                <span className="rounded bg-muted px-2 py-1 font-mono">
+                  Space {solApproachData.space}
+                </span>
               </div>
               <div className="flex items-center gap-1.5">
-                <Select
-                  value={effectiveSolLang}
-                  onValueChange={(v) => setSolLang(v as LangKey)}
-                >
+                <Select value={effectiveSolLang} onValueChange={(v) => setSolLang(v as LangKey)}>
                   <SelectTrigger className="h-8 w-[150px] text-xs">
                     <SelectValue />
                   </SelectTrigger>
@@ -1540,7 +1503,10 @@ function PlaygroundPage() {
       ) : (
         <div className="flex flex-1 flex-col items-center justify-center gap-3 p-5 text-center text-sm text-muted-foreground">
           <Lightbulb className="h-8 w-8 text-warning/60" />
-          <p>Get complete, accurate solutions (brute force → optimal) in C++, Python, Java &amp; JavaScript.</p>
+          <p>
+            Get complete, accurate solutions (brute force → optimal) in C++, Python, Java &amp;
+            JavaScript.
+          </p>
           <Button size="sm" onClick={() => loadEditorial(false)}>
             <Lightbulb className="h-3.5 w-3.5" /> Generate solutions
           </Button>
@@ -1548,7 +1514,6 @@ function PlaygroundPage() {
       )}
     </div>
   );
-
 
   const SubmissionsBody = (
     <div className="h-full overflow-y-auto p-5 text-sm">
@@ -1800,7 +1765,11 @@ function PlaygroundPage() {
         disabled={busy}
         title="Run (⌘/Ctrl + Enter)"
       >
-        {running ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5" />}
+        {running ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        ) : (
+          <Play className="h-3.5 w-3.5" />
+        )}
         Run
       </Button>
       <Button
@@ -1861,9 +1830,7 @@ function PlaygroundPage() {
         <IconBtn
           label="Next problem"
           onClick={() =>
-            navIndex >= 0 &&
-            navIndex < navQueue.length - 1 &&
-            goToProblem(navQueue[navIndex + 1])
+            navIndex >= 0 && navIndex < navQueue.length - 1 && goToProblem(navQueue[navIndex + 1])
           }
           disabled={navIndex === -1 || navIndex >= navQueue.length - 1}
         >
@@ -1892,10 +1859,7 @@ function PlaygroundPage() {
               title="Practice streak"
             >
               <Flame
-                className={cn(
-                  "h-3.5 w-3.5",
-                  streak && streak.current > 0 && "fill-orange-500/20",
-                )}
+                className={cn("h-3.5 w-3.5", streak && streak.current > 0 && "fill-orange-500/20")}
               />
               <span className="tabular-nums">{streak?.current ?? 0}</span>
             </button>
@@ -1963,7 +1927,9 @@ function PlaygroundPage() {
           title={timerOn ? "Pause timer" : "Start timer"}
         >
           {timerOn ? <Pause className="h-3.5 w-3.5" /> : <TimerIcon className="h-3.5 w-3.5" />}
-          <span className="tabular-nums">{mm}:{ss}</span>
+          <span className="tabular-nums">
+            {mm}:{ss}
+          </span>
         </button>
 
         {seconds > 0 && (
@@ -2233,7 +2199,11 @@ function SubmitOutput({ result }: { result: SubmitResult }) {
 
       <div className="flex flex-wrap gap-2">
         {result.runtimeMs != null && (
-          <Metric icon={<Clock className="h-3.5 w-3.5" />} label="Runtime" value={`${result.runtimeMs} ms`} />
+          <Metric
+            icon={<Clock className="h-3.5 w-3.5" />}
+            label="Runtime"
+            value={`${result.runtimeMs} ms`}
+          />
         )}
         {result.memoryKb != null && (
           <Metric
@@ -2273,9 +2243,7 @@ function SubmitOutput({ result }: { result: SubmitResult }) {
             title={`Case ${c.index + 1}${c.hidden ? " (hidden)" : ""}`}
             className={cn(
               "flex h-6 w-6 items-center justify-center rounded text-[10px] font-bold",
-              c.passed
-                ? "bg-success/15 text-success"
-                : "bg-destructive/15 text-destructive",
+              c.passed ? "bg-success/15 text-success" : "bg-destructive/15 text-destructive",
             )}
           >
             {c.passed ? <Check className="h-3 w-3" /> : <X className="h-3 w-3" />}
@@ -2327,11 +2295,15 @@ function LabeledBox({
 function Block({ label, text, tone }: { label: string; text: string; tone: "error" }) {
   return (
     <div>
-      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</p>
+      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+        {label}
+      </p>
       <pre
         className={cn(
           "mt-1 max-h-52 overflow-auto whitespace-pre-wrap rounded-lg p-3 font-mono text-xs",
-          tone === "error" ? "bg-destructive/10 text-destructive" : "bg-muted/50 text-foreground/90",
+          tone === "error"
+            ? "bg-destructive/10 text-destructive"
+            : "bg-muted/50 text-foreground/90",
         )}
       >
         {text}

@@ -15,9 +15,7 @@ export type { LeetProblem };
  * key to LeetCode-like instant loads for the ~4k catalog problems.
  */
 export const getLeetProblem = createServerFn({ method: "GET" })
-  .inputValidator((input) =>
-    z.object({ slug: z.string().min(1).max(200) }).parse(input),
-  )
+  .inputValidator((input) => z.object({ slug: z.string().min(1).max(200) }).parse(input))
   .handler(async ({ data }): Promise<LeetProblem> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
