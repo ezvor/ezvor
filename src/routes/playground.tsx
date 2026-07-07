@@ -614,6 +614,7 @@ function PlaygroundPage() {
             refresh,
           },
         });
+        if (!data) throw new Error("empty editorial");
         editorialCache.set(slug, data);
         setEditorial(data);
         editorialSlugRef.current = slug;
