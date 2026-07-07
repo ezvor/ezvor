@@ -160,7 +160,7 @@ function RootComponent() {
                   Ezvor
                 </span>
                 <span className="hidden text-xs text-muted-foreground sm:inline">
-                  · Free AI career copilot
+                  Free AI career copilot
                 </span>
               </header>
               <main className="min-w-0 flex-1">
