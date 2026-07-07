@@ -110,14 +110,26 @@ function ChatPage() {
     streamingRef.current = true;
 
     let assistant = "";
-    const pushAssistant = (chunk: string) => {
-      assistant += chunk;
+    let rafId: number | null = null;
+    const flush = () => {
+      rafId = null;
       setMessages((prev) => {
         const last = prev[prev.length - 1];
         return last?.role === "assistant"
           ? prev.map((m, i) => (i === prev.length - 1 ? { ...m, content: assistant } : m))
           : [...prev, { role: "assistant", content: assistant }];
       });
+    };
+    // Coalesce tokens into a single paint per frame so fast streaming stays
+    // buttery instead of thrashing the markdown renderer on every token.
+    const pushAssistant = (chunk: string) => {
+      assistant += chunk;
+      if (rafId == null) {
+        rafId =
+          typeof requestAnimationFrame !== "undefined"
+            ? requestAnimationFrame(flush)
+            : (setTimeout(flush, 16) as unknown as number);
+      }
     };
 
     try {
