@@ -165,6 +165,8 @@ func main() {
 const STORAGE_PREFIX = "ezvor.compiler.";
 
 function CompilerPage() {
+  // Stack editor / input / output vertically until there's room for a side-by-side IDE.
+  const stacked = useMediaQuery("(max-width: 1023px)");
   const [langKey, setLangKey] = useState<LangKey>("cpp");
   const [code, setCode] = useState<Record<LangKey, string>>(() => {
     const initial = {} as Record<LangKey, string>;
