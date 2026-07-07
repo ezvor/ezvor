@@ -88,7 +88,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           "Ezvor is a free AI career platform: unified roadmaps and skill graphs, live opportunities, a DSA arena, an online compiler, and an AI advisor for students and professionals.",
       },
       { name: "author", content: "Ezvor" },
-      { property: "og:title", content: "Ezvor — Free AI Career Platform for Engineers" },
+      { property: "og:title", content: "Ezvor Free AI Career Platform for Engineers" },
       {
         property: "og:description",
         content:
