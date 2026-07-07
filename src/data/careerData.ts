@@ -55,7 +55,7 @@ export const OPPORTUNITIES: Opportunity[] = [
     eligibility: "18+ open-source newcomers (students & non-students)",
     url: "https://summerofcode.withgoogle.com/",
     tags: ["mentorship", "remote", "global"],
-    stipend: "$750–$3300",
+    stipend: "$750–$3000",
     status: "Closed",
     region: "Global",
     statusNote: "2025 applications closed — next cycle opens Mar 2026",
