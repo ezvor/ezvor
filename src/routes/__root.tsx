@@ -81,14 +81,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Ezvor — Free AI Career Platform for Engineers" },
+      { title: "Ezvor Free AI Career Platform for Engineers" },
       {
         name: "description",
         content:
           "Ezvor is a free AI career platform: unified roadmaps and skill graphs, live opportunities, a DSA arena, an online compiler, and an AI advisor for students and professionals.",
       },
       { name: "author", content: "Ezvor" },
-      { property: "og:title", content: "Ezvor — Free AI Career Platform for Engineers" },
+      { property: "og:title", content: "Ezvor Free AI Career Platform for Engineers" },
       {
         property: "og:description",
         content:
@@ -96,7 +96,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Ezvor — Free AI Career Platform for Engineers" },
+      { name: "twitter:title", content: "Ezvor Free AI Career Platform for Engineers" },
       {
         name: "twitter:description",
         content:
@@ -105,6 +105,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
     ],
     links: [
+      { rel: "icon", type: "image/png", href: "/favicon.png" },
+      { rel: "apple-touch-icon", href: "/favicon.png" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       {
         rel: "preconnect",
@@ -158,7 +160,7 @@ function RootComponent() {
                   Ezvor
                 </span>
                 <span className="hidden text-xs text-muted-foreground sm:inline">
-                  · Free AI career copilot
+                  Free AI career copilot
                 </span>
               </header>
               <main className="min-w-0 flex-1">
