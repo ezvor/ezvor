@@ -454,6 +454,15 @@ function PlaygroundPage() {
   useEffect(() => {
     if (!remote) return;
     const slug = remote.slug;
+
+    // Instant path: harness already in this session's memory cache.
+    const cachedHarness = harnessCache.get(slug);
+    if (cachedHarness) {
+      setHarness(cachedHarness);
+      setHarnessLoading(false);
+      return;
+    }
+
     let cancelled = false;
     setHarnessLoading(true);
     setHarness(null);
@@ -468,6 +477,7 @@ function PlaygroundPage() {
       },
     })
       .then((h) => {
+        if (h.slug === slug) harnessCache.set(slug, h);
         if (!cancelled && h.slug === slug) setHarness(h);
       })
       .catch(() => {
