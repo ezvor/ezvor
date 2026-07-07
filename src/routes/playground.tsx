@@ -53,7 +53,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useMediaQuery } from "@/hooks/use-mobile";
 import {
   PROBLEMS,
   LANGUAGES,
@@ -226,7 +226,9 @@ function timeAgo(ts: number): string {
 }
 
 function PlaygroundPage() {
-  const isMobile = useIsMobile();
+  // The 3-pane resizable IDE only has room from ~1024px up (sidebar eats ~256px).
+  // Below that, fall back to the single-pane tabbed layout so nothing clips.
+  const isMobile = useMediaQuery("(max-width: 1023px)");
   const [problemId, setProblemId] = useState<string>(PROBLEMS[0].id);
   const [lang, setLang] = useState<LangKey>("python");
   const [code, setCode] = useState<string>(() => starterFor(PROBLEMS[0], "python"));
@@ -1059,7 +1061,7 @@ function PlaygroundPage() {
   );
 
   const LeftTabs = (
-    <div className="flex items-center gap-1 border-b border-border/60 bg-card/40 px-2">
+    <div className="no-scrollbar flex items-center gap-1 overflow-x-auto border-b border-border/60 bg-card/40 px-2">
       {[
         { key: "description", label: "Description", icon: FileText },
         { key: "editorial", label: "Editorial", icon: BookOpen },
@@ -1073,14 +1075,14 @@ function PlaygroundPage() {
             key={t.key}
             onClick={() => setLeftTab(t.key as typeof leftTab)}
             className={cn(
-              "flex items-center gap-1.5 border-b-2 px-2.5 py-2.5 text-xs font-medium transition-colors",
+              "flex shrink-0 items-center gap-1.5 whitespace-nowrap border-b-2 px-2 py-2.5 text-xs font-medium transition-colors",
               active
                 ? "border-primary text-foreground"
                 : "border-transparent text-muted-foreground hover:text-foreground",
             )}
           >
-            <Icon className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{t.label}</span>
+            <Icon className="h-3.5 w-3.5 shrink-0" />
+            <span>{t.label}</span>
           </button>
         );
       })}
@@ -2008,11 +2010,11 @@ function PlaygroundPage() {
     <div className="flex h-[calc(100vh-3.5rem)] flex-col">
       {TopBar}
       <ResizablePanelGroup orientation="horizontal" className="min-h-0 flex-1">
-        <ResizablePanel defaultSize="44%" minSize="25%">
+        <ResizablePanel defaultSize="48%" minSize="28%">
           {LeftPanel}
         </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel defaultSize="56%" minSize="35%">
+        <ResizablePanel defaultSize="52%" minSize="30%">
           <ResizablePanelGroup orientation="vertical">
             <ResizablePanel defaultSize="60%" minSize="25%">
               {EditorArea}

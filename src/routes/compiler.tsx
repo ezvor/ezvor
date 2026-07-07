@@ -38,6 +38,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { useMediaQuery } from "@/hooks/use-mobile";
 import type { LangKey } from "@/lib/judge.server";
 import { executeCode } from "@/lib/judge.functions";
 import type { RunResult } from "@/lib/judge.server";
@@ -164,6 +165,8 @@ func main() {
 const STORAGE_PREFIX = "ezvor.compiler.";
 
 function CompilerPage() {
+  // Stack editor / input / output vertically until there's room for a side-by-side IDE.
+  const stacked = useMediaQuery("(max-width: 1023px)");
   const [langKey, setLangKey] = useState<LangKey>("cpp");
   const [code, setCode] = useState<Record<LangKey, string>>(() => {
     const initial = {} as Record<LangKey, string>;
@@ -354,8 +357,8 @@ function CompilerPage() {
 
         {/* Editor + output */}
         <div className="min-h-0 flex-1">
-          <ResizablePanelGroup orientation="horizontal">
-            <ResizablePanel defaultSize={58} minSize={30}>
+          <ResizablePanelGroup orientation={stacked ? "vertical" : "horizontal"}>
+            <ResizablePanel defaultSize={stacked ? 45 : 58} minSize={20}>
               <div className="flex h-full flex-col">
                 <div className="flex items-center gap-2 border-b border-border/40 bg-card/20 px-4 py-1.5 text-xs text-muted-foreground">
                   <ChevronRight className="h-3.5 w-3.5" />
@@ -381,7 +384,7 @@ function CompilerPage() {
 
             <ResizableHandle withHandle />
 
-            <ResizablePanel defaultSize={42} minSize={24}>
+            <ResizablePanel defaultSize={stacked ? 55 : 42} minSize={20}>
               <ResizablePanelGroup orientation="vertical">
                 {/* Input */}
                 <ResizablePanel defaultSize={35} minSize={12}>
