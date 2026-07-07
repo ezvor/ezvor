@@ -1061,7 +1061,7 @@ function PlaygroundPage() {
   );
 
   const LeftTabs = (
-    <div className="no-scrollbar flex items-center gap-1 overflow-x-auto border-b border-border/60 bg-card/40 px-2">>
+    <div className="no-scrollbar flex items-center gap-1 overflow-x-auto border-b border-border/60 bg-card/40 px-2">
       {[
         { key: "description", label: "Description", icon: FileText },
         { key: "editorial", label: "Editorial", icon: BookOpen },
