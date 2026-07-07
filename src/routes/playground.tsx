@@ -120,6 +120,17 @@ const CODE_PREFIX = "ezvor.code.v1";
 const SOLVED_KEY = "ezvor.solved.v1";
 const SUBS_PREFIX = "ezvor.subs.v1";
 
+// Session-scoped, in-memory caches keyed by problem slug. Once a problem's
+// statement / harness / editorial has been fetched (or generated) during this
+// browser session, re-opening the problem or switching tabs is INSTANT — no
+// server round-trip at all. Persists across component remounts for the tab's
+// lifetime. The durable cross-session cache lives in the database.
+const remoteCache = new Map<string, LeetProblem>();
+const harnessCache = new Map<string, HarnessData>();
+const editorialCache = new Map<string, EditorialData>();
+
+
+
 type SubStatus = "Accepted" | "Wrong Answer" | "Compile Error" | "Runtime Error";
 type Submission = {
   id: string;
