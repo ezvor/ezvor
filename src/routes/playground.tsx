@@ -2010,7 +2010,7 @@ function PlaygroundPage() {
     <div className="flex h-[calc(100vh-3.5rem)] flex-col">
       {TopBar}
       <ResizablePanelGroup orientation="horizontal" className="min-h-0 flex-1">
-        <ResizablePanel defaultSize="44%" minSize="25%">
+        <ResizablePanel defaultSize="48%" minSize="28%">
           {LeftPanel}
         </ResizablePanel>
         <ResizableHandle withHandle />
