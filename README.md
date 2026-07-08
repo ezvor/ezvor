@@ -6,11 +6,6 @@
 
 **The career platform that measures real work and tells you the truth: are you hireable yet?**
 
-[![Live](https://img.shields.io/badge/Live-ezvor.lovable.app-white?style=for-the-badge)](https://ezvor.lovable.app)
-[![React](https://img.shields.io/badge/React_19-black?style=for-the-badge&logo=react)](https://react.dev)
-[![TypeScript](https://img.shields.io/badge/TypeScript-strict-black?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org)
-[![TanStack Start](https://img.shields.io/badge/TanStack_Start-black?style=for-the-badge)](https://tanstack.com/start)
-
 [Live App](https://ezvor.lovable.app) · [Report a Bug](https://github.com/ezvor/ezvor/issues) · [Request a Feature](https://github.com/ezvor/ezvor/issues)
 
 </div>
