@@ -23,6 +23,8 @@ export interface IntelFocusArea {
 export interface CompanyIntel {
   company: string;
   role: string;
+  recognized: boolean;
+  note: string;
   overview: string;
   culture: string[];
   requirements: string[];
@@ -81,9 +83,19 @@ const tools = [
       parameters: {
         type: "object",
         properties: {
+          recognized: {
+            type: "boolean",
+            description:
+              "true only if this is a real, identifiable organization you can speak to with confidence (from sources or well-established knowledge). false if the name looks like random characters, gibberish, a test string, or a company you cannot verify exists.",
+          },
+          note: {
+            type: "string",
+            description:
+              "If recognized is false: a short, friendly note that this company could not be verified as a registered organization, and that the brief below is generic role-based preparation. If recognized is true: an empty string.",
+          },
           overview: {
             type: "string",
-            description: "1-2 sentence factual overview of the company and what the role does there.",
+            description: "1-2 sentence factual overview of the company and what the role does there. If the company is unrecognized, describe the ROLE generically instead and do not invent company facts.",
           },
           culture: {
             type: "array",
@@ -143,6 +155,8 @@ const tools = [
           },
         },
         required: [
+          "recognized",
+          "note",
           "overview",
           "culture",
           "requirements",
@@ -159,24 +173,43 @@ const tools = [
   },
 ];
 
+/** Cheap gibberish detector for obviously-fake company names. */
+function looksLikeGibberish(name: string): boolean {
+  const n = name.trim().toLowerCase();
+  if (n.length < 2) return true;
+  const letters = n.replace(/[^a-z]/g, "");
+  if (!letters) return true;
+  const vowels = (letters.match(/[aeiou]/g) || []).length;
+  const vowelRatio = vowels / letters.length;
+  // A single long token with almost no vowels is almost certainly keyboard mash.
+  const singleToken = !/\s/.test(n);
+  const longConsonantRun = /[bcdfghjklmnpqrstvwxyz]{6,}/.test(letters);
+  return (singleToken && letters.length >= 10 && vowelRatio < 0.28) || longConsonantRun;
+}
+
 export async function buildCompanyIntel(company: string, role: string): Promise<CompanyIntel> {
   const hits = await gatherContext(company, role);
+  const suspicious = hits.length === 0 && looksLikeGibberish(company);
 
   const context = hits.length
     ? hits
         .map((h, i) => `[Source ${i + 1}] ${h.title}\n${h.url}\n${h.snippet}`)
         .join("\n\n---\n\n")
-    : "No live sources were retrieved. Use your best, honest general knowledge and clearly avoid inventing specifics.";
+    : "No live sources were retrieved for this company name.";
 
   const messages: ChatMessage[] = [
     {
       role: "system",
       content:
-        "You are a sharp technical recruiter and interview coach. Produce an accurate, concise hiring brief for a specific company and role. Prefer facts grounded in the provided sources. If sources are thin, rely on well-established general knowledge and keep claims safe and non-specific rather than fabricating exact details (never invent salary figures, named recruiters, or exact question banks). Keep every field tight and skimmable.",
+        "You are a sharp technical recruiter and interview coach. First judge whether the company is a real, identifiable organization. If it is, produce an accurate, concise hiring brief grounded in the sources or well-established knowledge (never invent salary figures, named recruiters, or exact question banks). If the company name looks like random characters, gibberish, or a company you cannot verify, set recognized=false, write a short friendly note saying it could not be verified as a registered organization, and fill every remaining field with solid GENERIC role-based interview preparation for the target role (do not fabricate company-specific facts). Keep every field tight and skimmable.",
     },
     {
       role: "user",
-      content: `Company: ${company}\nTarget role: ${role}\n\nResearched context:\n${context}\n\nWrite the structured brief.`,
+      content: `Company: ${company}\nTarget role: ${role}\n${
+        suspicious
+          ? "\nHeuristic flag: this company name looks like random/gibberish text and returned no web results. Treat it as unrecognized unless you have strong evidence otherwise.\n"
+          : ""
+      }\nResearched context:\n${context}\n\nWrite the structured brief.`,
     },
   ];
 
@@ -199,6 +232,13 @@ export async function buildCompanyIntel(company: string, role: string): Promise<
 
   const parsed = JSON.parse(argStr) as Omit<CompanyIntel, "company" | "role" | "resources">;
 
+  // Hard override: gibberish name with zero web evidence is never "recognized".
+  const recognized = suspicious ? false : parsed.recognized;
+  const note = recognized
+    ? ""
+    : parsed.note ||
+      `We couldn't verify "${company}" as a registered organization, so this is generic ${role} preparation. Double-check the exact company name, or start prepping the fundamentals below anyway.`;
+
   // Only surface real, retrieved links as resources.
   const seen = new Set<string>();
   const resources: IntelResource[] = [];
@@ -209,5 +249,5 @@ export async function buildCompanyIntel(company: string, role: string): Promise<
     if (resources.length >= 5) break;
   }
 
-  return { company, role, resources, ...parsed };
+  return { company, role, resources, ...parsed, recognized, note };
 }
