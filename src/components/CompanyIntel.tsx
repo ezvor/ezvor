@@ -345,14 +345,16 @@ function TagPanel({
   const a = accentStyles[accent];
   return (
     <Section icon={icon} title={title} accent={accent}>
-      <div className="flex flex-wrap gap-1.5 rounded-xl border border-l-2 border-border/60 bg-background/40 p-4">
-        <div className={cn("pointer-events-none absolute", a.leftBorder)} />
+      <div
+        className={cn(
+          "flex flex-wrap gap-1.5 rounded-xl border border-l-2 border-border/60 bg-background/40 p-4",
+          a.leftBorder,
+        )}
+      >
         {items.map((t) => (
           <span
             key={t}
-            className={cn(
-              "rounded-md border border-border/60 bg-card/70 px-2 py-1 text-xs text-foreground transition-colors",
-            )}
+            className="rounded-md border border-border/60 bg-card/70 px-2 py-1 text-xs text-foreground transition-colors"
           >
             {t}
           </span>
