@@ -233,6 +233,8 @@ function NodeDetail({
   onToggleDone: () => void;
   onClose: () => void;
 }) {
+  const cat = node.category ? CATEGORY_META[node.category] : null;
+  const nodeAccent = cat?.token ?? accent;
   return (
     <motion.div
       className="fixed inset-0 z-50 flex items-end justify-center bg-background/70 p-0 backdrop-blur-sm sm:items-center sm:p-4"
@@ -251,9 +253,9 @@ function NodeDetail({
           <div>
             <span
               className="text-xs font-medium uppercase tracking-wide"
-              style={{ color: accent }}
+              style={{ color: nodeAccent }}
             >
-              Skill node
+              {cat ? cat.label : "Skill node"}
             </span>
             <h3 className="mt-1 font-display text-2xl font-bold">{node.label}</h3>
           </div>
@@ -264,6 +266,21 @@ function NodeDetail({
             <X className="h-5 w-5" />
           </button>
         </div>
+
+        {node.bridgeNote && (
+          <div
+            className="mt-3 rounded-xl border p-3 text-sm leading-relaxed"
+            style={{
+              borderColor: `color-mix(in oklab, ${nodeAccent} 40%, transparent)`,
+              background: `color-mix(in oklab, ${nodeAccent} 10%, transparent)`,
+            }}
+          >
+            <span className="font-semibold" style={{ color: nodeAccent }}>
+              From where you are:{" "}
+            </span>
+            <span className="text-foreground/90">{node.bridgeNote}</span>
+          </div>
+        )}
 
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{node.desc}</p>
 
