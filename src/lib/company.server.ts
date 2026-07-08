@@ -83,9 +83,19 @@ const tools = [
       parameters: {
         type: "object",
         properties: {
+          recognized: {
+            type: "boolean",
+            description:
+              "true only if this is a real, identifiable organization you can speak to with confidence (from sources or well-established knowledge). false if the name looks like random characters, gibberish, a test string, or a company you cannot verify exists.",
+          },
+          note: {
+            type: "string",
+            description:
+              "If recognized is false: a short, friendly note that this company could not be verified as a registered organization, and that the brief below is generic role-based preparation. If recognized is true: an empty string.",
+          },
           overview: {
             type: "string",
-            description: "1-2 sentence factual overview of the company and what the role does there.",
+            description: "1-2 sentence factual overview of the company and what the role does there. If the company is unrecognized, describe the ROLE generically instead and do not invent company facts.",
           },
           culture: {
             type: "array",
