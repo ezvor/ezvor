@@ -119,12 +119,14 @@ export function RoadmapGraph({ graph }: { graph: GraphRoadmap }) {
             const x2 = b.col * 100;
             const y2 = (b.row + 0.5) * 100;
             const my = (y1 + y2) / 2;
+            // Colour the edge by the category of the node it flows into.
+            const edgeColor = b.category ? CATEGORY_META[b.category].token : accent;
             return (
               <motion.path
                 key={i}
                 d={`M ${x1} ${y1} C ${x1} ${my}, ${x2} ${my}, ${x2} ${y2}`}
                 fill="none"
-                stroke={accent}
+                stroke={edgeColor}
                 strokeWidth={2}
                 strokeOpacity={0.35}
                 vectorEffect="non-scaling-stroke"
