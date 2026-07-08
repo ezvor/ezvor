@@ -163,15 +163,32 @@ export const generatePersonalGraph = createServerFn({ method: "POST" })
     }),
   )
   .handler(async ({ data }): Promise<GraphRoadmap> => {
+    const currentSkills = data.skills?.trim();
+    const hasCurrent = !!currentSkills;
+
     const messages: ChatMessage[] = [
       {
         role: "system",
-        content:
-          "You are a career mentor building a visual skill roadmap. Given a target role and the learner's current skills, produce 4-6 ordered stages from foundations to job-ready. SKIP or shorten topics the learner already knows and go deeper on what they're missing. Each stage has 1-2 nodes. Every node MUST include 1-3 FREE resources, preferring specific YouTube channels/playlists (e.g. freeCodeCamp, NeetCode, TechWorld with Nana, Krish Naik, StatQuest, Corey Schafer) that match the topic. Use real, working URLs.",
+        content: [
+          "You are a senior career-transition mentor. Your job is NOT to dump a generic roadmap for the target role.",
+          "You build a MIGRATION MAP that shows how someone moves FROM their current background TO the target role.",
+          "",
+          "Rules for every node, classify it with `category`:",
+          "- \"transfer\": a skill the learner ALREADY HAS that carries over directly. Do NOT teach it again; briefly say how it applies in the new role. Keep these to the first stage(s).",
+          "- \"bridge\": something the learner partially knows but must REFRAME or EXTEND (e.g. an SQA engineer already writes test cases, so they bridge into CI test automation / pipeline gates). Explain the delta from what they do today.",
+          "- \"new\": a net-new skill they must learn from scratch. Go deeper here since this is where the real gap is.",
+          "For EVERY node also fill `bridgeNote`: one concrete sentence relating it to the learner's stated background (e.g. 'You already validate APIs manually — now assert them inside a pipeline stage').",
+          "",
+          "Order stages so early stages leverage transferable strengths, middle stages bridge, and later stages build the missing core of the target role, ending job-ready. 4-6 stages, 1-2 nodes each, and give each stage a short `title`.",
+          "Be specific and accurate to the ACTUAL transition named (do not invent a generic path). Every node MUST include 1-3 FREE resources, preferring specific YouTube channels/playlists (freeCodeCamp, NeetCode, TechWorld with Nana, KodeKloud, Krish Naik, StatQuest, Corey Schafer) matching the topic. Use real, working URLs.",
+          "Set `title` to the transition itself, e.g. 'SQA Engineer -> DevOps'. Set `tagline` to one sentence naming the biggest gap to close.",
+        ].join("\n"),
       },
       {
         role: "user",
-        content: `Target role: ${data.role}\nCurrent skills: ${data.skills?.trim() || "beginner / not specified"}`,
+        content: hasCurrent
+          ? `Build the transition map.\nCurrent role / skills: ${currentSkills}\nTarget role: ${data.role}\nShow exactly what transfers, what must be reframed, and what is net-new to migrate from where I am today to ${data.role}.`
+          : `Target role: ${data.role}\nCurrent skills: not specified. Assume an early-career learner and build a foundations-to-job-ready path; mark truly foundational items as "new".`,
       },
     ];
 
@@ -180,17 +197,18 @@ export const generatePersonalGraph = createServerFn({ method: "POST" })
         type: "function",
         function: {
           name: "build_graph",
-          description: "Return a staged skill graph with free resources per node.",
+          description: "Return a staged transition/skill graph with free resources per node.",
           parameters: {
             type: "object",
             properties: {
-              title: { type: "string" },
-              tagline: { type: "string", description: "One short sentence." },
+              title: { type: "string", description: "The transition, e.g. 'SQA Engineer -> DevOps'." },
+              tagline: { type: "string", description: "One sentence naming the biggest gap to close." },
               stages: {
                 type: "array",
                 items: {
                   type: "object",
                   properties: {
+                    title: { type: "string", description: "Short stage name." },
                     nodes: {
                       type: "array",
                       items: {
@@ -198,6 +216,16 @@ export const generatePersonalGraph = createServerFn({ method: "POST" })
                         properties: {
                           label: { type: "string" },
                           desc: { type: "string" },
+                          category: {
+                            type: "string",
+                            enum: ["transfer", "bridge", "new"],
+                            description:
+                              "transfer = already have it; bridge = reframe/extend existing skill; new = learn from scratch.",
+                          },
+                          bridgeNote: {
+                            type: "string",
+                            description: "One sentence relating this node to the learner's current background.",
+                          },
                           resources: {
                             type: "array",
                             items: {
@@ -216,12 +244,12 @@ export const generatePersonalGraph = createServerFn({ method: "POST" })
                             },
                           },
                         },
-                        required: ["label", "desc", "resources"],
+                        required: ["label", "desc", "category", "bridgeNote", "resources"],
                         additionalProperties: false,
                       },
                     },
                   },
-                  required: ["nodes"],
+                  required: ["title", "nodes"],
                   additionalProperties: false,
                 },
               },
@@ -253,7 +281,14 @@ export const generatePersonalGraph = createServerFn({ method: "POST" })
       title: string;
       tagline: string;
       stages: {
-        nodes: { label: string; desc: string; resources: GraphNode["resources"] }[];
+        title?: string;
+        nodes: {
+          label: string;
+          desc: string;
+          category?: "transfer" | "bridge" | "new";
+          bridgeNote?: string;
+          resources: GraphNode["resources"];
+        }[];
       }[];
     };
 
@@ -268,7 +303,16 @@ export const generatePersonalGraph = createServerFn({ method: "POST" })
       stage.nodes.forEach((n, i) => {
         const id = `s${row}n${i}`;
         const col = count === 1 ? 0.5 : 0.25 + (i * 0.5) / (count - 1);
-        nodes.push({ id, label: n.label, desc: n.desc, row, col, resources: n.resources ?? [] });
+        nodes.push({
+          id,
+          label: n.label,
+          desc: n.desc,
+          row,
+          col,
+          resources: n.resources ?? [],
+          category: hasCurrent ? n.category : undefined,
+          bridgeNote: hasCurrent ? n.bridgeNote : undefined,
+        });
         rowIds.push(id);
       });
       idsByRow.push(rowIds);

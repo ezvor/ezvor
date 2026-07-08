@@ -24,6 +24,30 @@ const kindIcon: Record<ResourceKind, LucideIcon> = {
   Course: GraduationCap,
 };
 
+type Category = NonNullable<GraphNode["category"]>;
+
+/** Colour + copy for each transition category (uses approved --sec-* accent tokens). */
+const CATEGORY_META: Record<Category, { label: string; short: string; token: string; hint: string }> = {
+  transfer: {
+    label: "Already yours",
+    short: "Transfer",
+    token: "var(--sec-green)",
+    hint: "A strength you already have — it carries over directly.",
+  },
+  bridge: {
+    label: "Reframe & extend",
+    short: "Bridge",
+    token: "var(--sec-amber)",
+    hint: "You partly know this — stretch it into the new role.",
+  },
+  new: {
+    label: "Learn from scratch",
+    short: "New",
+    token: "var(--sec-blue)",
+    hint: "A net-new skill — this is where the real gap is.",
+  },
+};
+
 export function RoadmapGraph({ graph }: { graph: GraphRoadmap }) {
   const [active, setActive] = useState<GraphNode | null>(null);
   const [done, setDone] = useState<Set<string>>(new Set());
@@ -34,6 +58,12 @@ export function RoadmapGraph({ graph }: { graph: GraphRoadmap }) {
   const nodeById = Object.fromEntries(graph.nodes.map((n) => [n.id, n]));
   const accent = `var(--${graph.accent})`;
 
+  // A personalized transition graph tags nodes as transfer/bridge/new.
+  const isTransition = graph.nodes.some((n) => n.category);
+  const usedCategories = (Object.keys(CATEGORY_META) as Category[]).filter((c) =>
+    graph.nodes.some((n) => n.category === c),
+  );
+
   const toggleDone = (id: string) =>
     setDone((prev) => {
       const next = new Set(prev);
@@ -43,6 +73,33 @@ export function RoadmapGraph({ graph }: { graph: GraphRoadmap }) {
 
   return (
     <div className="relative">
+      {isTransition && (
+        <div className="mx-auto mb-6 flex max-w-3xl flex-wrap items-center justify-center gap-2">
+          {usedCategories.map((c) => {
+            const meta = CATEGORY_META[c];
+            return (
+              <span
+                key={c}
+                className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs"
+                style={{
+                  borderColor: `color-mix(in oklab, ${meta.token} 45%, transparent)`,
+                  background: `color-mix(in oklab, ${meta.token} 12%, transparent)`,
+                }}
+                title={meta.hint}
+              >
+                <span
+                  className="h-2 w-2 rounded-full"
+                  style={{ background: meta.token }}
+                />
+                <span className="font-medium" style={{ color: meta.token }}>
+                  {meta.short}
+                </span>
+                <span className="hidden text-muted-foreground sm:inline">{meta.label}</span>
+              </span>
+            );
+          })}
+        </div>
+      )}
       <div
         className="relative mx-auto w-full max-w-3xl"
         style={{ height, perspective: "1200px" }}
@@ -62,12 +119,14 @@ export function RoadmapGraph({ graph }: { graph: GraphRoadmap }) {
             const x2 = b.col * 100;
             const y2 = (b.row + 0.5) * 100;
             const my = (y1 + y2) / 2;
+            // Colour the edge by the category of the node it flows into.
+            const edgeColor = b.category ? CATEGORY_META[b.category].token : accent;
             return (
               <motion.path
                 key={i}
                 d={`M ${x1} ${y1} C ${x1} ${my}, ${x2} ${my}, ${x2} ${y2}`}
                 fill="none"
-                stroke={accent}
+                stroke={edgeColor}
                 strokeWidth={2}
                 strokeOpacity={0.35}
                 vectorEffect="non-scaling-stroke"
@@ -83,6 +142,8 @@ export function RoadmapGraph({ graph }: { graph: GraphRoadmap }) {
         {/* nodes */}
         {graph.nodes.map((n, i) => {
           const isDone = done.has(n.id);
+          const cat = n.category ? CATEGORY_META[n.category] : null;
+          const nodeAccent = cat?.token ?? accent;
           return (
             <motion.button
               key={n.id}
@@ -94,20 +155,39 @@ export function RoadmapGraph({ graph }: { graph: GraphRoadmap }) {
               whileHover={{ scale: 1.06, rotateX: -6, rotateY: 4 }}
               className={cn(
                 "group absolute z-10 flex w-[8.5rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1 rounded-2xl border bg-card/90 px-3 py-3 text-center shadow-soft backdrop-blur transition-colors sm:w-40",
-                isDone ? "border-success/60" : "border-border/60 hover:border-primary/60",
+                isDone
+                  ? "border-success/60"
+                  : cat
+                    ? "hover:brightness-110"
+                    : "border-border/60 hover:border-primary/60",
               )}
               style={{
                 left: `${n.col * 100}%`,
                 top: `${(n.row + 0.5) * ROW_GAP}px`,
                 transformStyle: "preserve-3d",
-                boxShadow: `0 10px 30px -16px ${accent}`,
+                boxShadow: `0 10px 30px -16px ${nodeAccent}`,
+                borderColor:
+                  !isDone && cat
+                    ? `color-mix(in oklab, ${nodeAccent} 55%, transparent)`
+                    : undefined,
               }}
             >
+              {cat && (
+                <span
+                  className="mb-0.5 rounded-full px-2 py-[1px] text-[9px] font-semibold uppercase tracking-wide"
+                  style={{
+                    background: `color-mix(in oklab, ${nodeAccent} 16%, transparent)`,
+                    color: nodeAccent,
+                  }}
+                >
+                  {cat.short}
+                </span>
+              )}
               <span
                 className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold"
                 style={{
-                  background: isDone ? "var(--success)" : `color-mix(in oklab, ${accent} 22%, transparent)`,
-                  color: isDone ? "var(--success-foreground)" : accent,
+                  background: isDone ? "var(--success)" : `color-mix(in oklab, ${nodeAccent} 22%, transparent)`,
+                  color: isDone ? "var(--success-foreground)" : nodeAccent,
                 }}
               >
                 {isDone ? "✓" : i + 1}
@@ -153,6 +233,8 @@ function NodeDetail({
   onToggleDone: () => void;
   onClose: () => void;
 }) {
+  const cat = node.category ? CATEGORY_META[node.category] : null;
+  const nodeAccent = cat?.token ?? accent;
   return (
     <motion.div
       className="fixed inset-0 z-50 flex items-end justify-center bg-background/70 p-0 backdrop-blur-sm sm:items-center sm:p-4"
@@ -171,9 +253,9 @@ function NodeDetail({
           <div>
             <span
               className="text-xs font-medium uppercase tracking-wide"
-              style={{ color: accent }}
+              style={{ color: nodeAccent }}
             >
-              Skill node
+              {cat ? cat.label : "Skill node"}
             </span>
             <h3 className="mt-1 font-display text-2xl font-bold">{node.label}</h3>
           </div>
@@ -184,6 +266,21 @@ function NodeDetail({
             <X className="h-5 w-5" />
           </button>
         </div>
+
+        {node.bridgeNote && (
+          <div
+            className="mt-3 rounded-xl border p-3 text-sm leading-relaxed"
+            style={{
+              borderColor: `color-mix(in oklab, ${nodeAccent} 40%, transparent)`,
+              background: `color-mix(in oklab, ${nodeAccent} 10%, transparent)`,
+            }}
+          >
+            <span className="font-semibold" style={{ color: nodeAccent }}>
+              From where you are:{" "}
+            </span>
+            <span className="text-foreground/90">{node.bridgeNote}</span>
+          </div>
+        )}
 
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{node.desc}</p>
 
@@ -201,7 +298,7 @@ function NodeDetail({
               >
                 <span
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
-                  style={{ background: `color-mix(in oklab, ${accent} 18%, transparent)`, color: accent }}
+                  style={{ background: `color-mix(in oklab, ${nodeAccent} 18%, transparent)`, color: nodeAccent }}
                 >
                   <Icon className="h-4 w-4" />
                 </span>

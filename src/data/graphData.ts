@@ -22,6 +22,15 @@ export interface GraphNode {
   desc: string;
   optional?: boolean;
   resources: NodeResource[];
+  /**
+   * Transition classification (used by personalized "current -> target" graphs):
+   * - "transfer": a skill you already have that carries over directly.
+   * - "bridge":   an existing skill you must reframe/extend for the new role.
+   * - "new":      a net-new skill you have to learn from scratch.
+   */
+  category?: "transfer" | "bridge" | "new";
+  /** Short note explaining how this connects to the learner's current background. */
+  bridgeNote?: string;
 }
 
 export interface GraphEdge {
