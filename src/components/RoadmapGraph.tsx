@@ -298,7 +298,7 @@ function NodeDetail({
               >
                 <span
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
-                  style={{ background: `color-mix(in oklab, ${accent} 18%, transparent)`, color: accent }}
+                  style={{ background: `color-mix(in oklab, ${nodeAccent} 18%, transparent)`, color: nodeAccent }}
                 >
                   <Icon className="h-4 w-4" />
                 </span>
