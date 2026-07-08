@@ -24,6 +24,30 @@ const kindIcon: Record<ResourceKind, LucideIcon> = {
   Course: GraduationCap,
 };
 
+type Category = NonNullable<GraphNode["category"]>;
+
+/** Colour + copy for each transition category (uses approved --sec-* accent tokens). */
+const CATEGORY_META: Record<Category, { label: string; short: string; token: string; hint: string }> = {
+  transfer: {
+    label: "Already yours",
+    short: "Transfer",
+    token: "var(--sec-green)",
+    hint: "A strength you already have — it carries over directly.",
+  },
+  bridge: {
+    label: "Reframe & extend",
+    short: "Bridge",
+    token: "var(--sec-amber)",
+    hint: "You partly know this — stretch it into the new role.",
+  },
+  new: {
+    label: "Learn from scratch",
+    short: "New",
+    token: "var(--sec-blue)",
+    hint: "A net-new skill — this is where the real gap is.",
+  },
+};
+
 export function RoadmapGraph({ graph }: { graph: GraphRoadmap }) {
   const [active, setActive] = useState<GraphNode | null>(null);
   const [done, setDone] = useState<Set<string>>(new Set());
