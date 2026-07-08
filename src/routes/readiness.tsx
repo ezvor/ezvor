@@ -18,6 +18,7 @@ import {
   Loader2,
   Sparkles,
   CheckCircle2,
+  LogIn,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -41,16 +42,20 @@ import {
   toggleRoadmapItem,
   updateProfile,
 } from "@/lib/readiness.functions";
+import { CompanyIntel } from "@/components/CompanyIntel";
+import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/lib/utils";
 
-export const Route = createFileRoute("/_authenticated/readiness")({
+export const Route = createFileRoute("/readiness")({
+  // Public page — works signed out; sign in only to save progress.
+  ssr: false,
   head: () => ({
     meta: [
       { title: "Readiness Engine: Am I hireable yet? | Ezvor" },
       {
         name: "description",
         content:
-          "An honest, calibrated readiness score for your target role, built from verified proof — problems you've solved and skills you've mastered — with the highest-impact next moves.",
+          "A free, honest readiness score for your target role plus live company intelligence: culture, hiring process, interview rounds, and exactly what to prepare.",
       },
     ],
   }),
@@ -65,14 +70,25 @@ const pillarIcons = {
 } as const;
 
 function ReadinessPage() {
+  const { user } = useAuth();
+  const signedIn = !!user;
+
   const progressFn = useServerFn(getProgress);
   const profileFn = useServerFn(getMyProfile);
   const setTargetFn = useServerFn(setTarget);
   const toggleFn = useServerFn(toggleRoadmapItem);
   const updateProfileFn = useServerFn(updateProfile);
 
-  const progressQuery = useQuery({ queryKey: ["readiness-progress"], queryFn: () => progressFn() });
-  const profileQuery = useQuery({ queryKey: ["readiness-profile"], queryFn: () => profileFn() });
+  const progressQuery = useQuery({
+    queryKey: ["readiness-progress"],
+    queryFn: () => progressFn(),
+    enabled: signedIn,
+  });
+  const profileQuery = useQuery({
+    queryKey: ["readiness-profile"],
+    queryFn: () => profileFn(),
+    enabled: signedIn,
+  });
 
   // Local, optimistic state so the score reacts instantly as you check skills.
   const [roadmapId, setRoadmapId] = useState<string>("");
@@ -101,6 +117,7 @@ function ReadinessPage() {
     const r = ROADMAPS.find((x) => x.id === id);
     if (!r) return;
     setRoadmapId(id);
+    if (!signedIn) return;
     setTargetFn({ data: { roadmapId: id, roleLabel: r.role, company: company || null } }).catch(() =>
       toast.error("Couldn't save target"),
     );
@@ -108,6 +125,10 @@ function ReadinessPage() {
 
   const saveCompany = () => {
     if (!roadmap) return;
+    if (!signedIn) {
+      toast.info("Sign in to save your target company");
+      return;
+    }
     setTargetFn({ data: { roadmapId: roadmap.id, roleLabel: roadmap.role, company: company || null } })
       .then(() => toast.success("Target company saved"))
       .catch(() => toast.error("Couldn't save"));
@@ -122,22 +143,36 @@ function ReadinessPage() {
       else next.delete(item);
       return next;
     });
+    if (!signedIn) return;
     toggleFn({
       data: { roadmapId: roadmap.id, stageTitle, item, done: willComplete },
     }).catch(() => toast.error("Couldn't sync progress"));
   };
 
-  const loading = progressQuery.isLoading;
+  const loading = signedIn && progressQuery.isLoading;
 
   return (
     <div className="pb-24">
       <PageHeader
         eyebrow="Readiness Engine"
-        title="Am I actually good enough — yet?"
-        description="A brutally honest, calibrated score for your target role, built only from verified proof: problems you've solved here and skills you've mastered. No vanity counts."
+        title="Am I actually good enough, yet?"
+        description="A brutally honest, calibrated score for your target role, plus live company intelligence on culture, hiring, and exactly what to prepare. Free, no sign-in required."
       />
 
       <div className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8">
+        {!signedIn && (
+          <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-primary/25 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-muted-foreground">
+              You're exploring as a guest. Everything works, but sign in to <strong className="text-foreground">save</strong> your target and progress across devices.
+            </p>
+            <Link to="/auth" search={{ redirect: "/readiness" }}>
+              <Button variant="secondary" size="sm" className="shrink-0">
+                <LogIn className="h-4 w-4" /> Sign in to save
+              </Button>
+            </Link>
+          </div>
+        )}
+
         {/* Target selector */}
         <div className="mb-8 flex flex-col gap-3 rounded-2xl border border-border/60 bg-gradient-card p-5 sm:flex-row sm:items-end">
           <div className="flex-1">
@@ -165,7 +200,7 @@ function ReadinessPage() {
               <Input
                 value={company}
                 onChange={(e) => setCompany(e.target.value)}
-                placeholder="e.g. Google, Systems Limited"
+                placeholder="e.g. i2c, Google, Systems Limited"
                 className="bg-card/70"
               />
               <Button variant="secondary" onClick={saveCompany} disabled={!roadmap}>
@@ -173,6 +208,11 @@ function ReadinessPage() {
               </Button>
             </div>
           </div>
+        </div>
+
+        {/* Company intelligence — works for everyone, no sign-in */}
+        <div className="mb-8">
+          <CompanyIntel role={roadmap?.role ?? ""} company={company} />
         </div>
 
         {loading ? (
@@ -303,15 +343,38 @@ function ReadinessPage() {
                 hard={readiness.stats.hard}
                 itemsDone={readiness.stats.itemsDone}
               />
-              <PublishPanel
-                profileQuery={profileQuery}
-                updateProfileFn={updateProfileFn}
-                onSaved={() => profileQuery.refetch()}
-              />
+              {signedIn ? (
+                <PublishPanel
+                  profileQuery={profileQuery}
+                  updateProfileFn={updateProfileFn}
+                  onSaved={() => profileQuery.refetch()}
+                />
+              ) : (
+                <SignInPanel />
+              )}
             </div>
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function SignInPanel() {
+  return (
+    <div className="rounded-2xl border border-border/60 bg-gradient-card p-5">
+      <h3 className="flex items-center gap-2 font-display text-base font-semibold">
+        <Globe className="h-5 w-5 text-primary-glow" /> Shareable proof page
+      </h3>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Sign in to save your progress and publish a public page recruiters can open to verify your
+        readiness, with every skill and solve backed by evidence.
+      </p>
+      <Link to="/auth" search={{ redirect: "/readiness" }}>
+        <Button className="mt-4 w-full bg-gradient-primary shadow-glow" size="sm">
+          <LogIn className="h-3.5 w-3.5" /> Sign in, it's free
+        </Button>
+      </Link>
     </div>
   );
 }
@@ -440,7 +503,7 @@ function VerifiedEvidence({
         <ShieldCheck className="h-5 w-5 text-success" /> Verified proof
       </h3>
       <p className="mt-1 text-xs text-muted-foreground">
-        Every item here is server-recorded and tamper-proof — recruiters can trust it.
+        Every item here is server-recorded and tamper-proof, so recruiters can trust it.
       </p>
       <div className="mt-4 grid grid-cols-3 gap-2 text-center">
         <div className="rounded-lg border border-success/30 bg-success/10 p-2.5">
@@ -532,8 +595,8 @@ function PublishPanel({
         <Globe className="h-5 w-5 text-primary-glow" /> Shareable proof page
       </h3>
       <p className="mt-1 text-xs text-muted-foreground">
-        A public page recruiters can open to verify your readiness — every skill and solve backed by
-        evidence.
+        A public page recruiters can open to verify your readiness, with every skill and solve backed
+        by evidence.
       </p>
 
       <label className="mt-4 mb-1 block text-xs font-medium text-muted-foreground">Username</label>
