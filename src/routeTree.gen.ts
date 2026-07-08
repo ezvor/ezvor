@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as RoadmapsRouteImport } from './routes/roadmaps'
 import { Route as ResourcesRouteImport } from './routes/resources'
+import { Route as ReadinessRouteImport } from './routes/readiness'
 import { Route as ProblemsRouteImport } from './routes/problems'
 import { Route as PlaygroundRouteImport } from './routes/playground'
 import { Route as OpportunitiesRouteImport } from './routes/opportunities'
@@ -22,7 +23,6 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PHandleRouteImport } from './routes/p.$handle'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
-import { Route as AuthenticatedReadinessRouteImport } from './routes/_authenticated/readiness'
 import { Route as AuthenticatedAdvisorRouteImport } from './routes/_authenticated/advisor'
 import { Route as AuthenticatedAdvisorIndexRouteImport } from './routes/_authenticated/advisor.index'
 import { Route as AuthenticatedAdvisorThreadIdRouteImport } from './routes/_authenticated/advisor.$threadId'
@@ -41,6 +41,11 @@ const RoadmapsRoute = RoadmapsRouteImport.update({
 const ResourcesRoute = ResourcesRouteImport.update({
   id: '/resources',
   path: '/resources',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReadinessRoute = ReadinessRouteImport.update({
+  id: '/readiness',
+  path: '/readiness',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProblemsRoute = ProblemsRouteImport.update({
@@ -92,11 +97,6 @@ const ApiChatRoute = ApiChatRouteImport.update({
   path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedReadinessRoute = AuthenticatedReadinessRouteImport.update({
-  id: '/readiness',
-  path: '/readiness',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
 const AuthenticatedAdvisorRoute = AuthenticatedAdvisorRouteImport.update({
   id: '/advisor',
   path: '/advisor',
@@ -129,11 +129,11 @@ export interface FileRoutesByFullPath {
   '/opportunities': typeof OpportunitiesRoute
   '/playground': typeof PlaygroundRoute
   '/problems': typeof ProblemsRoute
+  '/readiness': typeof ReadinessRoute
   '/resources': typeof ResourcesRoute
   '/roadmaps': typeof RoadmapsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/advisor': typeof AuthenticatedAdvisorRouteWithChildren
-  '/readiness': typeof AuthenticatedReadinessRoute
   '/api/chat': typeof ApiChatRoute
   '/p/$handle': typeof PHandleRoute
   '/advisor/$threadId': typeof AuthenticatedAdvisorThreadIdRoute
@@ -148,10 +148,10 @@ export interface FileRoutesByTo {
   '/opportunities': typeof OpportunitiesRoute
   '/playground': typeof PlaygroundRoute
   '/problems': typeof ProblemsRoute
+  '/readiness': typeof ReadinessRoute
   '/resources': typeof ResourcesRoute
   '/roadmaps': typeof RoadmapsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/readiness': typeof AuthenticatedReadinessRoute
   '/api/chat': typeof ApiChatRoute
   '/p/$handle': typeof PHandleRoute
   '/advisor/$threadId': typeof AuthenticatedAdvisorThreadIdRoute
@@ -168,11 +168,11 @@ export interface FileRoutesById {
   '/opportunities': typeof OpportunitiesRoute
   '/playground': typeof PlaygroundRoute
   '/problems': typeof ProblemsRoute
+  '/readiness': typeof ReadinessRoute
   '/resources': typeof ResourcesRoute
   '/roadmaps': typeof RoadmapsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/_authenticated/advisor': typeof AuthenticatedAdvisorRouteWithChildren
-  '/_authenticated/readiness': typeof AuthenticatedReadinessRoute
   '/api/chat': typeof ApiChatRoute
   '/p/$handle': typeof PHandleRoute
   '/_authenticated/advisor/$threadId': typeof AuthenticatedAdvisorThreadIdRoute
@@ -189,11 +189,11 @@ export interface FileRouteTypes {
     | '/opportunities'
     | '/playground'
     | '/problems'
+    | '/readiness'
     | '/resources'
     | '/roadmaps'
     | '/sitemap.xml'
     | '/advisor'
-    | '/readiness'
     | '/api/chat'
     | '/p/$handle'
     | '/advisor/$threadId'
@@ -208,10 +208,10 @@ export interface FileRouteTypes {
     | '/opportunities'
     | '/playground'
     | '/problems'
+    | '/readiness'
     | '/resources'
     | '/roadmaps'
     | '/sitemap.xml'
-    | '/readiness'
     | '/api/chat'
     | '/p/$handle'
     | '/advisor/$threadId'
@@ -227,11 +227,11 @@ export interface FileRouteTypes {
     | '/opportunities'
     | '/playground'
     | '/problems'
+    | '/readiness'
     | '/resources'
     | '/roadmaps'
     | '/sitemap.xml'
     | '/_authenticated/advisor'
-    | '/_authenticated/readiness'
     | '/api/chat'
     | '/p/$handle'
     | '/_authenticated/advisor/$threadId'
@@ -248,6 +248,7 @@ export interface RootRouteChildren {
   OpportunitiesRoute: typeof OpportunitiesRoute
   PlaygroundRoute: typeof PlaygroundRoute
   ProblemsRoute: typeof ProblemsRoute
+  ReadinessRoute: typeof ReadinessRoute
   ResourcesRoute: typeof ResourcesRoute
   RoadmapsRoute: typeof RoadmapsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -277,6 +278,13 @@ declare module '@tanstack/react-router' {
       path: '/resources'
       fullPath: '/resources'
       preLoaderRoute: typeof ResourcesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/readiness': {
+      id: '/readiness'
+      path: '/readiness'
+      fullPath: '/readiness'
+      preLoaderRoute: typeof ReadinessRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/problems': {
@@ -349,13 +357,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/readiness': {
-      id: '/_authenticated/readiness'
-      path: '/readiness'
-      fullPath: '/readiness'
-      preLoaderRoute: typeof AuthenticatedReadinessRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
     '/_authenticated/advisor': {
       id: '/_authenticated/advisor'
       path: '/advisor'
@@ -402,12 +403,10 @@ const AuthenticatedAdvisorRouteWithChildren =
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAdvisorRoute: typeof AuthenticatedAdvisorRouteWithChildren
-  AuthenticatedReadinessRoute: typeof AuthenticatedReadinessRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAdvisorRoute: AuthenticatedAdvisorRouteWithChildren,
-  AuthenticatedReadinessRoute: AuthenticatedReadinessRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
@@ -422,6 +421,7 @@ const rootRouteChildren: RootRouteChildren = {
   OpportunitiesRoute: OpportunitiesRoute,
   PlaygroundRoute: PlaygroundRoute,
   ProblemsRoute: ProblemsRoute,
+  ReadinessRoute: ReadinessRoute,
   ResourcesRoute: ResourcesRoute,
   RoadmapsRoute: RoadmapsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
