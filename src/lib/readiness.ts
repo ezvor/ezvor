@@ -58,6 +58,7 @@ export interface ReadinessResult {
 // How much competitive DSA depth a role realistically demands. Drives how
 // heavily solved problems weigh into readiness for that target.
 const DSA_TARGET_POINTS: Record<string, number> = {
+  "software-engineer": 280,
   "competitive-programmer": 420,
   backend: 300,
   fullstack: 280,
