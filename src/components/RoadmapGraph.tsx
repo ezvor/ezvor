@@ -58,6 +58,12 @@ export function RoadmapGraph({ graph }: { graph: GraphRoadmap }) {
   const nodeById = Object.fromEntries(graph.nodes.map((n) => [n.id, n]));
   const accent = `var(--${graph.accent})`;
 
+  // A personalized transition graph tags nodes as transfer/bridge/new.
+  const isTransition = graph.nodes.some((n) => n.category);
+  const usedCategories = (Object.keys(CATEGORY_META) as Category[]).filter((c) =>
+    graph.nodes.some((n) => n.category === c),
+  );
+
   const toggleDone = (id: string) =>
     setDone((prev) => {
       const next = new Set(prev);
@@ -67,6 +73,33 @@ export function RoadmapGraph({ graph }: { graph: GraphRoadmap }) {
 
   return (
     <div className="relative">
+      {isTransition && (
+        <div className="mx-auto mb-6 flex max-w-3xl flex-wrap items-center justify-center gap-2">
+          {usedCategories.map((c) => {
+            const meta = CATEGORY_META[c];
+            return (
+              <span
+                key={c}
+                className="inline-flex items-center gap-2 rounded-full border px-3 py-1 text-xs"
+                style={{
+                  borderColor: `color-mix(in oklab, ${meta.token} 45%, transparent)`,
+                  background: `color-mix(in oklab, ${meta.token} 12%, transparent)`,
+                }}
+                title={meta.hint}
+              >
+                <span
+                  className="h-2 w-2 rounded-full"
+                  style={{ background: meta.token }}
+                />
+                <span className="font-medium" style={{ color: meta.token }}>
+                  {meta.short}
+                </span>
+                <span className="hidden text-muted-foreground sm:inline">{meta.label}</span>
+              </span>
+            );
+          })}
+        </div>
+      )}
       <div
         className="relative mx-auto w-full max-w-3xl"
         style={{ height, perspective: "1200px" }}
