@@ -586,6 +586,19 @@ export interface Roadmap {
 
 export const ROADMAPS: Roadmap[] = [
   {
+    id: "software-engineer",
+    role: "Software Engineer",
+    icon: "Code2",
+    summary: "The generalist path: write solid code, design systems, and ship real software.",
+    duration: "6–10 months",
+    stages: [
+      { title: "Foundations", items: ["A language (Java/Python/C++)", "Data structures & algorithms", "Git & GitHub", "Linux & CLI"] },
+      { title: "Core Engineering", items: ["OOP & clean code", "Databases & SQL", "REST APIs", "Testing & debugging"] },
+      { title: "Systems", items: ["System design basics", "Concurrency", "Caching & queues", "Version control workflows"] },
+      { title: "Advanced", items: ["Scalable architecture", "CI/CD", "Cloud fundamentals", "Code review & mentoring"] },
+    ],
+  },
+  {
     id: "frontend",
     role: "Frontend Developer",
     icon: "Layout",
