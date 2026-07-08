@@ -173,24 +173,43 @@ const tools = [
   },
 ];
 
+/** Cheap gibberish detector for obviously-fake company names. */
+function looksLikeGibberish(name: string): boolean {
+  const n = name.trim().toLowerCase();
+  if (n.length < 2) return true;
+  const letters = n.replace(/[^a-z]/g, "");
+  if (!letters) return true;
+  const vowels = (letters.match(/[aeiou]/g) || []).length;
+  const vowelRatio = vowels / letters.length;
+  // A single long token with almost no vowels is almost certainly keyboard mash.
+  const singleToken = !/\s/.test(n);
+  const longConsonantRun = /[bcdfghjklmnpqrstvwxyz]{6,}/.test(letters);
+  return (singleToken && letters.length >= 10 && vowelRatio < 0.28) || longConsonantRun;
+}
+
 export async function buildCompanyIntel(company: string, role: string): Promise<CompanyIntel> {
   const hits = await gatherContext(company, role);
+  const suspicious = hits.length === 0 && looksLikeGibberish(company);
 
   const context = hits.length
     ? hits
         .map((h, i) => `[Source ${i + 1}] ${h.title}\n${h.url}\n${h.snippet}`)
         .join("\n\n---\n\n")
-    : "No live sources were retrieved. Use your best, honest general knowledge and clearly avoid inventing specifics.";
+    : "No live sources were retrieved for this company name.";
 
   const messages: ChatMessage[] = [
     {
       role: "system",
       content:
-        "You are a sharp technical recruiter and interview coach. Produce an accurate, concise hiring brief for a specific company and role. Prefer facts grounded in the provided sources. If sources are thin, rely on well-established general knowledge and keep claims safe and non-specific rather than fabricating exact details (never invent salary figures, named recruiters, or exact question banks). Keep every field tight and skimmable.",
+        "You are a sharp technical recruiter and interview coach. First judge whether the company is a real, identifiable organization. If it is, produce an accurate, concise hiring brief grounded in the sources or well-established knowledge (never invent salary figures, named recruiters, or exact question banks). If the company name looks like random characters, gibberish, or a company you cannot verify, set recognized=false, write a short friendly note saying it could not be verified as a registered organization, and fill every remaining field with solid GENERIC role-based interview preparation for the target role (do not fabricate company-specific facts). Keep every field tight and skimmable.",
     },
     {
       role: "user",
-      content: `Company: ${company}\nTarget role: ${role}\n\nResearched context:\n${context}\n\nWrite the structured brief.`,
+      content: `Company: ${company}\nTarget role: ${role}\n${
+        suspicious
+          ? "\nHeuristic flag: this company name looks like random/gibberish text and returned no web results. Treat it as unrecognized unless you have strong evidence otherwise.\n"
+          : ""
+      }\nResearched context:\n${context}\n\nWrite the structured brief.`,
     },
   ];
 
