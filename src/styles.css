@@ -108,6 +108,14 @@
   --chart-4: oklch(0.44 0 0);
   --chart-5: oklch(0.3 0 0);
 
+  /* Tasteful, desaturated section accents — used only to make dense reading
+     surfaces scannable (Readiness / Company Intelligence). Never purple/indigo. */
+  --sec-blue: oklch(0.72 0.11 235);
+  --sec-teal: oklch(0.76 0.1 185);
+  --sec-amber: oklch(0.82 0.1 82);
+  --sec-rose: oklch(0.72 0.12 18);
+  --sec-green: oklch(0.76 0.1 150);
+
   --sidebar: oklch(0.12 0 0);
   --sidebar-foreground: oklch(0.9 0 0);
   --sidebar-primary: oklch(0.985 0 0);
