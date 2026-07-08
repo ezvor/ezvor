@@ -23,6 +23,8 @@ export interface IntelFocusArea {
 export interface CompanyIntel {
   company: string;
   role: string;
+  recognized: boolean;
+  note: string;
   overview: string;
   culture: string[];
   requirements: string[];
