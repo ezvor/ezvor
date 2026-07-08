@@ -155,6 +155,8 @@ const tools = [
           },
         },
         required: [
+          "recognized",
+          "note",
           "overview",
           "culture",
           "requirements",
