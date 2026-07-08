@@ -186,3 +186,53 @@ function RootComponent() {
   );
 }
 
+function HeaderAuth() {
+  const { user, signOut } = useAuth();
+
+  if (!user) {
+    return (
+      <Link to="/auth">
+        <Button size="sm" variant="secondary" className="gap-1.5">
+          <LogIn className="h-4 w-4" /> Sign in
+        </Button>
+      </Link>
+    );
+  }
+
+  const meta = user.user_metadata ?? {};
+  const displayName: string =
+    meta.display_name || meta.full_name || meta.name || user.email?.split("@")[0] || "Account";
+  const avatarUrl: string | undefined = meta.avatar_url || meta.picture;
+  const initials =
+    displayName
+      .split(" ")
+      .map((s: string) => s[0])
+      .slice(0, 2)
+      .join("")
+      .toUpperCase() || "U";
+
+  return (
+    <div className="flex items-center gap-2">
+      <Avatar className="h-7 w-7">
+        {avatarUrl && <AvatarImage src={avatarUrl} alt={displayName} />}
+        <AvatarFallback className="bg-gradient-primary text-[11px] text-primary-foreground">
+          {initials}
+        </AvatarFallback>
+      </Avatar>
+      <span className="hidden max-w-[120px] truncate text-sm font-medium sm:inline">
+        {displayName}
+      </span>
+      <Button
+        size="icon"
+        variant="ghost"
+        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+        aria-label="Sign out"
+        onClick={() => signOut()}
+      >
+        <LogOut className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+}
+
+
