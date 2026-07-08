@@ -168,7 +168,11 @@ function RootComponent() {
                 <span className="hidden text-xs text-muted-foreground sm:inline">
                   Free AI career copilot
                 </span>
+                <div className="ml-auto">
+                  <HeaderAuth />
+                </div>
               </header>
+
               <main className="min-w-0 flex-1">
                 {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
                 <Outlet />
