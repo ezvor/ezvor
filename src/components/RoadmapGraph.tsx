@@ -142,6 +142,8 @@ export function RoadmapGraph({ graph }: { graph: GraphRoadmap }) {
         {/* nodes */}
         {graph.nodes.map((n, i) => {
           const isDone = done.has(n.id);
+          const cat = n.category ? CATEGORY_META[n.category] : null;
+          const nodeAccent = cat?.token ?? accent;
           return (
             <motion.button
               key={n.id}
@@ -153,20 +155,39 @@ export function RoadmapGraph({ graph }: { graph: GraphRoadmap }) {
               whileHover={{ scale: 1.06, rotateX: -6, rotateY: 4 }}
               className={cn(
                 "group absolute z-10 flex w-[8.5rem] -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1 rounded-2xl border bg-card/90 px-3 py-3 text-center shadow-soft backdrop-blur transition-colors sm:w-40",
-                isDone ? "border-success/60" : "border-border/60 hover:border-primary/60",
+                isDone
+                  ? "border-success/60"
+                  : cat
+                    ? "hover:brightness-110"
+                    : "border-border/60 hover:border-primary/60",
               )}
               style={{
                 left: `${n.col * 100}%`,
                 top: `${(n.row + 0.5) * ROW_GAP}px`,
                 transformStyle: "preserve-3d",
-                boxShadow: `0 10px 30px -16px ${accent}`,
+                boxShadow: `0 10px 30px -16px ${nodeAccent}`,
+                borderColor:
+                  !isDone && cat
+                    ? `color-mix(in oklab, ${nodeAccent} 55%, transparent)`
+                    : undefined,
               }}
             >
+              {cat && (
+                <span
+                  className="mb-0.5 rounded-full px-2 py-[1px] text-[9px] font-semibold uppercase tracking-wide"
+                  style={{
+                    background: `color-mix(in oklab, ${nodeAccent} 16%, transparent)`,
+                    color: nodeAccent,
+                  }}
+                >
+                  {cat.short}
+                </span>
+              )}
               <span
                 className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold"
                 style={{
-                  background: isDone ? "var(--success)" : `color-mix(in oklab, ${accent} 22%, transparent)`,
-                  color: isDone ? "var(--success-foreground)" : accent,
+                  background: isDone ? "var(--success)" : `color-mix(in oklab, ${nodeAccent} 22%, transparent)`,
+                  color: isDone ? "var(--success-foreground)" : nodeAccent,
                 }}
               >
                 {isDone ? "✓" : i + 1}
