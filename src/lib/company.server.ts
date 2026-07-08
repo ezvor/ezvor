@@ -232,6 +232,13 @@ export async function buildCompanyIntel(company: string, role: string): Promise<
 
   const parsed = JSON.parse(argStr) as Omit<CompanyIntel, "company" | "role" | "resources">;
 
+  // Hard override: gibberish name with zero web evidence is never "recognized".
+  const recognized = suspicious ? false : parsed.recognized;
+  const note = recognized
+    ? ""
+    : parsed.note ||
+      `We couldn't verify "${company}" as a registered organization, so this is generic ${role} preparation. Double-check the exact company name, or start prepping the fundamentals below anyway.`;
+
   // Only surface real, retrieved links as resources.
   const seen = new Set<string>();
   const resources: IntelResource[] = [];
@@ -242,5 +249,5 @@ export async function buildCompanyIntel(company: string, role: string): Promise<
     if (resources.length >= 5) break;
   }
 
-  return { company, role, resources, ...parsed };
+  return { company, role, resources, ...parsed, recognized, note };
 }
