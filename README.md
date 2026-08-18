@@ -12,7 +12,7 @@
 
 ---
 
-## Problem
+## Problems
 
 I was preparing for internships and interviews and got tired of the workflow. Check three job boards, bookmark a roadmap I would never finish, grind problems on one site, then have no idea whether any of it added up to being hireable. Progress felt invisible.
 
