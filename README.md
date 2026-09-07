@@ -151,14 +151,3 @@ Things I still want to build:
 - Shareable readiness reports
 - More languages in the judge
 
-## License
-
-Open source. Add a `LICENSE` file (MIT is a fine default) if you plan to reuse it.
-
-<div align="center">
-
-<br />
-
-**[Ezvor](https://ezvor.lovable.app)** · Built for engineers who want the truth about where they stand.
-
-</div>
