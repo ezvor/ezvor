@@ -10,7 +10,7 @@ ALTER TABLE public.profiles
 CREATE UNIQUE INDEX IF NOT EXISTS profiles_handle_key
   ON public.profiles (lower(handle)) WHERE handle IS NOT NULL;
 
--- security-definer helper so public policies can check profile visibility without recursion
+-- Security-definer helper so public policies can check profile visibility without recursion
 CREATE OR REPLACE FUNCTION public.is_public_profile(_user_id uuid)
 RETURNS boolean
 LANGUAGE sql
@@ -24,7 +24,7 @@ AS $$
   );
 $$;
 
--- allow anonymous visitors to read rows exposed via public policies
+-- Allow anonymous visitors to read rows exposed via public policies
 GRANT SELECT ON public.profiles TO anon;
 CREATE POLICY "Public profiles are viewable"
   ON public.profiles FOR SELECT TO public
