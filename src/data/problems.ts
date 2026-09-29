@@ -236,7 +236,7 @@ public class Main {
     difficulty: "Easy",
     topic: "Math & Simulation",
     description:
-      "Return a string array `answer` (1-indexed) where for each `i` from 1 to n: `answer[i] = \"FizzBuzz\"` if i is divisible by 3 and 5, `\"Fizz\"` if divisible by 3, `\"Buzz\"` if divisible by 5, otherwise the number as a string. The harness prints each element on its own line.",
+      'Return a string array `answer` (1-indexed) where for each `i` from 1 to n: `answer[i] = "FizzBuzz"` if i is divisible by 3 and 5, `"Fizz"` if divisible by 3, `"Buzz"` if divisible by 5, otherwise the number as a string. The harness prints each element on its own line.',
     ioFormat: "Input: one integer n.\nOutput: n lines following the Fizz Buzz rules.",
     examples: [{ input: "5", output: "1\n2\nFizz\n4\nBuzz" }],
     constraints: ["1 ≤ n ≤ 10^4"],
@@ -421,8 +421,7 @@ public class Main {
     topic: "Arrays & Hashing",
     description:
       "Given an integer array `nums`, return `true` if any value appears at least twice, and `false` if every element is distinct.",
-    ioFormat:
-      "Input: line 1 = n, line 2 = n space-separated integers.\nOutput: `true` or `false`.",
+    ioFormat: "Input: line 1 = n, line 2 = n space-separated integers.\nOutput: `true` or `false`.",
     examples: [
       { input: "4\n1 2 3 1", output: "true" },
       { input: "3\n1 2 3", output: "false" },
@@ -519,7 +518,10 @@ public class Main {
       { input: "anagram\nnagaram", output: "true" },
       { input: "rat\ncar", output: "false" },
     ],
-    constraints: ["1 ≤ s.length, t.length ≤ 5*10^4", "s and t consist of lowercase English letters"],
+    constraints: [
+      "1 ≤ s.length, t.length ≤ 5*10^4",
+      "s and t consist of lowercase English letters",
+    ],
     starters: {
       python: `class Solution:
     def isAnagram(self, s: str, t: str) -> bool:
@@ -787,8 +789,7 @@ public class Main {
     topic: "Sliding Window",
     description:
       "You are given an array `prices` where `prices[i]` is the price of a stock on day `i`. Maximize profit by choosing one day to buy and a later day to sell. Return the max profit, or 0 if none is possible.",
-    ioFormat:
-      "Input: line 1 = n, line 2 = n space-separated prices.\nOutput: the maximum profit.",
+    ioFormat: "Input: line 1 = n, line 2 = n space-separated prices.\nOutput: the maximum profit.",
     examples: [
       { input: "6\n7 1 5 3 6 4", output: "5", explanation: "Buy at 1, sell at 6 → profit 5." },
       { input: "5\n7 6 4 3 1", output: "0" },

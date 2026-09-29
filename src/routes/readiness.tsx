@@ -34,7 +34,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ROADMAPS } from "@/data/careerData";
-import { computeReadiness, type SolvedRow } from "@/lib/readiness";
+import {
+  computeReadiness,
+  loadLocalReadiness,
+  saveLocalReadiness,
+  type SolvedRow,
+} from "@/lib/readiness";
+import { useCollection } from "@/lib/local/store";
 import {
   getProgress,
   getMyProfile,
@@ -51,7 +57,7 @@ export const Route = createFileRoute("/readiness")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Readiness Engine: Am I hireable yet? | Ezvor" },
+      { title: "Readiness Engine: Am I hireable yet? — Ezvor" },
       {
         name: "description",
         content:
@@ -70,8 +76,9 @@ const pillarIcons = {
 } as const;
 
 function ReadinessPage() {
-  const { user } = useAuth();
-  const signedIn = !!user;
+  const { user, enabled, refreshProfile } = useAuth();
+  const signedIn = enabled && !!user;
+  const localSolved = useCollection("solved");
 
   const progressFn = useServerFn(getProgress);
   const profileFn = useServerFn(getMyProfile);
@@ -94,18 +101,47 @@ function ReadinessPage() {
   const [roadmapId, setRoadmapId] = useState<string>("");
   const [company, setCompany] = useState<string>("");
   const [completed, setCompleted] = useState<Set<string>>(new Set());
-  const [solved, setSolved] = useState<SolvedRow[]>([]);
-  const seeded = useRef(false);
+  const [serverSolved, setServerSolved] = useState<SolvedRow[]>([]);
+  const seeded = useRef<"none" | "local" | "server">("none");
 
+  // Signed in: seed from the account (judge-verified solves only).
   useEffect(() => {
-    if (!progressQuery.data || seeded.current) return;
-    seeded.current = true;
+    if (!signedIn || !progressQuery.data || seeded.current === "server") return;
+    seeded.current = "server";
     const d = progressQuery.data;
     setRoadmapId(d.target?.roadmapId ?? "");
     setCompany(d.target?.company ?? "");
     setCompleted(new Set(d.completedItems));
-    setSolved(d.solved.map((s) => ({ difficulty: s.difficulty, solved_at: s.solved_at })));
-  }, [progressQuery.data]);
+    setServerSolved(d.solved.map((s) => ({ difficulty: s.difficulty, solved_at: s.solved_at })));
+  }, [signedIn, progressQuery.data]);
+
+  // Guest: seed from this browser.
+  useEffect(() => {
+    if (signedIn || seeded.current !== "none") return;
+    seeded.current = "local";
+    const saved = loadLocalReadiness();
+    if (!saved) return;
+    setRoadmapId(saved.roadmapId);
+    setCompany(saved.company);
+    setCompleted(new Set(saved.completed));
+  }, [signedIn]);
+
+  // Guest: remember target + skills in this browser.
+  useEffect(() => {
+    if (signedIn || seeded.current !== "local") return;
+    saveLocalReadiness({ roadmapId, company, completed: [...completed] });
+  }, [signedIn, roadmapId, company, completed]);
+
+  const solved = useMemo<SolvedRow[]>(
+    () =>
+      signedIn
+        ? serverSolved
+        : Object.values(localSolved).map((s) => ({
+            difficulty: s.difficulty,
+            solved_at: new Date(s.solvedAt).toISOString(),
+          })),
+    [signedIn, serverSolved, localSolved],
+  );
 
   const roadmap = useMemo(() => ROADMAPS.find((r) => r.id === roadmapId), [roadmapId]);
   const readiness = useMemo(
@@ -118,18 +154,20 @@ function ReadinessPage() {
     if (!r) return;
     setRoadmapId(id);
     if (!signedIn) return;
-    setTargetFn({ data: { roadmapId: id, roleLabel: r.role, company: company || null } }).catch(() =>
-      toast.error("Couldn't save target"),
+    setTargetFn({ data: { roadmapId: id, roleLabel: r.role, company: company || null } }).catch(
+      () => toast.error("Couldn't save target"),
     );
   };
 
   const saveCompany = () => {
     if (!roadmap) return;
     if (!signedIn) {
-      toast.info("Sign in to save your target company");
+      toast.success("Target company saved in this browser");
       return;
     }
-    setTargetFn({ data: { roadmapId: roadmap.id, roleLabel: roadmap.role, company: company || null } })
+    setTargetFn({
+      data: { roadmapId: roadmap.id, roleLabel: roadmap.role, company: company || null },
+    })
       .then(() => toast.success("Target company saved"))
       .catch(() => toast.error("Couldn't save"));
   };
@@ -160,10 +198,12 @@ function ReadinessPage() {
       />
 
       <div className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8">
-        {!signedIn && (
+        {!signedIn && enabled && (
           <div className="mb-6 flex flex-col gap-3 rounded-2xl border border-primary/25 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
             <p className="text-sm text-muted-foreground">
-              You're exploring as a guest. Everything works, but sign in to <strong className="text-foreground">save</strong> your target and progress across devices.
+              You're exploring as a guest — your target and progress are saved in this browser. Sign
+              in to <strong className="text-foreground">sync</strong> them across devices and
+              publish verified proof.
             </p>
             <Link to="/auth" search={{ redirect: "/readiness" }}>
               <Button variant="secondary" size="sm" className="shrink-0">
@@ -222,10 +262,12 @@ function ReadinessPage() {
         ) : !roadmap ? (
           <div className="rounded-2xl border border-dashed border-border/70 bg-card/40 p-12 text-center">
             <Sparkles className="mx-auto h-8 w-8 text-primary-glow" />
-            <p className="mt-3 font-display text-lg font-semibold">Pick a target to unlock your score</p>
+            <p className="mt-3 font-display text-lg font-semibold">
+              Pick a target to unlock your score
+            </p>
             <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
-              Your readiness is scored against a specific role. Choose one above and it updates live as
-              you master skills and solve problems.
+              Your readiness is scored against a specific role. Choose one above and it updates live
+              as you master skills and solve problems.
             </p>
           </div>
         ) : (
@@ -296,8 +338,13 @@ function ReadinessPage() {
                 </p>
                 <div className="space-y-4">
                   {roadmap.stages.map((stage) => (
-                    <div key={stage.title} className="rounded-xl border border-border/60 bg-card/60 p-4">
-                      <p className="mb-3 text-sm font-semibold text-muted-foreground">{stage.title}</p>
+                    <div
+                      key={stage.title}
+                      className="rounded-xl border border-border/60 bg-card/60 p-4"
+                    >
+                      <p className="mb-3 text-sm font-semibold text-muted-foreground">
+                        {stage.title}
+                      </p>
                       <div className="grid gap-2 sm:grid-cols-2">
                         {stage.items.map((item) => {
                           const done = completed.has(item);
@@ -337,6 +384,7 @@ function ReadinessPage() {
             {/* RIGHT: verified proof + publish */}
             <div className="space-y-6">
               <VerifiedEvidence
+                verified={signedIn}
                 solvedCount={readiness.stats.solved}
                 easy={readiness.stats.easy}
                 medium={readiness.stats.medium}
@@ -347,11 +395,14 @@ function ReadinessPage() {
                 <PublishPanel
                   profileQuery={profileQuery}
                   updateProfileFn={updateProfileFn}
-                  onSaved={() => profileQuery.refetch()}
+                  onSaved={() => {
+                    void profileQuery.refetch();
+                    void refreshProfile();
+                  }}
                 />
-              ) : (
+              ) : enabled ? (
                 <SignInPanel />
-              )}
+              ) : null}
             </div>
           </div>
         )}
@@ -407,7 +458,10 @@ function ScoreCard({
             {readiness.pillars.map((p) => {
               const Icon = pillarIcons[p.key];
               return (
-                <div key={p.key} className="rounded-lg border border-border/60 bg-background/40 p-3">
+                <div
+                  key={p.key}
+                  className="rounded-lg border border-border/60 bg-background/40 p-3"
+                >
                   <div className="flex items-center justify-between">
                     <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
                       <Icon className="h-3.5 w-3.5" /> {p.label}
@@ -422,7 +476,9 @@ function ScoreCard({
                       transition={{ duration: 0.6, ease: "easeOut" }}
                     />
                   </div>
-                  <p className="mt-1.5 text-[11px] leading-tight text-muted-foreground">{p.detail}</p>
+                  <p className="mt-1.5 text-[11px] leading-tight text-muted-foreground">
+                    {p.detail}
+                  </p>
                 </div>
               );
             })}
@@ -458,7 +514,14 @@ function Gauge({ value }: { value: number }) {
   return (
     <div className="relative shrink-0" style={{ width: size, height: size }}>
       <svg width={size} height={size} className="-rotate-90">
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="hsl(var(--muted))" strokeWidth={stroke} />
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke="hsl(var(--muted))"
+          strokeWidth={stroke}
+        />
         <motion.circle
           cx={size / 2}
           cy={size / 2}
@@ -485,12 +548,14 @@ function Gauge({ value }: { value: number }) {
 }
 
 function VerifiedEvidence({
+  verified,
   solvedCount,
   easy,
   medium,
   hard,
   itemsDone,
 }: {
+  verified: boolean;
   solvedCount: number;
   easy: number;
   medium: number;
@@ -500,10 +565,13 @@ function VerifiedEvidence({
   return (
     <div className="rounded-2xl border border-border/60 bg-gradient-card p-5">
       <h3 className="flex items-center gap-2 font-display text-base font-semibold">
-        <ShieldCheck className="h-5 w-5 text-success" /> Verified proof
+        <ShieldCheck className="h-5 w-5 text-success" />{" "}
+        {verified ? "Verified proof" : "Your progress"}
       </h3>
       <p className="mt-1 text-xs text-muted-foreground">
-        Every item here is server-recorded and tamper-proof, so recruiters can trust it.
+        {verified
+          ? "Solves here were judged and recorded by the server, so recruiters can trust them."
+          : "Solves saved in this browser. Signed-in solves are judged and recorded by the server."}
       </p>
       <div className="mt-4 grid grid-cols-3 gap-2 text-center">
         <div className="rounded-lg border border-success/30 bg-success/10 p-2.5">
@@ -545,7 +613,13 @@ function PublishPanel({
 }: {
   profileQuery: { data?: Awaited<ReturnType<typeof getMyProfile>> | null; refetch: () => void };
   updateProfileFn: (args: {
-    data: { handle?: string | null; headline?: string | null; isPublic?: boolean; displayName?: string | null; location?: string | null };
+    data: {
+      handle?: string | null;
+      headline?: string | null;
+      isPublic?: boolean;
+      displayName?: string | null;
+      location?: string | null;
+    };
   }) => Promise<{ ok: boolean; error?: string }>;
   onSaved: () => void;
 }) {
@@ -595,8 +669,8 @@ function PublishPanel({
         <Globe className="h-5 w-5 text-primary-glow" /> Shareable proof page
       </h3>
       <p className="mt-1 text-xs text-muted-foreground">
-        A public page recruiters can open to verify your readiness, with every skill and solve backed
-        by evidence.
+        A public page recruiters can open to verify your readiness, with every skill and solve
+        backed by evidence.
       </p>
 
       <label className="mt-4 mb-1 block text-xs font-medium text-muted-foreground">Username</label>
@@ -636,10 +710,27 @@ function PublishPanel({
         />
       </div>
 
-      <Button onClick={() => save()} disabled={saving} className="mt-3 w-full" variant="secondary" size="sm">
-        {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />}
+      <Button
+        onClick={() => save()}
+        disabled={saving}
+        className="mt-3 w-full"
+        variant="secondary"
+        size="sm"
+      >
+        {saving ? (
+          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+        ) : (
+          <Check className="h-3.5 w-3.5" />
+        )}
         Save profile
       </Button>
+      <p className="mt-2 text-center text-[11px] text-muted-foreground">
+        Add a bio, GitHub and LinkedIn in{" "}
+        <Link to="/settings" className="text-primary-glow hover:underline">
+          Settings
+        </Link>
+        .
+      </p>
 
       {isPublic && proofUrl && (
         <div className="mt-4 space-y-2 rounded-lg border border-success/30 bg-success/10 p-3">

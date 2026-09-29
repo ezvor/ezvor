@@ -30,57 +30,93 @@ const BodySchema = z.object({
     .max(40),
 });
 
+const json = (body: unknown, status: number, headers: Record<string, string> = {}) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json", ...headers },
+  });
+
+/**
+ * `/api/chat` is a plain server route, so the server-function CSRF middleware
+ * doesn't cover it. Only accept requests the browser marks as same-origin, so
+ * other sites can't spend this deployment's AI quota from their visitors' tabs.
+ */
+function isSameOrigin(request: Request): boolean {
+  const site = request.headers.get("sec-fetch-site");
+  if (site && site !== "same-origin" && site !== "none") return false;
+
+  const origin = request.headers.get("origin");
+  if (origin) {
+    let originHost: string;
+    try {
+      originHost = new URL(origin).host;
+    } catch {
+      return false;
+    }
+    const host =
+      request.headers.get("x-forwarded-host")?.split(",")[0]?.trim() ||
+      request.headers.get("host") ||
+      new URL(request.url).host;
+    return originHost === host;
+  }
+  // No Origin header: non-browser clients (curl, server-to-server). Browsers
+  // always send Origin on cross-origin POSTs, so this can't be a CSRF vector.
+  return true;
+}
+
 export const Route = createFileRoute("/api/chat")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        if (!isSameOrigin(request)) {
+          return json({ error: "Cross-origin requests are not allowed." }, 403);
+        }
+
         try {
           enforceRateLimit("chat", { request });
         } catch (e) {
           if (e instanceof RateLimitError) {
-            return new Response(JSON.stringify({ error: e.message }), {
-              status: 429,
-              headers: { "Content-Type": "application/json", "Retry-After": String(e.retryAfterSec) },
-            });
+            return json({ error: e.message }, 429, { "Retry-After": String(e.retryAfterSec) });
           }
           throw e;
         }
 
-        let json: unknown;
+        let body: unknown;
         try {
-          json = await request.json();
+          body = await request.json();
         } catch {
-          return new Response(JSON.stringify({ error: "Invalid JSON" }), {
-            status: 400,
-            headers: { "Content-Type": "application/json" },
-          });
+          return json({ error: "Invalid JSON" }, 400);
         }
 
-        const parsed = BodySchema.safeParse(json);
-        if (!parsed.success) {
-          return new Response(JSON.stringify({ error: "Invalid request" }), {
-            status: 400,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
+        const parsed = BodySchema.safeParse(body);
+        if (!parsed.success) return json({ error: "Invalid request" }, 400);
 
         const messages: ChatMessage[] = [
           { role: "system", content: SYSTEM_PROMPT },
           ...parsed.data.messages,
         ];
 
-        const response = await streamAI(messages, { tier: "smart", reasoning: "low" });
+        let response: Response;
+        try {
+          response = await streamAI(messages, { tier: "smart", reasoning: "low" });
+        } catch (e) {
+          console.error("[chat] AI request failed", e);
+          return json(
+            { error: "The AI service is temporarily unavailable. Please try again shortly." },
+            503,
+          );
+        }
 
-        if (!response.ok) {
+        if (!response.ok || !response.body) {
           const status = response.status === 429 ? 429 : 503;
-          return new Response(
-            JSON.stringify({
+          return json(
+            {
               error:
                 status === 429
                   ? "The AI is busy right now. Please try again in a moment."
                   : "The AI service is temporarily unavailable. Please try again shortly.",
-            }),
-            { status, headers: { "Content-Type": "application/json" } },
+            },
+            status,
           );
         }
 

@@ -10,27 +10,40 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as RoadmapsRouteImport } from './routes/roadmaps'
 import { Route as ResourcesRouteImport } from './routes/resources'
 import { Route as ReadinessRouteImport } from './routes/readiness'
+import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as ProblemsRouteImport } from './routes/problems'
 import { Route as PlaygroundRouteImport } from './routes/playground'
 import { Route as OpportunitiesRouteImport } from './routes/opportunities'
+import { Route as ListsRouteImport } from './routes/lists'
+import { Route as LeaderboardRouteImport } from './routes/leaderboard'
 import { Route as GraphRouteImport } from './routes/graph'
 import { Route as CompilerRouteImport } from './routes/compiler'
 import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AdvisorRouteImport } from './routes/advisor'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AdvisorIndexRouteImport } from './routes/advisor.index'
+import { Route as ProblemsSlugRouteImport } from './routes/problems_.$slug'
 import { Route as PHandleRouteImport } from './routes/p.$handle'
+import { Route as ListsListIdRouteImport } from './routes/lists_.$listId'
+import { Route as AuthCallbackRouteImport } from './routes/auth_.callback'
+import { Route as ApiHealthRouteImport } from './routes/api/health'
+import { Route as ApiCoachRouteImport } from './routes/api/coach'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
-import { Route as AuthenticatedAdvisorRouteImport } from './routes/_authenticated/advisor'
-import { Route as AuthenticatedAdvisorIndexRouteImport } from './routes/_authenticated/advisor.index'
-import { Route as AuthenticatedAdvisorThreadIdRouteImport } from './routes/_authenticated/advisor.$threadId'
+import { Route as AdvisorThreadIdRouteImport } from './routes/advisor.$threadId'
 import { Route as ApiPublicHooksRefreshStatusesRouteImport } from './routes/api/public/hooks/refresh-statuses'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RoadmapsRoute = RoadmapsRouteImport.update({
@@ -48,6 +61,11 @@ const ReadinessRoute = ReadinessRouteImport.update({
   path: '/readiness',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProgressRoute = ProgressRouteImport.update({
+  id: '/progress',
+  path: '/progress',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProblemsRoute = ProblemsRouteImport.update({
   id: '/problems',
   path: '/problems',
@@ -61,6 +79,16 @@ const PlaygroundRoute = PlaygroundRouteImport.update({
 const OpportunitiesRoute = OpportunitiesRouteImport.update({
   id: '/opportunities',
   path: '/opportunities',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ListsRoute = ListsRouteImport.update({
+  id: '/lists',
+  path: '/lists',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LeaderboardRoute = LeaderboardRouteImport.update({
+  id: '/leaderboard',
+  path: '/leaderboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const GraphRoute = GraphRouteImport.update({
@@ -78,8 +106,9 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
+const AdvisorRoute = AdvisorRouteImport.update({
+  id: '/advisor',
+  path: '/advisor',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -87,9 +116,39 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdvisorIndexRoute = AdvisorIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdvisorRoute,
+} as any)
+const ProblemsSlugRoute = ProblemsSlugRouteImport.update({
+  id: '/problems_/$slug',
+  path: '/problems/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PHandleRoute = PHandleRouteImport.update({
   id: '/p/$handle',
   path: '/p/$handle',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ListsListIdRoute = ListsListIdRouteImport.update({
+  id: '/lists_/$listId',
+  path: '/lists/$listId',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth_/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCoachRoute = ApiCoachRouteImport.update({
+  id: '/api/coach',
+  path: '/api/coach',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiChatRoute = ApiChatRouteImport.update({
@@ -97,23 +156,11 @@ const ApiChatRoute = ApiChatRouteImport.update({
   path: '/api/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedAdvisorRoute = AuthenticatedAdvisorRouteImport.update({
-  id: '/advisor',
-  path: '/advisor',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const AdvisorThreadIdRoute = AdvisorThreadIdRouteImport.update({
+  id: '/$threadId',
+  path: '/$threadId',
+  getParentRoute: () => AdvisorRoute,
 } as any)
-const AuthenticatedAdvisorIndexRoute =
-  AuthenticatedAdvisorIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedAdvisorRoute,
-  } as any)
-const AuthenticatedAdvisorThreadIdRoute =
-  AuthenticatedAdvisorThreadIdRouteImport.update({
-    id: '/$threadId',
-    path: '/$threadId',
-    getParentRoute: () => AuthenticatedAdvisorRoute,
-  } as any)
 const ApiPublicHooksRefreshStatusesRoute =
   ApiPublicHooksRefreshStatusesRouteImport.update({
     id: '/api/public/hooks/refresh-statuses',
@@ -123,21 +170,30 @@ const ApiPublicHooksRefreshStatusesRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/advisor': typeof AdvisorRouteWithChildren
   '/auth': typeof AuthRoute
   '/compiler': typeof CompilerRoute
   '/graph': typeof GraphRoute
+  '/leaderboard': typeof LeaderboardRoute
+  '/lists': typeof ListsRoute
   '/opportunities': typeof OpportunitiesRoute
   '/playground': typeof PlaygroundRoute
   '/problems': typeof ProblemsRoute
+  '/progress': typeof ProgressRoute
   '/readiness': typeof ReadinessRoute
   '/resources': typeof ResourcesRoute
   '/roadmaps': typeof RoadmapsRoute
+  '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/advisor': typeof AuthenticatedAdvisorRouteWithChildren
+  '/advisor/$threadId': typeof AdvisorThreadIdRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/coach': typeof ApiCoachRoute
+  '/api/health': typeof ApiHealthRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/lists/$listId': typeof ListsListIdRoute
   '/p/$handle': typeof PHandleRoute
-  '/advisor/$threadId': typeof AuthenticatedAdvisorThreadIdRoute
-  '/advisor/': typeof AuthenticatedAdvisorIndexRoute
+  '/problems/$slug': typeof ProblemsSlugRoute
+  '/advisor/': typeof AdvisorIndexRoute
   '/api/public/hooks/refresh-statuses': typeof ApiPublicHooksRefreshStatusesRoute
 }
 export interface FileRoutesByTo {
@@ -145,58 +201,84 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/compiler': typeof CompilerRoute
   '/graph': typeof GraphRoute
+  '/leaderboard': typeof LeaderboardRoute
+  '/lists': typeof ListsRoute
   '/opportunities': typeof OpportunitiesRoute
   '/playground': typeof PlaygroundRoute
   '/problems': typeof ProblemsRoute
+  '/progress': typeof ProgressRoute
   '/readiness': typeof ReadinessRoute
   '/resources': typeof ResourcesRoute
   '/roadmaps': typeof RoadmapsRoute
+  '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/advisor/$threadId': typeof AdvisorThreadIdRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/coach': typeof ApiCoachRoute
+  '/api/health': typeof ApiHealthRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/lists/$listId': typeof ListsListIdRoute
   '/p/$handle': typeof PHandleRoute
-  '/advisor/$threadId': typeof AuthenticatedAdvisorThreadIdRoute
-  '/advisor': typeof AuthenticatedAdvisorIndexRoute
+  '/problems/$slug': typeof ProblemsSlugRoute
+  '/advisor': typeof AdvisorIndexRoute
   '/api/public/hooks/refresh-statuses': typeof ApiPublicHooksRefreshStatusesRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/advisor': typeof AdvisorRouteWithChildren
   '/auth': typeof AuthRoute
   '/compiler': typeof CompilerRoute
   '/graph': typeof GraphRoute
+  '/leaderboard': typeof LeaderboardRoute
+  '/lists': typeof ListsRoute
   '/opportunities': typeof OpportunitiesRoute
   '/playground': typeof PlaygroundRoute
   '/problems': typeof ProblemsRoute
+  '/progress': typeof ProgressRoute
   '/readiness': typeof ReadinessRoute
   '/resources': typeof ResourcesRoute
   '/roadmaps': typeof RoadmapsRoute
+  '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/_authenticated/advisor': typeof AuthenticatedAdvisorRouteWithChildren
+  '/advisor/$threadId': typeof AdvisorThreadIdRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/coach': typeof ApiCoachRoute
+  '/api/health': typeof ApiHealthRoute
+  '/auth_/callback': typeof AuthCallbackRoute
+  '/lists_/$listId': typeof ListsListIdRoute
   '/p/$handle': typeof PHandleRoute
-  '/_authenticated/advisor/$threadId': typeof AuthenticatedAdvisorThreadIdRoute
-  '/_authenticated/advisor/': typeof AuthenticatedAdvisorIndexRoute
+  '/problems_/$slug': typeof ProblemsSlugRoute
+  '/advisor/': typeof AdvisorIndexRoute
   '/api/public/hooks/refresh-statuses': typeof ApiPublicHooksRefreshStatusesRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/advisor'
     | '/auth'
     | '/compiler'
     | '/graph'
+    | '/leaderboard'
+    | '/lists'
     | '/opportunities'
     | '/playground'
     | '/problems'
+    | '/progress'
     | '/readiness'
     | '/resources'
     | '/roadmaps'
+    | '/settings'
     | '/sitemap.xml'
-    | '/advisor'
-    | '/api/chat'
-    | '/p/$handle'
     | '/advisor/$threadId'
+    | '/api/chat'
+    | '/api/coach'
+    | '/api/health'
+    | '/auth/callback'
+    | '/lists/$listId'
+    | '/p/$handle'
+    | '/problems/$slug'
     | '/advisor/'
     | '/api/public/hooks/refresh-statuses'
   fileRoutesByTo: FileRoutesByTo
@@ -205,55 +287,81 @@ export interface FileRouteTypes {
     | '/auth'
     | '/compiler'
     | '/graph'
+    | '/leaderboard'
+    | '/lists'
     | '/opportunities'
     | '/playground'
     | '/problems'
+    | '/progress'
     | '/readiness'
     | '/resources'
     | '/roadmaps'
+    | '/settings'
     | '/sitemap.xml'
-    | '/api/chat'
-    | '/p/$handle'
     | '/advisor/$threadId'
+    | '/api/chat'
+    | '/api/coach'
+    | '/api/health'
+    | '/auth/callback'
+    | '/lists/$listId'
+    | '/p/$handle'
+    | '/problems/$slug'
     | '/advisor'
     | '/api/public/hooks/refresh-statuses'
   id:
     | '__root__'
     | '/'
-    | '/_authenticated'
+    | '/advisor'
     | '/auth'
     | '/compiler'
     | '/graph'
+    | '/leaderboard'
+    | '/lists'
     | '/opportunities'
     | '/playground'
     | '/problems'
+    | '/progress'
     | '/readiness'
     | '/resources'
     | '/roadmaps'
+    | '/settings'
     | '/sitemap.xml'
-    | '/_authenticated/advisor'
+    | '/advisor/$threadId'
     | '/api/chat'
+    | '/api/coach'
+    | '/api/health'
+    | '/auth_/callback'
+    | '/lists_/$listId'
     | '/p/$handle'
-    | '/_authenticated/advisor/$threadId'
-    | '/_authenticated/advisor/'
+    | '/problems_/$slug'
+    | '/advisor/'
     | '/api/public/hooks/refresh-statuses'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AdvisorRoute: typeof AdvisorRouteWithChildren
   AuthRoute: typeof AuthRoute
   CompilerRoute: typeof CompilerRoute
   GraphRoute: typeof GraphRoute
+  LeaderboardRoute: typeof LeaderboardRoute
+  ListsRoute: typeof ListsRoute
   OpportunitiesRoute: typeof OpportunitiesRoute
   PlaygroundRoute: typeof PlaygroundRoute
   ProblemsRoute: typeof ProblemsRoute
+  ProgressRoute: typeof ProgressRoute
   ReadinessRoute: typeof ReadinessRoute
   ResourcesRoute: typeof ResourcesRoute
   RoadmapsRoute: typeof RoadmapsRoute
+  SettingsRoute: typeof SettingsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   ApiChatRoute: typeof ApiChatRoute
+  ApiCoachRoute: typeof ApiCoachRoute
+  ApiHealthRoute: typeof ApiHealthRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
+  ListsListIdRoute: typeof ListsListIdRoute
   PHandleRoute: typeof PHandleRoute
+  ProblemsSlugRoute: typeof ProblemsSlugRoute
   ApiPublicHooksRefreshStatusesRoute: typeof ApiPublicHooksRefreshStatusesRoute
 }
 
@@ -264,6 +372,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/roadmaps': {
@@ -287,6 +402,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReadinessRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/progress': {
+      id: '/progress'
+      path: '/progress'
+      fullPath: '/progress'
+      preLoaderRoute: typeof ProgressRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/problems': {
       id: '/problems'
       path: '/problems'
@@ -306,6 +428,20 @@ declare module '@tanstack/react-router' {
       path: '/opportunities'
       fullPath: '/opportunities'
       preLoaderRoute: typeof OpportunitiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lists': {
+      id: '/lists'
+      path: '/lists'
+      fullPath: '/lists'
+      preLoaderRoute: typeof ListsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/leaderboard': {
+      id: '/leaderboard'
+      path: '/leaderboard'
+      fullPath: '/leaderboard'
+      preLoaderRoute: typeof LeaderboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/graph': {
@@ -329,11 +465,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated': {
-      id: '/_authenticated'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+    '/advisor': {
+      id: '/advisor'
+      path: '/advisor'
+      fullPath: '/advisor'
+      preLoaderRoute: typeof AdvisorRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -343,11 +479,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/advisor/': {
+      id: '/advisor/'
+      path: '/'
+      fullPath: '/advisor/'
+      preLoaderRoute: typeof AdvisorIndexRouteImport
+      parentRoute: typeof AdvisorRoute
+    }
+    '/problems_/$slug': {
+      id: '/problems_/$slug'
+      path: '/problems/$slug'
+      fullPath: '/problems/$slug'
+      preLoaderRoute: typeof ProblemsSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/p/$handle': {
       id: '/p/$handle'
       path: '/p/$handle'
       fullPath: '/p/$handle'
       preLoaderRoute: typeof PHandleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lists_/$listId': {
+      id: '/lists_/$listId'
+      path: '/lists/$listId'
+      fullPath: '/lists/$listId'
+      preLoaderRoute: typeof ListsListIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth_/callback': {
+      id: '/auth_/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/coach': {
+      id: '/api/coach'
+      path: '/api/coach'
+      fullPath: '/api/coach'
+      preLoaderRoute: typeof ApiCoachRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/chat': {
@@ -357,26 +535,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/advisor': {
-      id: '/_authenticated/advisor'
-      path: '/advisor'
-      fullPath: '/advisor'
-      preLoaderRoute: typeof AuthenticatedAdvisorRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
-    }
-    '/_authenticated/advisor/': {
-      id: '/_authenticated/advisor/'
-      path: '/'
-      fullPath: '/advisor/'
-      preLoaderRoute: typeof AuthenticatedAdvisorIndexRouteImport
-      parentRoute: typeof AuthenticatedAdvisorRoute
-    }
-    '/_authenticated/advisor/$threadId': {
-      id: '/_authenticated/advisor/$threadId'
+    '/advisor/$threadId': {
+      id: '/advisor/$threadId'
       path: '/$threadId'
       fullPath: '/advisor/$threadId'
-      preLoaderRoute: typeof AuthenticatedAdvisorThreadIdRouteImport
-      parentRoute: typeof AuthenticatedAdvisorRoute
+      preLoaderRoute: typeof AdvisorThreadIdRouteImport
+      parentRoute: typeof AdvisorRoute
     }
     '/api/public/hooks/refresh-statuses': {
       id: '/api/public/hooks/refresh-statuses'
@@ -388,45 +552,43 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AuthenticatedAdvisorRouteChildren {
-  AuthenticatedAdvisorThreadIdRoute: typeof AuthenticatedAdvisorThreadIdRoute
-  AuthenticatedAdvisorIndexRoute: typeof AuthenticatedAdvisorIndexRoute
+interface AdvisorRouteChildren {
+  AdvisorThreadIdRoute: typeof AdvisorThreadIdRoute
+  AdvisorIndexRoute: typeof AdvisorIndexRoute
 }
 
-const AuthenticatedAdvisorRouteChildren: AuthenticatedAdvisorRouteChildren = {
-  AuthenticatedAdvisorThreadIdRoute: AuthenticatedAdvisorThreadIdRoute,
-  AuthenticatedAdvisorIndexRoute: AuthenticatedAdvisorIndexRoute,
+const AdvisorRouteChildren: AdvisorRouteChildren = {
+  AdvisorThreadIdRoute: AdvisorThreadIdRoute,
+  AdvisorIndexRoute: AdvisorIndexRoute,
 }
 
-const AuthenticatedAdvisorRouteWithChildren =
-  AuthenticatedAdvisorRoute._addFileChildren(AuthenticatedAdvisorRouteChildren)
-
-interface AuthenticatedRouteRouteChildren {
-  AuthenticatedAdvisorRoute: typeof AuthenticatedAdvisorRouteWithChildren
-}
-
-const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
-  AuthenticatedAdvisorRoute: AuthenticatedAdvisorRouteWithChildren,
-}
-
-const AuthenticatedRouteRouteWithChildren =
-  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+const AdvisorRouteWithChildren =
+  AdvisorRoute._addFileChildren(AdvisorRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AdvisorRoute: AdvisorRouteWithChildren,
   AuthRoute: AuthRoute,
   CompilerRoute: CompilerRoute,
   GraphRoute: GraphRoute,
+  LeaderboardRoute: LeaderboardRoute,
+  ListsRoute: ListsRoute,
   OpportunitiesRoute: OpportunitiesRoute,
   PlaygroundRoute: PlaygroundRoute,
   ProblemsRoute: ProblemsRoute,
+  ProgressRoute: ProgressRoute,
   ReadinessRoute: ReadinessRoute,
   ResourcesRoute: ResourcesRoute,
   RoadmapsRoute: RoadmapsRoute,
+  SettingsRoute: SettingsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   ApiChatRoute: ApiChatRoute,
+  ApiCoachRoute: ApiCoachRoute,
+  ApiHealthRoute: ApiHealthRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
+  ListsListIdRoute: ListsListIdRoute,
   PHandleRoute: PHandleRoute,
+  ProblemsSlugRoute: ProblemsSlugRoute,
   ApiPublicHooksRefreshStatusesRoute: ApiPublicHooksRefreshStatusesRoute,
 }
 export const routeTree = rootRouteImport

@@ -1,5 +1,8 @@
 // Server functions for durable submission history + practice streak.
-// All scoped to the signed-in user via requireSupabaseAuth (RLS as auth.uid()).
+//
+// Submissions are written only by the trusted judge (src/lib/judge.functions.ts
+// `submitSolution`, service role). These readers run with the caller's
+// RLS-scoped client, so users only ever see their own rows.
 
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
@@ -15,6 +18,9 @@ export type SubmissionRow = {
   runtimeMs: number | null;
   memoryKb: number | null;
   when: number;
+  code: string | null;
+  verified: boolean;
+  engine: string | null;
 };
 
 export type StreakInfo = {
@@ -25,49 +31,28 @@ export type StreakInfo = {
   lastActive: string | null;
 };
 
-// ---- Record a submission (any status) ----
-export const recordSubmissionDb = createServerFn({ method: "POST" })
+// ---- List a user's submissions for one problem ----
+export const listSubmissions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .validator((input) =>
     z
       .object({
-        problemSlug: z.string().min(1).max(200),
-        problemTitle: z.string().max(200).nullable().optional(),
-        status: z.string().min(1).max(40),
-        language: z.string().min(1).max(40),
-        passed: z.number().int().nonnegative().default(0),
-        total: z.number().int().nonnegative().default(0),
-        runtimeMs: z.number().int().nonnegative().nullable().optional(),
-        memoryKb: z.number().int().nonnegative().nullable().optional(),
+        slug: z
+          .string()
+          .trim()
+          .min(1)
+          .max(200)
+          .regex(/^[a-z0-9-]+$/i),
       })
       .parse(input),
   )
-  .handler(async ({ data, context }) => {
-    const { supabase, userId } = context;
-    const { error } = await supabase.from("code_submissions").insert({
-      user_id: userId,
-      problem_slug: data.problemSlug,
-      problem_title: data.problemTitle ?? null,
-      status: data.status,
-      language: data.language,
-      passed: data.passed,
-      total: data.total,
-      runtime_ms: data.runtimeMs ?? null,
-      memory_kb: data.memoryKb ?? null,
-    });
-    if (error) throw new Error(error.message);
-    return { ok: true };
-  });
-
-// ---- List a user's submissions for one problem ----
-export const listSubmissions = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .validator((input) => z.object({ slug: z.string().min(1).max(200) }).parse(input))
   .handler(async ({ data, context }): Promise<SubmissionRow[]> => {
     const { supabase, userId } = context;
     const { data: rows } = await supabase
       .from("code_submissions")
-      .select("id, status, language, passed, total, runtime_ms, memory_kb, created_at")
+      .select(
+        "id, status, language, passed, total, runtime_ms, memory_kb, created_at, code, verified, engine",
+      )
       .eq("user_id", userId)
       .eq("problem_slug", data.slug)
       .order("created_at", { ascending: false })
@@ -81,6 +66,9 @@ export const listSubmissions = createServerFn({ method: "GET" })
       runtimeMs: r.runtime_ms,
       memoryKb: r.memory_kb,
       when: new Date(r.created_at).getTime(),
+      code: r.code,
+      verified: r.verified,
+      engine: r.engine,
     }));
   });
 

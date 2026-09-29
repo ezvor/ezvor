@@ -1,27 +1,26 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, useNavigate, useRouter } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import {
-  ArrowUpRight,
+  ArrowDown,
+  ArrowUp,
+  Bookmark,
   Building2,
   Check,
+  ChevronLeft,
+  ChevronRight,
   ChevronsUpDown,
-  Crown,
   Loader2,
-  Play,
   Search,
+  Shuffle,
   X,
 } from "lucide-react";
 
 import { PageHeader } from "@/components/PageHeader";
-import { Badge } from "@/components/ui/badge";
+import { BookmarkButton } from "@/components/progress/BookmarkButton";
+import { DIFF_TEXT } from "@/components/progress/Difficulty";
+import { problemHref, ProblemLink } from "@/components/progress/ProblemLink";
+import { StatusIcon } from "@/components/progress/StatusIcon";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import {
   Command,
   CommandEmpty,
@@ -30,6 +29,8 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
+import { Input } from "@/components/ui/input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -37,24 +38,57 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { prettyTag, type LcDifficulty, type LcProblem } from "@/data/leetcodeCatalog";
+import { getList, listSlugs, STUDY_LISTS } from "@/data/lists";
+import { useCollection } from "@/lib/local/store";
+import { useCatalog } from "@/lib/progress/catalog";
+import { attemptedSlugs, catalogTotals, solvedCounts, statusOf } from "@/lib/progress/stats";
 import { cn } from "@/lib/utils";
-import {
-  loadCatalog,
-  prettyTag,
-  SOLVABLE_SLUGS,
-  type LcCatalog,
-  type LcDifficulty,
-  type LcProblem,
-} from "@/data/leetcodeCatalog";
+
+type StatusFilter = "all" | "solved" | "attempted" | "todo";
+type SortKey = "id" | "acceptance" | "difficulty" | "list";
+type SortDir = "asc" | "desc";
+
+type ProblemsSearch = {
+  q?: string;
+  difficulty?: LcDifficulty;
+  topic?: string;
+  company?: string;
+  list?: string;
+  status?: StatusFilter;
+  bookmarked?: boolean;
+  free?: boolean;
+  sort?: SortKey;
+  dir?: SortDir;
+  page?: number;
+};
+
+const str = (v: unknown) => (typeof v === "string" && v ? v : undefined);
+const oneOf = <T extends string>(v: unknown, opts: readonly T[]) =>
+  typeof v === "string" && (opts as readonly string[]).includes(v) ? (v as T) : undefined;
 
 export const Route = createFileRoute("/problems")({
+  validateSearch: (s: Record<string, unknown>): ProblemsSearch => ({
+    q: str(s.q),
+    difficulty: oneOf(s.difficulty, ["Easy", "Medium", "Hard"] as const),
+    topic: str(s.topic),
+    company: str(s.company),
+    list: str(s.list),
+    status: oneOf(s.status, ["all", "solved", "attempted", "todo"] as const),
+    bookmarked: s.bookmarked === true || s.bookmarked === "true" ? true : undefined,
+    free: s.free === true || s.free === "true" ? true : undefined,
+    sort: oneOf(s.sort, ["id", "acceptance", "difficulty", "list"] as const),
+    dir: oneOf(s.dir, ["asc", "desc"] as const),
+    page: typeof s.page === "number" && s.page > 1 ? Math.floor(s.page) : undefined,
+  }),
   head: () => ({
     meta: [
-      { title: "All LeetCode Problems + Free Company Lists | Ezvor" },
+      { title: "Problems — Ezvor" },
       {
         name: "description",
         content:
-          "Browse all 3,977 LeetCode problems with topic tags, difficulty and acceptance rate — plus free company-wise lists (Google, Amazon, Microsoft, Meta and 180+ more) usually locked behind Premium.",
+          "All 3,900+ LeetCode problems, solvable in the browser with a real judge. Filter by difficulty, topic, company (180+ company tags), study list and your own progress.",
       },
     ],
   }),
@@ -62,42 +96,58 @@ export const Route = createFileRoute("/problems")({
 });
 
 const PAGE_SIZE = 50;
-
-function diffColor(d: LcDifficulty) {
-  if (d === "Easy") return "text-emerald-400";
-  if (d === "Medium") return "text-amber-400";
-  return "text-rose-400";
-}
+const DIFF_RANK: Record<LcDifficulty, number> = { Easy: 0, Medium: 1, Hard: 2 };
 
 function ProblemsPage() {
-  const [catalog, setCatalog] = useState<LcCatalog | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const search = Route.useSearch();
+  const navigate = useNavigate({ from: "/problems" });
+  const router = useRouter();
+  const { catalog, error, bySlug } = useCatalog();
+  const solved = useCollection("solved");
+  const submissions = useCollection("submissions");
+  const bookmarks = useCollection("bookmarks");
 
-  const [query, setQuery] = useState("");
-  const [difficulty, setDifficulty] = useState<"All" | LcDifficulty>("All");
-  const [company, setCompany] = useState<string | null>(null);
-  const [topic, setTopic] = useState<string>("All");
-  const [freeOnly, setFreeOnly] = useState(false);
-  const [solvableOnly, setSolvableOnly] = useState(false);
-  const [sort, setSort] = useState<"number" | "acceptance-desc" | "acceptance-asc">("number");
+  // The search box is local so typing stays instant; it syncs to the URL after a pause.
+  const [query, setQuery] = useState(search.q ?? "");
   const [companyPickerOpen, setCompanyPickerOpen] = useState(false);
-  const [page, setPage] = useState(0);
+
+  const list = getList(search.list);
+  const difficulty = search.difficulty;
+  const status = search.status ?? "all";
+  const sort: SortKey = search.sort ?? (list ? "list" : "id");
+  const dir: SortDir = search.dir ?? (sort === "acceptance" ? "desc" : "asc");
+  const page = (search.page ?? 1) - 1;
+
+  const update = (patch: Partial<ProblemsSearch>, keepPage = false) =>
+    navigate({
+      search: (prev: ProblemsSearch) => {
+        const next: ProblemsSearch = { ...prev, ...patch };
+        if (!keepPage) delete next.page;
+        for (const k of Object.keys(next) as (keyof ProblemsSearch)[]) {
+          if (next[k] === undefined || next[k] === "" || next[k] === false) delete next[k];
+        }
+        return next;
+      },
+      replace: true,
+      resetScroll: false,
+    });
 
   useEffect(() => {
-    loadCatalog().then(setCatalog).catch((e) => setError(e.message));
-  }, []);
+    const t = setTimeout(() => {
+      if ((search.q ?? "") !== query.trim()) update({ q: query.trim() || undefined });
+    }, 250);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query]);
 
-  // Reset to first page whenever filters change.
-  useEffect(() => {
-    setPage(0);
-  }, [query, difficulty, company, topic, freeOnly, solvableOnly, sort]);
+  const attempted = useMemo(() => attemptedSlugs(submissions, solved), [submissions, solved]);
+  const totals = useMemo(() => catalogTotals(catalog?.problems), [catalog]);
+  const mine = useMemo(() => solvedCounts(solved, bySlug), [solved, bySlug]);
 
   const companyCounts = useMemo(() => {
     const m = new Map<string, number>();
-    if (!catalog) return m;
-    for (const p of catalog.problems) {
+    for (const p of catalog?.problems ?? [])
       for (const c of p.companies) m.set(c, (m.get(c) ?? 0) + 1);
-    }
     return m;
   }, [catalog]);
 
@@ -105,126 +155,184 @@ function ProblemsPage() {
     () =>
       [...companyCounts.entries()]
         .sort((a, b) => b[1] - a[1])
-        .slice(0, 12)
+        .slice(0, 10)
         .map(([name]) => name),
     [companyCounts],
   );
 
   const topics = useMemo(() => {
-    if (!catalog) return [];
     const s = new Set<string>();
-    for (const p of catalog.problems) for (const t of p.tags) s.add(t);
+    for (const p of catalog?.problems ?? []) for (const t of p.tags) s.add(t);
     return [...s].sort();
-  }, [catalog]);
-
-  const stats = useMemo(() => {
-    if (!catalog) return { total: 0, easy: 0, medium: 0, hard: 0, free: 0 };
-    let easy = 0,
-      medium = 0,
-      hard = 0,
-      free = 0;
-    for (const p of catalog.problems) {
-      if (p.difficulty === "Easy") easy++;
-      else if (p.difficulty === "Medium") medium++;
-      else hard++;
-      if (!p.paid) free++;
-    }
-    return { total: catalog.problems.length, easy, medium, hard, free };
   }, [catalog]);
 
   const filtered = useMemo(() => {
     if (!catalog) return [] as LcProblem[];
-    const q = query.trim().toLowerCase();
-    let list = catalog.problems.filter((p) => {
-      if (difficulty !== "All" && p.difficulty !== difficulty) return false;
-      if (freeOnly && p.paid) return false;
-      if (solvableOnly && !SOLVABLE_SLUGS.has(p.slug)) return false;
-      if (company && !p.companies.includes(company)) return false;
-      if (topic !== "All" && !p.tags.includes(topic)) return false;
-      if (q) {
-        const hay = `${p.id} ${p.title}`.toLowerCase();
-        if (!hay.includes(q)) return false;
-      }
+    const q = (search.q ?? "").toLowerCase();
+    const inList = list ? new Map(listSlugs(list).map((s, i) => [s, i])) : null;
+    const rows = catalog.problems.filter((p) => {
+      if (inList && !inList.has(p.slug)) return false;
+      if (difficulty && p.difficulty !== difficulty) return false;
+      if (search.free && p.paid) return false;
+      if (search.bookmarked && !bookmarks[p.slug]) return false;
+      if (search.company && !p.companies.includes(search.company)) return false;
+      if (search.topic && !p.tags.includes(search.topic)) return false;
+      if (status !== "all" && statusOf(p.slug, solved, attempted) !== status) return false;
+      if (q && !`${p.id}. ${p.title}`.toLowerCase().includes(q) && !p.slug.includes(q))
+        return false;
       return true;
     });
-    if (sort === "acceptance-desc") list = [...list].sort((a, b) => b.acRate - a.acRate);
-    else if (sort === "acceptance-asc") list = [...list].sort((a, b) => a.acRate - b.acRate);
-    else list = [...list].sort((a, b) => a.id - b.id);
-    return list;
-  }, [catalog, query, difficulty, company, topic, freeOnly, solvableOnly, sort]);
+    const sign = dir === "asc" ? 1 : -1;
+    const cmp: Record<SortKey, (a: LcProblem, b: LcProblem) => number> = {
+      id: (a, b) => a.id - b.id,
+      acceptance: (a, b) => a.acRate - b.acRate || a.id - b.id,
+      difficulty: (a, b) => DIFF_RANK[a.difficulty] - DIFF_RANK[b.difficulty] || a.id - b.id,
+      list: (a, b) => (inList?.get(a.slug) ?? a.id) - (inList?.get(b.slug) ?? b.id),
+    };
+    return rows.sort((a, b) => sign * cmp[sort](a, b));
+  }, [catalog, search, list, difficulty, status, sort, dir, solved, attempted, bookmarks]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const pageItems = filtered.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
+  const safePage = Math.min(page, pageCount - 1);
+  const pageItems = filtered.slice(safePage * PAGE_SIZE, safePage * PAGE_SIZE + PAGE_SIZE);
+
+  const activeFilters =
+    Number(Boolean(search.q)) +
+    Number(Boolean(difficulty)) +
+    Number(Boolean(search.topic)) +
+    Number(Boolean(search.company)) +
+    Number(Boolean(list)) +
+    Number(status !== "all") +
+    Number(Boolean(search.bookmarked)) +
+    Number(Boolean(search.free));
+
+  const pickRandom = () => {
+    if (!filtered.length) return;
+    const unsolved = filtered.filter((p) => !solved[p.slug] && !p.paid);
+    const pool = unsolved.length ? unsolved : filtered;
+    const p = pool[Math.floor(Math.random() * pool.length)];
+    router.history.push(problemHref(p.slug, list?.id));
+  };
+
+  const goToPage = (index: number) => {
+    update({ page: index > 0 ? index + 1 : undefined }, true);
+    document.getElementById("problem-table")?.scrollIntoView({ block: "start" });
+  };
+
+  const setSort = (key: SortKey) => {
+    if (key === sort) update({ sort: key, dir: dir === "asc" ? "desc" : "asc" });
+    else update({ sort: key, dir: undefined });
+  };
+
+  const SortHeader = ({
+    k,
+    label,
+    className,
+  }: {
+    k: SortKey;
+    label: string;
+    className?: string;
+  }) => (
+    <th
+      scope="col"
+      className={cn("px-3 py-2.5 text-left font-medium", className)}
+      aria-sort={sort === k ? (dir === "asc" ? "ascending" : "descending") : "none"}
+    >
+      <button
+        type="button"
+        onClick={() => setSort(k)}
+        className="inline-flex items-center gap-1 uppercase hover:text-foreground"
+      >
+        {label}
+        {sort === k ? (
+          dir === "asc" ? (
+            <ArrowUp className="h-3 w-3" />
+          ) : (
+            <ArrowDown className="h-3 w-3" />
+          )
+        ) : (
+          <ChevronsUpDown className="h-3 w-3 opacity-40" />
+        )}
+      </button>
+    </th>
+  );
 
   return (
     <div className="pb-16">
       <PageHeader
-        eyebrow="LeetCode Premium — unlocked, free"
-        title="Problem Catalog"
-        description="All 3,977 LeetCode problems with topic tags, difficulty and acceptance — plus free company-wise lists (Google, Amazon, Microsoft, Meta and 180+ more)."
+        eyebrow="Problems"
+        title="Every problem, one judge"
+        description="The full LeetCode catalog with topic and company tags. Open any problem to solve it here: statements load on first open and are judged against verified tests."
       />
 
-      <div className="space-y-6 px-4 pt-4 md:px-6">
+      <div className="mx-auto w-full max-w-6xl space-y-5 px-4 pt-6 sm:px-8">
         {/* Stats */}
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          {[
-            { label: "Total", value: stats.total, cls: "text-foreground" },
-            { label: "Easy", value: stats.easy, cls: "text-emerald-400" },
-            { label: "Medium", value: stats.medium, cls: "text-amber-400" },
-            { label: "Hard", value: stats.hard, cls: "text-rose-400" },
-            { label: "Free", value: stats.free, cls: "text-primary" },
-          ].map((s) => (
-            <div
-              key={s.label}
-              className="rounded-xl border border-border/60 bg-card/60 p-4"
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {(
+            [
+              ["Total", null, totals.total, mine.total],
+              ["Easy", "Easy", totals.Easy, mine.Easy],
+              ["Medium", "Medium", totals.Medium, mine.Medium],
+              ["Hard", "Hard", totals.Hard, mine.Hard],
+            ] as const
+          ).map(([label, d, total, done]) => (
+            <button
+              key={label}
+              type="button"
+              onClick={() => update({ difficulty: d ?? undefined })}
+              aria-pressed={d ? difficulty === d : !difficulty}
+              className={cn(
+                "rounded-xl border bg-card/60 p-4 text-left transition-colors hover:border-foreground/30",
+                (d ? difficulty === d : !difficulty) ? "border-foreground/30" : "border-border/60",
+              )}
             >
-              <div className={cn("font-display text-2xl font-bold", s.cls)}>
-                {catalog ? s.value.toLocaleString() : "—"}
+              <div
+                className={cn("text-xs font-medium", d ? DIFF_TEXT[d] : "text-muted-foreground")}
+              >
+                {label}
               </div>
-              <div className="text-xs text-muted-foreground">{s.label}</div>
-            </div>
+              <div className="mt-1 font-display text-2xl font-bold tabular-nums">
+                {catalog ? total.toLocaleString() : "—"}
+              </div>
+              <div className="text-[11px] tabular-nums text-muted-foreground">{done} solved</div>
+            </button>
           ))}
         </div>
 
-        {/* Company lists — the "Premium" feature, free */}
+        {/* Company tags */}
         <div className="rounded-xl border border-border/60 bg-card/60 p-4">
           <div className="mb-3 flex items-center gap-2">
-            <Crown className="h-4 w-4 text-amber-400" />
-            <h2 className="font-display text-sm font-semibold">
-              Company Lists
-              <span className="ml-2 font-sans text-xs font-normal text-muted-foreground">
-                LeetCode Premium — free here
-              </span>
-            </h2>
+            <Building2 className="h-4 w-4 text-muted-foreground" />
+            <h2 className="text-sm font-semibold">Company tags</h2>
+            <span className="text-xs text-muted-foreground">
+              {catalog ? `${catalog.companies.length} companies` : ""}
+            </span>
           </div>
           <div className="flex flex-wrap gap-2">
             {topCompanies.map((c) => (
               <button
                 key={c}
-                onClick={() => setCompany(company === c ? null : c)}
+                type="button"
+                onClick={() => update({ company: search.company === c ? undefined : c })}
+                aria-pressed={search.company === c}
                 className={cn(
                   "inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium transition-colors",
-                  company === c
-                    ? "border-primary bg-primary/15 text-primary"
-                    : "border-border/60 bg-background/40 text-muted-foreground hover:border-primary/50 hover:text-foreground",
+                  search.company === c
+                    ? "border-foreground/50 bg-muted text-foreground"
+                    : "border-border/60 text-muted-foreground hover:border-foreground/30 hover:text-foreground",
                 )}
               >
-                <Building2 className="h-3 w-3" />
                 {c}
-                <span className="text-[10px] opacity-70">{companyCounts.get(c)}</span>
+                <span className="text-[10px] tabular-nums opacity-60">{companyCounts.get(c)}</span>
               </button>
             ))}
-
-            {/* All companies picker */}
             <Popover open={companyPickerOpen} onOpenChange={setCompanyPickerOpen}>
               <PopoverTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="h-8 gap-1.5 rounded-full text-xs"
-                >
+                <Button variant="outline" size="sm" className="h-8 gap-1.5 rounded-full text-xs">
                   <Search className="h-3 w-3" />
-                  All 187 companies
+                  {search.company && !topCompanies.includes(search.company)
+                    ? search.company
+                    : "All companies"}
                   <ChevronsUpDown className="h-3 w-3 opacity-60" />
                 </Button>
               </PopoverTrigger>
@@ -239,14 +347,14 @@ function ProblemsPage() {
                           key={c}
                           value={c}
                           onSelect={() => {
-                            setCompany(company === c ? null : c);
+                            update({ company: search.company === c ? undefined : c });
                             setCompanyPickerOpen(false);
                           }}
                         >
                           <Check
                             className={cn(
                               "mr-2 h-4 w-4",
-                              company === c ? "opacity-100" : "opacity-0",
+                              search.company === c ? "opacity-100" : "opacity-0",
                             )}
                           />
                           <span className="flex-1 truncate">{c}</span>
@@ -261,54 +369,78 @@ function ProblemsPage() {
               </PopoverContent>
             </Popover>
           </div>
-
-          {company && (
-            <div className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
-              Showing problems tagged for
-              <Badge variant="secondary" className="gap-1">
-                {company}
-                <button onClick={() => setCompany(null)} aria-label="Clear company">
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
-            </div>
-          )}
         </div>
 
         {/* Filters */}
-        <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search by title or number…"
-              className="pl-9"
-            />
+        <div className="space-y-3">
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search by title or number"
+                className="pl-9"
+                aria-label="Search problems"
+              />
+            </div>
+            <Button
+              variant="outline"
+              onClick={pickRandom}
+              disabled={!filtered.length}
+              className="gap-2"
+              title="Open a random unsolved problem from the current filters"
+            >
+              <Shuffle className="h-4 w-4" /> Pick random
+            </Button>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {(["All", "Easy", "Medium", "Hard"] as const).map((d) => (
-              <button
-                key={d}
-                onClick={() => setDifficulty(d)}
-                className={cn(
-                  "rounded-lg border px-3 py-1.5 text-xs font-medium transition-colors",
-                  difficulty === d
-                    ? "border-primary bg-primary/15 text-primary"
-                    : "border-border/60 text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {d}
-              </button>
-            ))}
+            <Select
+              value={list?.id ?? "all"}
+              onValueChange={(v) =>
+                update({ list: v === "all" ? undefined : v, sort: undefined, dir: undefined })
+              }
+            >
+              <SelectTrigger className="h-9 w-[160px]" aria-label="Study list">
+                <SelectValue placeholder="List" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All problems</SelectItem>
+                {STUDY_LISTS.map((l) => (
+                  <SelectItem key={l.id} value={l.id}>
+                    {l.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-            <Select value={topic} onValueChange={setTopic}>
-              <SelectTrigger className="h-9 w-[150px]">
-                <SelectValue placeholder="Topic" />
+            <Select
+              value={difficulty ?? "all"}
+              onValueChange={(v) =>
+                update({ difficulty: v === "all" ? undefined : (v as LcDifficulty) })
+              }
+            >
+              <SelectTrigger className="h-9 w-[130px]" aria-label="Difficulty">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Any difficulty</SelectItem>
+                <SelectItem value="Easy">Easy</SelectItem>
+                <SelectItem value="Medium">Medium</SelectItem>
+                <SelectItem value="Hard">Hard</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select
+              value={search.topic ?? "all"}
+              onValueChange={(v) => update({ topic: v === "all" ? undefined : v })}
+            >
+              <SelectTrigger className="h-9 w-[160px]" aria-label="Topic">
+                <SelectValue />
               </SelectTrigger>
               <SelectContent className="max-h-72">
-                <SelectItem value="All">All topics</SelectItem>
+                <SelectItem value="all">Any topic</SelectItem>
                 {topics.map((t) => (
                   <SelectItem key={t} value={t}>
                     {prettyTag(t)}
@@ -317,176 +449,244 @@ function ProblemsPage() {
               </SelectContent>
             </Select>
 
-            <Select value={sort} onValueChange={(v) => setSort(v as typeof sort)}>
-              <SelectTrigger className="h-9 w-[150px]">
+            <Select
+              value={status}
+              onValueChange={(v) =>
+                update({ status: v === "all" ? undefined : (v as StatusFilter) })
+              }
+            >
+              <SelectTrigger className="h-9 w-[130px]" aria-label="Status">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="number">Sort: Number</SelectItem>
-                <SelectItem value="acceptance-desc">Acceptance: High→Low</SelectItem>
-                <SelectItem value="acceptance-asc">Acceptance: Low→High</SelectItem>
+                <SelectItem value="all">Any status</SelectItem>
+                <SelectItem value="todo">Not started</SelectItem>
+                <SelectItem value="attempted">Attempted</SelectItem>
+                <SelectItem value="solved">Solved</SelectItem>
               </SelectContent>
             </Select>
 
-            <label className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Switch checked={freeOnly} onCheckedChange={setFreeOnly} />
-              Free only
+            <button
+              type="button"
+              onClick={() => update({ bookmarked: search.bookmarked ? undefined : true })}
+              aria-pressed={Boolean(search.bookmarked)}
+              className={cn(
+                "inline-flex h-9 items-center gap-1.5 rounded-md border px-3 text-xs font-medium transition-colors",
+                search.bookmarked
+                  ? "border-warning/50 bg-warning/10 text-warning"
+                  : "border-input text-muted-foreground hover:text-foreground",
+              )}
+            >
+              <Bookmark className={cn("h-3.5 w-3.5", search.bookmarked && "fill-current")} />
+              Bookmarked
+            </button>
+
+            <label className="flex items-center gap-2 px-1 text-xs text-muted-foreground">
+              <Switch
+                checked={Boolean(search.free)}
+                onCheckedChange={(v) => update({ free: v || undefined })}
+              />
+              Hide premium
             </label>
-            <label className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Switch checked={solvableOnly} onCheckedChange={setSolvableOnly} />
-              Solvable here
-            </label>
+
+            {activeFilters > 0 && (
+              <button
+                type="button"
+                onClick={() => {
+                  setQuery("");
+                  navigate({ search: {}, replace: true, resetScroll: false });
+                }}
+                className="inline-flex items-center gap-1 px-1 text-xs text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-3.5 w-3.5" /> Clear filters
+              </button>
+            )}
           </div>
         </div>
 
-        {/* Loading / error */}
         {error && (
-          <div className="rounded-xl border border-rose-500/40 bg-rose-500/10 p-6 text-sm text-rose-300">
-            Couldn’t load the catalog: {error}
+          <div className="rounded-xl border border-destructive/40 bg-destructive/10 p-6 text-sm">
+            Could not load the problem catalog: {error}
           </div>
         )}
         {!catalog && !error && (
           <div className="flex items-center justify-center gap-2 py-20 text-muted-foreground">
             <Loader2 className="h-5 w-5 animate-spin" />
-            Loading 3,977 problems…
+            Loading problems
           </div>
         )}
 
-        {/* Results */}
         {catalog && (
           <>
-            <div className="text-xs text-muted-foreground">
-              {filtered.length.toLocaleString()} problem
-              {filtered.length === 1 ? "" : "s"} match
+            <div
+              className="flex items-center justify-between text-xs text-muted-foreground"
+              aria-live="polite"
+            >
+              <span>
+                {filtered.length.toLocaleString()} problem{filtered.length === 1 ? "" : "s"}
+                {list && <> in {list.name}</>}
+                {search.company && <> tagged {search.company}</>}
+              </span>
+              {pageCount > 1 && (
+                <span className="tabular-nums">
+                  Page {safePage + 1} of {pageCount}
+                </span>
+              )}
             </div>
 
-            <div className="overflow-hidden rounded-xl border border-border/60">
-              <table className="w-full text-sm">
-                <thead className="bg-muted/40 text-xs uppercase text-muted-foreground">
+            <div
+              id="problem-table"
+              className="scroll-mt-4 overflow-hidden rounded-xl border border-border/60"
+            >
+              <table className="w-full table-fixed text-sm">
+                <thead className="bg-muted/40 text-xs text-muted-foreground">
                   <tr>
-                    <th className="px-3 py-2.5 text-left font-medium">#</th>
-                    <th className="px-3 py-2.5 text-left font-medium">Title</th>
-                    <th className="hidden px-3 py-2.5 text-left font-medium sm:table-cell">
-                      Difficulty
+                    <th scope="col" className="w-10 px-3 py-2.5">
+                      <span className="sr-only">Status</span>
                     </th>
-                    <th className="hidden px-3 py-2.5 text-left font-medium md:table-cell">
-                      Acceptance
+                    <SortHeader
+                      k={list ? "list" : "id"}
+                      label={list ? "Order" : "#"}
+                      className="hidden w-20 sm:table-cell"
+                    />
+                    <th scope="col" className="px-3 py-2.5 text-left font-medium uppercase">
+                      Title
                     </th>
-                    <th className="hidden px-3 py-2.5 text-left font-medium lg:table-cell">
+                    <SortHeader
+                      k="difficulty"
+                      label="Difficulty"
+                      className="hidden w-28 sm:table-cell"
+                    />
+                    <SortHeader
+                      k="acceptance"
+                      label="Acceptance"
+                      className="hidden w-32 md:table-cell"
+                    />
+                    <th
+                      scope="col"
+                      className="hidden w-56 px-3 py-2.5 text-left font-medium uppercase lg:table-cell"
+                    >
                       Companies
                     </th>
-                    <th className="px-3 py-2.5 text-right font-medium">Action</th>
+                    <th scope="col" className="w-12 px-2 py-2.5">
+                      <span className="sr-only">Bookmark</span>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {pageItems.map((p) => {
-                    const solvable = SOLVABLE_SLUGS.has(p.slug);
-                    return (
-                      <tr
-                        key={p.slug}
-                        className="border-t border-border/40 transition-colors hover:bg-muted/30"
+                  {pageItems.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={7}
+                        className="px-3 py-12 text-center text-sm text-muted-foreground"
                       >
-                        <td className="px-3 py-2.5 text-muted-foreground">{p.id}</td>
-                        <td className="px-3 py-2.5">
-                          <a
-                            href={`https://leetcode.com/problems/${p.slug}/`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="font-medium text-foreground hover:text-primary"
+                        No problems match these filters.
+                      </td>
+                    </tr>
+                  )}
+                  {pageItems.map((p) => (
+                    <tr
+                      key={p.slug}
+                      className="border-t border-border/40 transition-colors hover:bg-muted/20"
+                    >
+                      <td className="px-3 py-2.5">
+                        <StatusIcon status={statusOf(p.slug, solved, attempted)} />
+                      </td>
+                      <td className="hidden px-3 py-2.5 tabular-nums text-muted-foreground sm:table-cell">
+                        {p.id}
+                      </td>
+                      <td className="px-3 py-2.5">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <ProblemLink
+                            slug={p.slug}
+                            list={list?.id}
+                            className="truncate font-medium hover:underline"
                           >
+                            <span className="sm:hidden">{p.id}. </span>
                             {p.title}
-                          </a>
+                          </ProblemLink>
                           {p.paid && (
-                            <Crown className="ml-1.5 inline h-3 w-3 text-amber-400" />
-                          )}
-                          <div className="mt-0.5 flex flex-wrap gap-1 sm:hidden">
-                            <span className={cn("text-[11px]", diffColor(p.difficulty))}>
-                              {p.difficulty}
+                            <span
+                              className="shrink-0 rounded border border-warning/40 px-1 text-[10px] text-warning"
+                              title="Premium on LeetCode: the statement may not load here"
+                            >
+                              Premium
                             </span>
-                          </div>
-                        </td>
-                        <td className="hidden px-3 py-2.5 sm:table-cell">
-                          <span className={cn("font-medium", diffColor(p.difficulty))}>
+                          )}
+                        </div>
+                        <div className="mt-0.5 flex gap-2 truncate text-[11px] text-muted-foreground">
+                          <span className={cn("font-medium sm:hidden", DIFF_TEXT[p.difficulty])}>
                             {p.difficulty}
                           </span>
-                        </td>
-                        <td className="hidden px-3 py-2.5 text-muted-foreground md:table-cell">
-                          {p.acRate}%
-                        </td>
-                        <td className="hidden px-3 py-2.5 lg:table-cell">
-                          <div className="flex flex-wrap gap-1">
-                            {p.companies.slice(0, 3).map((c) => (
-                              <button
-                                key={c}
-                                onClick={() => setCompany(c)}
-                                className="rounded bg-muted/60 px-1.5 py-0.5 text-[10px] text-muted-foreground hover:text-foreground"
-                              >
-                                {c}
-                              </button>
-                            ))}
-                            {p.companies.length > 3 && (
-                              <span className="text-[10px] text-muted-foreground">
-                                +{p.companies.length - 3}
-                              </span>
-                            )}
-                          </div>
-                        </td>
-                        <td className="px-3 py-2.5 text-right">
-                          {solvable ? (
-                            <Button asChild size="sm" className="h-7 gap-1 text-xs">
-                              <Link to="/playground" search={{ problem: p.slug }}>
-                                <Play className="h-3 w-3" />
-                                Solve
-                              </Link>
-                            </Button>
-                          ) : (
-                            <Button
-                              asChild
-                              size="sm"
-                              variant="outline"
-                              className="h-7 gap-1 text-xs"
+                          {p.tags.slice(0, 3).map((t) => (
+                            <span key={t} className="hidden sm:inline">
+                              {prettyTag(t)}
+                            </span>
+                          ))}
+                        </div>
+                      </td>
+                      <td
+                        className={cn(
+                          "hidden px-3 py-2.5 font-medium sm:table-cell",
+                          DIFF_TEXT[p.difficulty],
+                        )}
+                      >
+                        {p.difficulty}
+                      </td>
+                      <td className="hidden px-3 py-2.5 tabular-nums text-muted-foreground md:table-cell">
+                        {p.acRate}%
+                      </td>
+                      <td className="hidden px-3 py-2.5 lg:table-cell">
+                        <div className="flex flex-wrap gap-1">
+                          {p.companies.slice(0, 3).map((c) => (
+                            <button
+                              key={c}
+                              type="button"
+                              onClick={() => update({ company: c })}
+                              className="max-w-[7rem] truncate rounded bg-muted/60 px-1.5 py-0.5 text-[10px] text-muted-foreground hover:text-foreground"
                             >
-                              <a
-                                href={`https://leetcode.com/problems/${p.slug}/`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                              >
-                                Open
-                                <ArrowUpRight className="h-3 w-3" />
-                              </a>
-                            </Button>
+                              {c}
+                            </button>
+                          ))}
+                          {p.companies.length > 3 && (
+                            <span className="text-[10px] text-muted-foreground">
+                              +{p.companies.length - 3}
+                            </span>
                           )}
-                        </td>
-                      </tr>
-                    );
-                  })}
+                        </div>
+                      </td>
+                      <td className="px-2 py-2.5 text-right">
+                        <BookmarkButton slug={p.slug} title={p.title} />
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
 
-            {/* Pagination */}
             {pageCount > 1 && (
-              <div className="flex items-center justify-between text-sm">
+              <nav className="flex items-center justify-between gap-2" aria-label="Pagination">
                 <Button
                   variant="outline"
                   size="sm"
-                  disabled={page === 0}
-                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                  disabled={safePage === 0}
+                  onClick={() => goToPage(safePage - 1)}
                 >
-                  Previous
+                  <ChevronLeft className="h-4 w-4" /> Previous
                 </Button>
-                <span className="text-xs text-muted-foreground">
-                  Page {page + 1} of {pageCount}
+                <span className="text-xs tabular-nums text-muted-foreground">
+                  {safePage * PAGE_SIZE + 1}–{Math.min(filtered.length, (safePage + 1) * PAGE_SIZE)}{" "}
+                  of {filtered.length.toLocaleString()}
                 </span>
                 <Button
                   variant="outline"
                   size="sm"
-                  disabled={page >= pageCount - 1}
-                  onClick={() => setPage((p) => Math.min(pageCount - 1, p + 1))}
+                  disabled={safePage >= pageCount - 1}
+                  onClick={() => goToPage(safePage + 1)}
                 >
-                  Next
+                  Next <ChevronRight className="h-4 w-4" />
                 </Button>
-              </div>
+              </nav>
             )}
           </>
         )}

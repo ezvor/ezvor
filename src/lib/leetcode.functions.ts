@@ -11,7 +11,16 @@ export type { LeetProblem };
  */
 export const getLeetProblem = createServerFn({ method: "GET" })
   .validator((input) =>
-    z.object({ slug: z.string().trim().min(1).max(120).regex(/^[a-z0-9-]+$/) }).parse(input),
+    z
+      .object({
+        slug: z
+          .string()
+          .trim()
+          .min(1)
+          .max(120)
+          .regex(/^[a-z0-9-]+$/),
+      })
+      .parse(input),
   )
   .handler(async ({ data }): Promise<LeetProblem> => {
     const { getStatement } = await import("./problem-source.server");

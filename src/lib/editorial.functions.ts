@@ -16,7 +16,12 @@ export const getProblemEditorial = createServerFn({ method: "POST" })
   .validator((input) =>
     z
       .object({
-        slug: z.string().trim().min(1).max(120).regex(/^[a-z0-9-]+$/),
+        slug: z
+          .string()
+          .trim()
+          .min(1)
+          .max(120)
+          .regex(/^[a-z0-9-]+$/),
         /** Regenerate (signed-in users only). */
         refresh: z.boolean().optional(),
         /** Return the cached editorial or null — never generate. */

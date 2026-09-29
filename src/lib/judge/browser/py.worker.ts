@@ -64,13 +64,23 @@ self.onmessage = async (e: MessageEvent<Job>) => {
   });
   py.setStdout({
     write: (buf) => {
-      self.postMessage({ id: job.id, type: "chunk", stream: "out", text: outDec.decode(buf, { stream: true }) });
+      self.postMessage({
+        id: job.id,
+        type: "chunk",
+        stream: "out",
+        text: outDec.decode(buf, { stream: true }),
+      });
       return buf.length;
     },
   });
   py.setStderr({
     write: (buf) => {
-      self.postMessage({ id: job.id, type: "chunk", stream: "err", text: errDec.decode(buf, { stream: true }) });
+      self.postMessage({
+        id: job.id,
+        type: "chunk",
+        stream: "err",
+        text: errDec.decode(buf, { stream: true }),
+      });
       return buf.length;
     },
   });

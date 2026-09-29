@@ -21,7 +21,12 @@ export const getProblemHarness = createServerFn({ method: "POST" })
   .validator((input) =>
     z
       .object({
-        slug: z.string().trim().min(1).max(120).regex(/^[a-z0-9-]+$/),
+        slug: z
+          .string()
+          .trim()
+          .min(1)
+          .max(120)
+          .regex(/^[a-z0-9-]+$/),
         /** Rebuild the judge (signed-in users only, e.g. after reporting a bad test). */
         refresh: z.boolean().optional(),
         /** Only return a cached judge; never generate. */
@@ -30,13 +35,17 @@ export const getProblemHarness = createServerFn({ method: "POST" })
       .parse(input),
   )
   .handler(async ({ data, context }): Promise<HarnessResponse> => {
-    const [{ cacheGet, cacheSet }, harnessMod, { getStatement }, { enforceRateLimit, RateLimitError }] =
-      await Promise.all([
-        import("./cache.server"),
-        import("./harness.server"),
-        import("./problem-source.server"),
-        import("./rate-limit.server"),
-      ]);
+    const [
+      { cacheGet, cacheSet },
+      harnessMod,
+      { getStatement },
+      { enforceRateLimit, RateLimitError },
+    ] = await Promise.all([
+      import("./cache.server"),
+      import("./harness.server"),
+      import("./problem-source.server"),
+      import("./rate-limit.server"),
+    ]);
     const { generateHarness, publicHarness, UnsupportedProblemError, HARNESS_VERSION } = harnessMod;
     const refresh = !!data.refresh && !!context.userId;
 

@@ -101,7 +101,7 @@ The app comes up on http://localhost:8080.
 
 ### Environment
 
-Copy `.env.example` to `.env`. **Nothing is required**: with no keys the app runs local-first (progress saved in the browser), code runs on free engines (in-browser Python/JS, Wandbox/Paiza for compiled languages) and the AI falls back to a keyless model.
+Run `npm run setup` (or copy `.env.example` to `.env`). **Nothing is required**: with no keys the app runs local-first (progress saved in the browser), code runs on free engines (in-browser Python/JS, Wandbox/Paiza for compiled languages) and the AI falls back to a keyless model.
 
 Recommended for production:
 
@@ -128,7 +128,7 @@ Postgres via Supabase. The schema lives in `supabase/migrations/`. If you are se
 
 ## Deployment
 
-Ezvor is server-rendered, so it needs a host that runs server functions. A static host will not work. It is deployed on Vercel at https://qeelo.cloud (Nitro auto-detects Vercel and Netlify; elsewhere it builds a Node server: `node .output/server/index.mjs`). Import the repo in Vercel, add the environment variables, and point the domain at the project. `vercel.json` schedules the daily status-refresh cron.
+Ezvor is server-rendered, so it needs a host that runs server functions. A static host will not work. It is deployed on Vercel at https://qeelo.cloud (Nitro auto-detects Vercel and Netlify; elsewhere it builds a Node server: `node .output/server/index.mjs`). Import the repo in Vercel, add the environment variables, and point the domain at the project. `vercel.json` schedules the daily status-refresh cron. Step-by-step guide: [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md).
 
 ## Roadmap
 

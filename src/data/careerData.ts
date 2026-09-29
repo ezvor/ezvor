@@ -145,8 +145,7 @@ export const OPPORTUNITIES: Opportunity[] = [
     org: "Google",
     category: "Open Source",
     field: "Technical Writing",
-    blurb:
-      "Connects technical writers with open-source projects to improve documentation.",
+    blurb: "Connects technical writers with open-source projects to improve documentation.",
     difficulty: "Intermediate",
     timing: "Mid-year",
     eligibility: "Technical writers, open-source orgs",
@@ -215,8 +214,7 @@ export const OPPORTUNITIES: Opportunity[] = [
     org: "NASA",
     category: "Hackathons",
     field: "Data / Space Tech",
-    blurb:
-      "World's largest annual hackathon solving real challenges with open NASA data.",
+    blurb: "World's largest annual hackathon solving real challenges with open NASA data.",
     difficulty: "Beginner",
     timing: "Every October",
     eligibility: "Open to all ages and backgrounds",
@@ -243,8 +241,7 @@ export const OPPORTUNITIES: Opportunity[] = [
     org: "Google",
     category: "Internships",
     field: "Software Engineering",
-    blurb:
-      "Paid summer software-engineering internship for first- and second-year undergraduates.",
+    blurb: "Paid summer software-engineering internship for first- and second-year undergraduates.",
     difficulty: "Intermediate",
     timing: "Applications: Sep–Oct • Summer role",
     eligibility: "1st/2nd-year undergrad students",
@@ -258,8 +255,7 @@ export const OPPORTUNITIES: Opportunity[] = [
     org: "Microsoft",
     category: "Internships",
     field: "Software / Product",
-    blurb:
-      "12-week summer internship for first/second-year students rotating through SWE and PM.",
+    blurb: "12-week summer internship for first/second-year students rotating through SWE and PM.",
     difficulty: "Intermediate",
     timing: "Applications: autumn • Summer role",
     eligibility: "1st/2nd-year undergrad students",
@@ -302,8 +298,7 @@ export const OPPORTUNITIES: Opportunity[] = [
     org: "GitHub",
     category: "Scholarships",
     field: "Software / Open Source",
-    blurb:
-      "Free developer tools, learning resources, and program access for verified students.",
+    blurb: "Free developer tools, learning resources, and program access for verified students.",
     difficulty: "Beginner",
     timing: "Rolling",
     eligibility: "Verified students worldwide",
@@ -316,8 +311,7 @@ export const OPPORTUNITIES: Opportunity[] = [
     org: "Z Fellows",
     category: "Fellowships",
     field: "Founders / Builders",
-    blurb:
-      "1-week fellowship + small investment connecting ambitious builders with top mentors.",
+    blurb: "1-week fellowship + small investment connecting ambitious builders with top mentors.",
     difficulty: "Advanced",
     timing: "Rolling cohorts",
     eligibility: "Builders & aspiring founders",
@@ -331,8 +325,7 @@ export const OPPORTUNITIES: Opportunity[] = [
     org: "Kleiner Perkins",
     category: "Fellowships",
     field: "Engineering / Product / Design",
-    blurb:
-      "Selective summer fellowship placing top students at leading venture-backed startups.",
+    blurb: "Selective summer fellowship placing top students at leading venture-backed startups.",
     difficulty: "Advanced",
     timing: "Applications: autumn • Summer role",
     eligibility: "Undergrad & grad students",
@@ -345,8 +338,7 @@ export const OPPORTUNITIES: Opportunity[] = [
     org: "GitHub",
     category: "Fellowships",
     field: "Community / Leadership",
-    blurb:
-      "Training program empowering students to build tech communities on their campuses.",
+    blurb: "Training program empowering students to build tech communities on their campuses.",
     difficulty: "Beginner",
     timing: "Rolling applications",
     eligibility: "Students 18+ active in communities",
@@ -592,10 +584,32 @@ export const ROADMAPS: Roadmap[] = [
     summary: "The generalist path: write solid code, design systems, and ship real software.",
     duration: "6–10 months",
     stages: [
-      { title: "Foundations", items: ["A language (Java/Python/C++)", "Data structures & algorithms", "Git & GitHub", "Linux & CLI"] },
-      { title: "Core Engineering", items: ["OOP & clean code", "Databases & SQL", "REST APIs", "Testing & debugging"] },
-      { title: "Systems", items: ["System design basics", "Concurrency", "Caching & queues", "Version control workflows"] },
-      { title: "Advanced", items: ["Scalable architecture", "CI/CD", "Cloud fundamentals", "Code review & mentoring"] },
+      {
+        title: "Foundations",
+        items: [
+          "A language (Java/Python/C++)",
+          "Data structures & algorithms",
+          "Git & GitHub",
+          "Linux & CLI",
+        ],
+      },
+      {
+        title: "Core Engineering",
+        items: ["OOP & clean code", "Databases & SQL", "REST APIs", "Testing & debugging"],
+      },
+      {
+        title: "Systems",
+        items: [
+          "System design basics",
+          "Concurrency",
+          "Caching & queues",
+          "Version control workflows",
+        ],
+      },
+      {
+        title: "Advanced",
+        items: ["Scalable architecture", "CI/CD", "Cloud fundamentals", "Code review & mentoring"],
+      },
     ],
   },
   {
@@ -605,10 +619,22 @@ export const ROADMAPS: Roadmap[] = [
     summary: "Build modern, accessible, performant user interfaces.",
     duration: "4–6 months",
     stages: [
-      { title: "Foundations", items: ["HTML semantics", "CSS & Flexbox/Grid", "JavaScript ES6+", "Git & GitHub"] },
-      { title: "Core", items: ["React fundamentals", "State management", "TypeScript", "Responsive design"] },
-      { title: "Tooling", items: ["Vite/Webpack", "Testing (Vitest/RTL)", "REST & GraphQL", "Accessibility"] },
-      { title: "Advanced", items: ["Performance optimization", "SSR frameworks", "Design systems", "CI/CD basics"] },
+      {
+        title: "Foundations",
+        items: ["HTML semantics", "CSS & Flexbox/Grid", "JavaScript ES6+", "Git & GitHub"],
+      },
+      {
+        title: "Core",
+        items: ["React fundamentals", "State management", "TypeScript", "Responsive design"],
+      },
+      {
+        title: "Tooling",
+        items: ["Vite/Webpack", "Testing (Vitest/RTL)", "REST & GraphQL", "Accessibility"],
+      },
+      {
+        title: "Advanced",
+        items: ["Performance optimization", "SSR frameworks", "Design systems", "CI/CD basics"],
+      },
     ],
   },
   {
@@ -618,10 +644,16 @@ export const ROADMAPS: Roadmap[] = [
     summary: "Design APIs, databases, and scalable server systems.",
     duration: "5–7 months",
     stages: [
-      { title: "Foundations", items: ["A language (Node/Go/Python)", "Data structures", "Git", "Linux & CLI"] },
+      {
+        title: "Foundations",
+        items: ["A language (Node/Go/Python)", "Data structures", "Git", "Linux & CLI"],
+      },
       { title: "Core", items: ["REST API design", "SQL databases", "Authentication", "ORMs"] },
       { title: "Systems", items: ["Caching (Redis)", "Message queues", "Docker", "Testing"] },
-      { title: "Advanced", items: ["System design", "Microservices", "Observability", "Cloud deployment"] },
+      {
+        title: "Advanced",
+        items: ["System design", "Microservices", "Observability", "Cloud deployment"],
+      },
     ],
   },
   {
@@ -631,10 +663,22 @@ export const ROADMAPS: Roadmap[] = [
     summary: "Turn data into insights and predictive models.",
     duration: "6–9 months",
     stages: [
-      { title: "Foundations", items: ["Python", "Statistics & probability", "Pandas & NumPy", "SQL"] },
-      { title: "Core", items: ["Data visualization", "EDA", "Scikit-learn", "Feature engineering"] },
-      { title: "Modeling", items: ["Regression & classification", "Model evaluation", "Time series", "NLP basics"] },
-      { title: "Advanced", items: ["Deep learning", "MLOps basics", "A/B testing", "Storytelling with data"] },
+      {
+        title: "Foundations",
+        items: ["Python", "Statistics & probability", "Pandas & NumPy", "SQL"],
+      },
+      {
+        title: "Core",
+        items: ["Data visualization", "EDA", "Scikit-learn", "Feature engineering"],
+      },
+      {
+        title: "Modeling",
+        items: ["Regression & classification", "Model evaluation", "Time series", "NLP basics"],
+      },
+      {
+        title: "Advanced",
+        items: ["Deep learning", "MLOps basics", "A/B testing", "Storytelling with data"],
+      },
     ],
   },
   {
@@ -645,9 +689,18 @@ export const ROADMAPS: Roadmap[] = [
     duration: "8–12 months",
     stages: [
       { title: "Foundations", items: ["Python & math", "Linear algebra", "Probability", "DSA"] },
-      { title: "ML Core", items: ["Supervised learning", "Neural networks", "PyTorch/TensorFlow", "Evaluation"] },
-      { title: "Engineering", items: ["Data pipelines", "Model serving", "Docker & APIs", "Experiment tracking"] },
-      { title: "Advanced", items: ["LLMs & transformers", "MLOps & monitoring", "Distributed training", "Scaling"] },
+      {
+        title: "ML Core",
+        items: ["Supervised learning", "Neural networks", "PyTorch/TensorFlow", "Evaluation"],
+      },
+      {
+        title: "Engineering",
+        items: ["Data pipelines", "Model serving", "Docker & APIs", "Experiment tracking"],
+      },
+      {
+        title: "Advanced",
+        items: ["LLMs & transformers", "MLOps & monitoring", "Distributed training", "Scaling"],
+      },
     ],
   },
   {
@@ -657,10 +710,22 @@ export const ROADMAPS: Roadmap[] = [
     summary: "Automate, deploy, and operate reliable infrastructure.",
     duration: "6–9 months",
     stages: [
-      { title: "Foundations", items: ["Linux & networking", "Bash scripting", "Git", "A programming language"] },
-      { title: "Core", items: ["Docker", "CI/CD pipelines", "Cloud (AWS/GCP)", "Infrastructure as Code"] },
-      { title: "Orchestration", items: ["Kubernetes", "Monitoring & logging", "Terraform", "Secrets management"] },
-      { title: "Advanced", items: ["Site reliability", "Security & DevSecOps", "Cost optimization", "Service mesh"] },
+      {
+        title: "Foundations",
+        items: ["Linux & networking", "Bash scripting", "Git", "A programming language"],
+      },
+      {
+        title: "Core",
+        items: ["Docker", "CI/CD pipelines", "Cloud (AWS/GCP)", "Infrastructure as Code"],
+      },
+      {
+        title: "Orchestration",
+        items: ["Kubernetes", "Monitoring & logging", "Terraform", "Secrets management"],
+      },
+      {
+        title: "Advanced",
+        items: ["Site reliability", "Security & DevSecOps", "Cost optimization", "Service mesh"],
+      },
     ],
   },
   {
@@ -670,10 +735,22 @@ export const ROADMAPS: Roadmap[] = [
     summary: "Defend systems and hunt for vulnerabilities.",
     duration: "6–10 months",
     stages: [
-      { title: "Foundations", items: ["Networking", "Operating systems", "Linux", "Security basics"] },
-      { title: "Core", items: ["Cryptography", "Web security (OWASP)", "Scripting (Python)", "Threat modeling"] },
-      { title: "Offense/Defense", items: ["Penetration testing", "SIEM tools", "Incident response", "Forensics"] },
-      { title: "Advanced", items: ["Cloud security", "Red/Blue teaming", "Certifications", "Compliance"] },
+      {
+        title: "Foundations",
+        items: ["Networking", "Operating systems", "Linux", "Security basics"],
+      },
+      {
+        title: "Core",
+        items: ["Cryptography", "Web security (OWASP)", "Scripting (Python)", "Threat modeling"],
+      },
+      {
+        title: "Offense/Defense",
+        items: ["Penetration testing", "SIEM tools", "Incident response", "Forensics"],
+      },
+      {
+        title: "Advanced",
+        items: ["Cloud security", "Red/Blue teaming", "Certifications", "Compliance"],
+      },
     ],
   },
   {
@@ -683,10 +760,42 @@ export const ROADMAPS: Roadmap[] = [
     summary: "Break into open source and win mentorships like GSoC & LFX.",
     duration: "3–5 months",
     stages: [
-      { title: "Get Ready", items: ["Master Git & GitHub", "Pick a language", "Read CONTRIBUTING docs", "Set up dev env"] },
-      { title: "First Steps", items: ["Find good-first-issues", "Fix docs/tests", "Open quality PRs", "Engage in community"] },
-      { title: "Grow", items: ["Take larger issues", "Review others' PRs", "Join project chats", "Build reputation"] },
-      { title: "Programs", items: ["Apply to GSoC/LFX", "Write strong proposals", "Outreachy/SoB", "Become a maintainer"] },
+      {
+        title: "Get Ready",
+        items: [
+          "Master Git & GitHub",
+          "Pick a language",
+          "Read CONTRIBUTING docs",
+          "Set up dev env",
+        ],
+      },
+      {
+        title: "First Steps",
+        items: [
+          "Find good-first-issues",
+          "Fix docs/tests",
+          "Open quality PRs",
+          "Engage in community",
+        ],
+      },
+      {
+        title: "Grow",
+        items: [
+          "Take larger issues",
+          "Review others' PRs",
+          "Join project chats",
+          "Build reputation",
+        ],
+      },
+      {
+        title: "Programs",
+        items: [
+          "Apply to GSoC/LFX",
+          "Write strong proposals",
+          "Outreachy/SoB",
+          "Become a maintainer",
+        ],
+      },
     ],
   },
   {
@@ -696,10 +805,24 @@ export const ROADMAPS: Roadmap[] = [
     summary: "Sharpen algorithms to crack ICPC and Meta Hacker Cup.",
     duration: "6–12 months",
     stages: [
-      { title: "Basics", items: ["A language (C++/Java)", "Time complexity", "Arrays & strings", "Sorting & searching"] },
+      {
+        title: "Basics",
+        items: [
+          "A language (C++/Java)",
+          "Time complexity",
+          "Arrays & strings",
+          "Sorting & searching",
+        ],
+      },
       { title: "Core DSA", items: ["Recursion", "Stacks/queues", "Trees & graphs", "Hashing"] },
-      { title: "Algorithms", items: ["Dynamic programming", "Greedy", "Graph algorithms", "Number theory"] },
-      { title: "Contest Mode", items: ["Codeforces rounds", "Virtual contests", "Upsolving", "ICPC team practice"] },
+      {
+        title: "Algorithms",
+        items: ["Dynamic programming", "Greedy", "Graph algorithms", "Number theory"],
+      },
+      {
+        title: "Contest Mode",
+        items: ["Codeforces rounds", "Virtual contests", "Upsolving", "ICPC team practice"],
+      },
     ],
   },
   {
@@ -710,8 +833,14 @@ export const ROADMAPS: Roadmap[] = [
     duration: "7–10 months",
     stages: [
       { title: "Foundations", items: ["HTML/CSS/JS", "Git", "Data structures", "Linux & CLI"] },
-      { title: "Frontend", items: ["Frontend framework", "State management", "TypeScript", "Responsive design"] },
-      { title: "Backend", items: ["Backend framework", "Databases (SQL/NoSQL)", "API design", "Auth & security"] },
+      {
+        title: "Frontend",
+        items: ["Frontend framework", "State management", "TypeScript", "Responsive design"],
+      },
+      {
+        title: "Backend",
+        items: ["Backend framework", "Databases (SQL/NoSQL)", "API design", "Auth & security"],
+      },
       { title: "Ship it", items: ["Docker", "Deployment", "Testing & CI/CD", "System design"] },
     ],
   },
@@ -722,10 +851,29 @@ export const ROADMAPS: Roadmap[] = [
     summary: "Guard product quality with manual and automated testing.",
     duration: "4–6 months",
     stages: [
-      { title: "Foundations", items: ["Software testing basics", "SDLC & STLC", "Test case design", "Bug reporting"] },
-      { title: "Manual QA", items: ["Manual testing", "API testing (Postman)", "SQL for testers", "Test management tools"] },
+      {
+        title: "Foundations",
+        items: ["Software testing basics", "SDLC & STLC", "Test case design", "Bug reporting"],
+      },
+      {
+        title: "Manual QA",
+        items: [
+          "Manual testing",
+          "API testing (Postman)",
+          "SQL for testers",
+          "Test management tools",
+        ],
+      },
       { title: "Automation", items: ["Selenium", "Cypress", "Playwright", "JUnit/TestNG"] },
-      { title: "Advanced", items: ["CI/CD for tests", "Performance testing (JMeter)", "Security testing", "Test strategy"] },
+      {
+        title: "Advanced",
+        items: [
+          "CI/CD for tests",
+          "Performance testing (JMeter)",
+          "Security testing",
+          "Test strategy",
+        ],
+      },
     ],
   },
   {
@@ -735,10 +883,22 @@ export const ROADMAPS: Roadmap[] = [
     summary: "Turn raw data into clear, decision-driving insights.",
     duration: "4–6 months",
     stages: [
-      { title: "Foundations", items: ["Excel / Google Sheets", "Descriptive statistics", "SQL querying", "Data cleaning"] },
-      { title: "Analysis", items: ["Python for analysis", "Pandas & NumPy", "EDA", "Business metrics & KPIs"] },
-      { title: "Visualization", items: ["Power BI", "Tableau", "Dashboards & reports", "Storytelling"] },
-      { title: "Advanced", items: ["ETL basics", "A/B testing", "Data warehousing", "Statistics & probability"] },
+      {
+        title: "Foundations",
+        items: ["Excel / Google Sheets", "Descriptive statistics", "SQL querying", "Data cleaning"],
+      },
+      {
+        title: "Analysis",
+        items: ["Python for analysis", "Pandas & NumPy", "EDA", "Business metrics & KPIs"],
+      },
+      {
+        title: "Visualization",
+        items: ["Power BI", "Tableau", "Dashboards & reports", "Storytelling"],
+      },
+      {
+        title: "Advanced",
+        items: ["ETL basics", "A/B testing", "Data warehousing", "Statistics & probability"],
+      },
     ],
   },
   {
@@ -750,8 +910,19 @@ export const ROADMAPS: Roadmap[] = [
     stages: [
       { title: "Foundations", items: ["Python & SQL", "Data modeling", "Linux & CLI", "Git"] },
       { title: "Pipelines", items: ["ETL basics", "Batch vs streaming", "Apache Airflow", "dbt"] },
-      { title: "Big Data", items: ["Apache Spark", "Apache Kafka", "Data lakes", "Data warehousing"] },
-      { title: "Cloud & Scale", items: ["Cloud data platforms", "Snowflake/BigQuery", "Orchestration", "Data quality & governance"] },
+      {
+        title: "Big Data",
+        items: ["Apache Spark", "Apache Kafka", "Data lakes", "Data warehousing"],
+      },
+      {
+        title: "Cloud & Scale",
+        items: [
+          "Cloud data platforms",
+          "Snowflake/BigQuery",
+          "Orchestration",
+          "Data quality & governance",
+        ],
+      },
     ],
   },
   {
@@ -761,10 +932,27 @@ export const ROADMAPS: Roadmap[] = [
     summary: "Design the data models, warehouses, and governance for the whole org.",
     duration: "10–14 months",
     stages: [
-      { title: "Modeling", items: ["Relational modeling", "NoSQL modeling", "Normalization", "Dimensional modeling"] },
-      { title: "Warehousing", items: ["Data warehouse design", "Data lakes", "Snowflake/BigQuery", "ETL basics"] },
-      { title: "Governance", items: ["Master data management", "Data lineage", "Data quality & governance", "Security & compliance"] },
-      { title: "Enterprise", items: ["Data mesh", "Cloud architecture", "Cost & performance", "System design"] },
+      {
+        title: "Modeling",
+        items: ["Relational modeling", "NoSQL modeling", "Normalization", "Dimensional modeling"],
+      },
+      {
+        title: "Warehousing",
+        items: ["Data warehouse design", "Data lakes", "Snowflake/BigQuery", "ETL basics"],
+      },
+      {
+        title: "Governance",
+        items: [
+          "Master data management",
+          "Data lineage",
+          "Data quality & governance",
+          "Security & compliance",
+        ],
+      },
+      {
+        title: "Enterprise",
+        items: ["Data mesh", "Cloud architecture", "Cost & performance", "System design"],
+      },
     ],
   },
   {
@@ -774,10 +962,22 @@ export const ROADMAPS: Roadmap[] = [
     summary: "Build real applications on top of large language models.",
     duration: "5–8 months",
     stages: [
-      { title: "Foundations", items: ["Python", "Statistics & probability", "Neural networks", "NLP basics"] },
-      { title: "LLM Core", items: ["Prompt engineering", "LLM APIs", "Embeddings", "RAG (retrieval)"] },
-      { title: "Build", items: ["LangChain", "Vector databases", "Fine-tuning", "AI app deployment"] },
-      { title: "Production", items: ["Evaluation", "MLOps & monitoring", "Scaling", "Security & compliance"] },
+      {
+        title: "Foundations",
+        items: ["Python", "Statistics & probability", "Neural networks", "NLP basics"],
+      },
+      {
+        title: "LLM Core",
+        items: ["Prompt engineering", "LLM APIs", "Embeddings", "RAG (retrieval)"],
+      },
+      {
+        title: "Build",
+        items: ["LangChain", "Vector databases", "Fine-tuning", "AI app deployment"],
+      },
+      {
+        title: "Production",
+        items: ["Evaluation", "MLOps & monitoring", "Scaling", "Security & compliance"],
+      },
     ],
   },
   {
@@ -788,9 +988,18 @@ export const ROADMAPS: Roadmap[] = [
     duration: "5–8 months",
     stages: [
       { title: "Foundations", items: ["Dart & Flutter", "Kotlin (Android)", "Swift (iOS)", "Git"] },
-      { title: "Core", items: ["UI layouts", "State management (mobile)", "Local storage", "REST API integration"] },
-      { title: "Advanced", items: ["Push notifications", "Auth & security", "Testing", "Performance optimization"] },
-      { title: "Ship", items: ["App store deployment", "CI/CD pipelines", "Analytics", "Crash reporting"] },
+      {
+        title: "Core",
+        items: ["UI layouts", "State management (mobile)", "Local storage", "REST API integration"],
+      },
+      {
+        title: "Advanced",
+        items: ["Push notifications", "Auth & security", "Testing", "Performance optimization"],
+      },
+      {
+        title: "Ship",
+        items: ["App store deployment", "CI/CD pipelines", "Analytics", "Crash reporting"],
+      },
     ],
   },
   {
@@ -800,10 +1009,27 @@ export const ROADMAPS: Roadmap[] = [
     summary: "Design intuitive, beautiful, research-backed product experiences.",
     duration: "4–7 months",
     stages: [
-      { title: "Foundations", items: ["Design principles", "Color & typography", "Figma", "Wireframing"] },
-      { title: "Design", items: ["Prototyping", "Design systems & tokens", "Accessibility (WCAG)", "Responsive design"] },
-      { title: "Research", items: ["User research", "Usability testing", "Information architecture", "A/B testing"] },
-      { title: "Career", items: ["Portfolio", "Design handoff", "Motion basics", "Collaboration with devs"] },
+      {
+        title: "Foundations",
+        items: ["Design principles", "Color & typography", "Figma", "Wireframing"],
+      },
+      {
+        title: "Design",
+        items: [
+          "Prototyping",
+          "Design systems & tokens",
+          "Accessibility (WCAG)",
+          "Responsive design",
+        ],
+      },
+      {
+        title: "Research",
+        items: ["User research", "Usability testing", "Information architecture", "A/B testing"],
+      },
+      {
+        title: "Career",
+        items: ["Portfolio", "Design handoff", "Motion basics", "Collaboration with devs"],
+      },
     ],
   },
   {
@@ -813,10 +1039,32 @@ export const ROADMAPS: Roadmap[] = [
     summary: "Architect secure, scalable, cost-efficient cloud systems.",
     duration: "9–12 months",
     stages: [
-      { title: "Foundations", items: ["Cloud fundamentals", "Networking & VPC", "Compute & storage", "Linux & networking"] },
-      { title: "Core", items: ["Infrastructure as Code", "Kubernetes", "CI/CD pipelines", "Monitoring & logging"] },
-      { title: "Architecture", items: ["Well-architected framework", "High availability", "Disaster recovery", "Security & compliance"] },
-      { title: "Advanced", items: ["Multi-cloud", "Cost optimization", "Service mesh", "Cloud certifications"] },
+      {
+        title: "Foundations",
+        items: [
+          "Cloud fundamentals",
+          "Networking & VPC",
+          "Compute & storage",
+          "Linux & networking",
+        ],
+      },
+      {
+        title: "Core",
+        items: ["Infrastructure as Code", "Kubernetes", "CI/CD pipelines", "Monitoring & logging"],
+      },
+      {
+        title: "Architecture",
+        items: [
+          "Well-architected framework",
+          "High availability",
+          "Disaster recovery",
+          "Security & compliance",
+        ],
+      },
+      {
+        title: "Advanced",
+        items: ["Multi-cloud", "Cost optimization", "Service mesh", "Cloud certifications"],
+      },
     ],
   },
   {
@@ -826,10 +1074,27 @@ export const ROADMAPS: Roadmap[] = [
     summary: "Keep databases fast, reliable, secure, and always available.",
     duration: "5–8 months",
     stages: [
-      { title: "Foundations", items: ["RDBMS fundamentals", "SQL & PL/SQL", "Data modeling", "Normalization"] },
-      { title: "Operations", items: ["Indexing & tuning", "Backup & recovery", "Monitoring", "Database security"] },
-      { title: "Scale", items: ["Replication", "High availability & clustering", "Caching (Redis)", "NoSQL modeling"] },
-      { title: "Cloud", items: ["Cloud data platforms", "Snowflake/BigQuery", "Cost optimization", "Automation"] },
+      {
+        title: "Foundations",
+        items: ["RDBMS fundamentals", "SQL & PL/SQL", "Data modeling", "Normalization"],
+      },
+      {
+        title: "Operations",
+        items: ["Indexing & tuning", "Backup & recovery", "Monitoring", "Database security"],
+      },
+      {
+        title: "Scale",
+        items: [
+          "Replication",
+          "High availability & clustering",
+          "Caching (Redis)",
+          "NoSQL modeling",
+        ],
+      },
+      {
+        title: "Cloud",
+        items: ["Cloud data platforms", "Snowflake/BigQuery", "Cost optimization", "Automation"],
+      },
     ],
   },
   {
@@ -839,10 +1104,22 @@ export const ROADMAPS: Roadmap[] = [
     summary: "Design and secure the networks that connect everything.",
     duration: "6–9 months",
     stages: [
-      { title: "Foundations", items: ["OSI & TCP/IP model", "Subnetting", "Routing & switching", "Linux & networking"] },
-      { title: "Core", items: ["Firewalls & VPN", "Network security", "Wireless networking", "Monitoring"] },
-      { title: "Advanced", items: ["Cloud networking", "Automation", "Observability", "Service mesh"] },
-      { title: "Career", items: ["CCNA certification", "Troubleshooting", "Documentation", "Incident response"] },
+      {
+        title: "Foundations",
+        items: ["OSI & TCP/IP model", "Subnetting", "Routing & switching", "Linux & networking"],
+      },
+      {
+        title: "Core",
+        items: ["Firewalls & VPN", "Network security", "Wireless networking", "Monitoring"],
+      },
+      {
+        title: "Advanced",
+        items: ["Cloud networking", "Automation", "Observability", "Service mesh"],
+      },
+      {
+        title: "Career",
+        items: ["CCNA certification", "Troubleshooting", "Documentation", "Incident response"],
+      },
     ],
   },
   {
@@ -852,10 +1129,29 @@ export const ROADMAPS: Roadmap[] = [
     summary: "Bridge business needs and engineering with clear requirements.",
     duration: "4–6 months",
     stages: [
-      { title: "Foundations", items: ["Requirements gathering", "Process modeling (BPMN)", "Stakeholder management", "Documentation"] },
-      { title: "Analysis", items: ["User stories & use cases", "Data analysis basics", "SQL querying", "Business metrics & KPIs"] },
+      {
+        title: "Foundations",
+        items: [
+          "Requirements gathering",
+          "Process modeling (BPMN)",
+          "Stakeholder management",
+          "Documentation",
+        ],
+      },
+      {
+        title: "Analysis",
+        items: [
+          "User stories & use cases",
+          "Data analysis basics",
+          "SQL querying",
+          "Business metrics & KPIs",
+        ],
+      },
       { title: "Delivery", items: ["Agile & Scrum", "UAT", "Dashboards & reports", "Prototyping"] },
-      { title: "Advanced", items: ["Product thinking", "A/B testing", "Storytelling", "Roadmapping"] },
+      {
+        title: "Advanced",
+        items: ["Product thinking", "A/B testing", "Storytelling", "Roadmapping"],
+      },
     ],
   },
   {
@@ -865,9 +1161,23 @@ export const ROADMAPS: Roadmap[] = [
     summary: "Build interactive games with modern engines and graphics.",
     duration: "7–11 months",
     stages: [
-      { title: "Foundations", items: ["C# or C++", "Game math & physics", "Data structures", "Git"] },
-      { title: "Engines", items: ["Unity", "Unreal Engine", "2D/3D graphics", "Game design principles"] },
-      { title: "Craft", items: ["Audio & animation", "Performance optimization", "AI for games", "Multiplayer basics"] },
+      {
+        title: "Foundations",
+        items: ["C# or C++", "Game math & physics", "Data structures", "Git"],
+      },
+      {
+        title: "Engines",
+        items: ["Unity", "Unreal Engine", "2D/3D graphics", "Game design principles"],
+      },
+      {
+        title: "Craft",
+        items: [
+          "Audio & animation",
+          "Performance optimization",
+          "AI for games",
+          "Multiplayer basics",
+        ],
+      },
       { title: "Ship", items: ["Publishing games", "Monetization", "Testing", "Portfolio"] },
     ],
   },
@@ -878,10 +1188,22 @@ export const ROADMAPS: Roadmap[] = [
     summary: "Build decentralized apps and smart contracts on Web3.",
     duration: "6–9 months",
     stages: [
-      { title: "Foundations", items: ["Blockchain fundamentals", "A programming language", "Cryptography", "Git"] },
-      { title: "Smart Contracts", items: ["Solidity", "Smart contracts", "Ethereum & EVM", "Hardhat/Foundry"] },
-      { title: "dApps", items: ["Web3.js / ethers.js", "dApps", "Frontend framework", "Wallet integration"] },
-      { title: "Advanced", items: ["Security & auditing", "Gas optimization", "Layer 2s", "DeFi basics"] },
+      {
+        title: "Foundations",
+        items: ["Blockchain fundamentals", "A programming language", "Cryptography", "Git"],
+      },
+      {
+        title: "Smart Contracts",
+        items: ["Solidity", "Smart contracts", "Ethereum & EVM", "Hardhat/Foundry"],
+      },
+      {
+        title: "dApps",
+        items: ["Web3.js / ethers.js", "dApps", "Frontend framework", "Wallet integration"],
+      },
+      {
+        title: "Advanced",
+        items: ["Security & auditing", "Gas optimization", "Layer 2s", "DeFi basics"],
+      },
     ],
   },
 ];
@@ -897,36 +1219,260 @@ export interface Resource {
 }
 
 export const RESOURCES: Resource[] = [
-  { id: "freecodecamp", title: "freeCodeCamp", provider: "freeCodeCamp", topic: "Web Development", type: "Course", free: true, url: "https://www.freecodecamp.org/" },
-  { id: "cs50", title: "CS50: Intro to Computer Science", provider: "Harvard", topic: "Computer Science", type: "Course", free: true, url: "https://cs50.harvard.edu/x/" },
-  { id: "roadmapsh", title: "Developer Roadmaps", provider: "roadmap.sh", topic: "Career Paths", type: "Roadmap", free: true, url: "https://roadmap.sh/" },
-  { id: "leetcode", title: "LeetCode", provider: "LeetCode", topic: "DSA / Interviews", type: "Practice", free: true, url: "https://leetcode.com/" },
-  { id: "neetcode", title: "NeetCode 150", provider: "NeetCode", topic: "DSA / Interviews", type: "Practice", free: true, url: "https://neetcode.io/" },
-  { id: "cp-algorithms", title: "CP-Algorithms", provider: "CP-Algorithms", topic: "Competitive Programming", type: "Docs", free: true, url: "https://cp-algorithms.com/" },
-  { id: "mdn", title: "MDN Web Docs", provider: "Mozilla", topic: "Web Development", type: "Docs", free: true, url: "https://developer.mozilla.org/" },
-  { id: "kaggle", title: "Kaggle Learn", provider: "Kaggle", topic: "Data Science / ML", type: "Course", free: true, url: "https://www.kaggle.com/learn" },
-  { id: "fastai", title: "Practical Deep Learning", provider: "fast.ai", topic: "Machine Learning", type: "Course", free: true, url: "https://course.fast.ai/" },
-  { id: "fullstackopen", title: "Full Stack Open", provider: "University of Helsinki", topic: "Full Stack", type: "Course", free: true, url: "https://fullstackopen.com/" },
-  { id: "firstcontributions", title: "First Contributions", provider: "Open Source", topic: "Open Source", type: "Community", free: true, url: "https://firstcontributions.github.io/" },
-  { id: "tryhackme", title: "TryHackMe", provider: "TryHackMe", topic: "Cybersecurity", type: "Practice", free: true, url: "https://tryhackme.com/" },
-  { id: "theodinproject", title: "The Odin Project", provider: "The Odin Project", topic: "Full Stack", type: "Course", free: true, url: "https://www.theodinproject.com/" },
-  { id: "missing-semester", title: "The Missing Semester", provider: "MIT", topic: "Dev Tools", type: "Course", free: true, url: "https://missing.csail.mit.edu/" },
+  {
+    id: "freecodecamp",
+    title: "freeCodeCamp",
+    provider: "freeCodeCamp",
+    topic: "Web Development",
+    type: "Course",
+    free: true,
+    url: "https://www.freecodecamp.org/",
+  },
+  {
+    id: "cs50",
+    title: "CS50: Intro to Computer Science",
+    provider: "Harvard",
+    topic: "Computer Science",
+    type: "Course",
+    free: true,
+    url: "https://cs50.harvard.edu/x/",
+  },
+  {
+    id: "roadmapsh",
+    title: "Developer Roadmaps",
+    provider: "roadmap.sh",
+    topic: "Career Paths",
+    type: "Roadmap",
+    free: true,
+    url: "https://roadmap.sh/",
+  },
+  {
+    id: "leetcode",
+    title: "LeetCode",
+    provider: "LeetCode",
+    topic: "DSA / Interviews",
+    type: "Practice",
+    free: true,
+    url: "https://leetcode.com/",
+  },
+  {
+    id: "neetcode",
+    title: "NeetCode 150",
+    provider: "NeetCode",
+    topic: "DSA / Interviews",
+    type: "Practice",
+    free: true,
+    url: "https://neetcode.io/",
+  },
+  {
+    id: "cp-algorithms",
+    title: "CP-Algorithms",
+    provider: "CP-Algorithms",
+    topic: "Competitive Programming",
+    type: "Docs",
+    free: true,
+    url: "https://cp-algorithms.com/",
+  },
+  {
+    id: "mdn",
+    title: "MDN Web Docs",
+    provider: "Mozilla",
+    topic: "Web Development",
+    type: "Docs",
+    free: true,
+    url: "https://developer.mozilla.org/",
+  },
+  {
+    id: "kaggle",
+    title: "Kaggle Learn",
+    provider: "Kaggle",
+    topic: "Data Science / ML",
+    type: "Course",
+    free: true,
+    url: "https://www.kaggle.com/learn",
+  },
+  {
+    id: "fastai",
+    title: "Practical Deep Learning",
+    provider: "fast.ai",
+    topic: "Machine Learning",
+    type: "Course",
+    free: true,
+    url: "https://course.fast.ai/",
+  },
+  {
+    id: "fullstackopen",
+    title: "Full Stack Open",
+    provider: "University of Helsinki",
+    topic: "Full Stack",
+    type: "Course",
+    free: true,
+    url: "https://fullstackopen.com/",
+  },
+  {
+    id: "firstcontributions",
+    title: "First Contributions",
+    provider: "Open Source",
+    topic: "Open Source",
+    type: "Community",
+    free: true,
+    url: "https://firstcontributions.github.io/",
+  },
+  {
+    id: "tryhackme",
+    title: "TryHackMe",
+    provider: "TryHackMe",
+    topic: "Cybersecurity",
+    type: "Practice",
+    free: true,
+    url: "https://tryhackme.com/",
+  },
+  {
+    id: "theodinproject",
+    title: "The Odin Project",
+    provider: "The Odin Project",
+    topic: "Full Stack",
+    type: "Course",
+    free: true,
+    url: "https://www.theodinproject.com/",
+  },
+  {
+    id: "missing-semester",
+    title: "The Missing Semester",
+    provider: "MIT",
+    topic: "Dev Tools",
+    type: "Course",
+    free: true,
+    url: "https://missing.csail.mit.edu/",
+  },
 
   // ───────────────────── Free YouTube channels & playlists ─────────────────────
-  { id: "yt-freecodecamp", title: "freeCodeCamp.org (full courses)", provider: "YouTube · freeCodeCamp", topic: "Web Development", type: "Video", free: true, url: "https://www.youtube.com/@freecodecamp" },
-  { id: "yt-codewithharry", title: "CodeWithHarry (Web, Python, DSA)", provider: "YouTube · CodeWithHarry", topic: "Full Stack", type: "Video", free: true, url: "https://www.youtube.com/@CodeWithHarry" },
-  { id: "yt-apnacollege", title: "Apna College (DSA + Dev)", provider: "YouTube · Apna College", topic: "DSA / Interviews", type: "Video", free: true, url: "https://www.youtube.com/@ApnaCollegeOfficial" },
-  { id: "yt-neetcode", title: "NeetCode (LeetCode patterns)", provider: "YouTube · NeetCode", topic: "DSA / Interviews", type: "Video", free: true, url: "https://www.youtube.com/@NeetCode" },
-  { id: "yt-abdulbari", title: "Abdul Bari (Algorithms)", provider: "YouTube · Abdul Bari", topic: "Competitive Programming", type: "Video", free: true, url: "https://www.youtube.com/@abdul_bari" },
-  { id: "yt-mosh", title: "Programming with Mosh", provider: "YouTube · Mosh", topic: "Software Engineering", type: "Video", free: true, url: "https://www.youtube.com/@programmingwithmosh" },
-  { id: "yt-netninja", title: "The Net Ninja (Frontend)", provider: "YouTube · Net Ninja", topic: "Web Development", type: "Video", free: true, url: "https://www.youtube.com/@NetNinja" },
-  { id: "yt-fireship", title: "Fireship (quick deep-dives)", provider: "YouTube · Fireship", topic: "Software Engineering", type: "Video", free: true, url: "https://www.youtube.com/@Fireship" },
-  { id: "yt-coreyschafer", title: "Corey Schafer (Python)", provider: "YouTube · Corey Schafer", topic: "Data Science / ML", type: "Video", free: true, url: "https://www.youtube.com/@coreyms" },
-  { id: "yt-krishnaik", title: "Krish Naik (Data Science & ML)", provider: "YouTube · Krish Naik", topic: "Data Science / ML", type: "Video", free: true, url: "https://www.youtube.com/@krishnaik06" },
-  { id: "yt-statquest", title: "StatQuest (ML & Stats)", provider: "YouTube · StatQuest", topic: "Machine Learning", type: "Video", free: true, url: "https://www.youtube.com/@statquest" },
-  { id: "yt-nana", title: "TechWorld with Nana (DevOps)", provider: "YouTube · Nana", topic: "DevOps / Cloud", type: "Video", free: true, url: "https://www.youtube.com/@TechWorldwithNana" },
-  { id: "yt-networkchuck", title: "NetworkChuck (Cloud & Networking)", provider: "YouTube · NetworkChuck", topic: "DevOps / Cloud", type: "Video", free: true, url: "https://www.youtube.com/@NetworkChuck" },
-  { id: "yt-alextheanalyst", title: "Alex The Analyst (Data Analytics)", provider: "YouTube · Alex The Analyst", topic: "Data Science / ML", type: "Video", free: true, url: "https://www.youtube.com/@AlexTheAnalyst" },
+  {
+    id: "yt-freecodecamp",
+    title: "freeCodeCamp.org (full courses)",
+    provider: "YouTube · freeCodeCamp",
+    topic: "Web Development",
+    type: "Video",
+    free: true,
+    url: "https://www.youtube.com/@freecodecamp",
+  },
+  {
+    id: "yt-codewithharry",
+    title: "CodeWithHarry (Web, Python, DSA)",
+    provider: "YouTube · CodeWithHarry",
+    topic: "Full Stack",
+    type: "Video",
+    free: true,
+    url: "https://www.youtube.com/@CodeWithHarry",
+  },
+  {
+    id: "yt-apnacollege",
+    title: "Apna College (DSA + Dev)",
+    provider: "YouTube · Apna College",
+    topic: "DSA / Interviews",
+    type: "Video",
+    free: true,
+    url: "https://www.youtube.com/@ApnaCollegeOfficial",
+  },
+  {
+    id: "yt-neetcode",
+    title: "NeetCode (LeetCode patterns)",
+    provider: "YouTube · NeetCode",
+    topic: "DSA / Interviews",
+    type: "Video",
+    free: true,
+    url: "https://www.youtube.com/@NeetCode",
+  },
+  {
+    id: "yt-abdulbari",
+    title: "Abdul Bari (Algorithms)",
+    provider: "YouTube · Abdul Bari",
+    topic: "Competitive Programming",
+    type: "Video",
+    free: true,
+    url: "https://www.youtube.com/@abdul_bari",
+  },
+  {
+    id: "yt-mosh",
+    title: "Programming with Mosh",
+    provider: "YouTube · Mosh",
+    topic: "Software Engineering",
+    type: "Video",
+    free: true,
+    url: "https://www.youtube.com/@programmingwithmosh",
+  },
+  {
+    id: "yt-netninja",
+    title: "The Net Ninja (Frontend)",
+    provider: "YouTube · Net Ninja",
+    topic: "Web Development",
+    type: "Video",
+    free: true,
+    url: "https://www.youtube.com/@NetNinja",
+  },
+  {
+    id: "yt-fireship",
+    title: "Fireship (quick deep-dives)",
+    provider: "YouTube · Fireship",
+    topic: "Software Engineering",
+    type: "Video",
+    free: true,
+    url: "https://www.youtube.com/@Fireship",
+  },
+  {
+    id: "yt-coreyschafer",
+    title: "Corey Schafer (Python)",
+    provider: "YouTube · Corey Schafer",
+    topic: "Data Science / ML",
+    type: "Video",
+    free: true,
+    url: "https://www.youtube.com/@coreyms",
+  },
+  {
+    id: "yt-krishnaik",
+    title: "Krish Naik (Data Science & ML)",
+    provider: "YouTube · Krish Naik",
+    topic: "Data Science / ML",
+    type: "Video",
+    free: true,
+    url: "https://www.youtube.com/@krishnaik06",
+  },
+  {
+    id: "yt-statquest",
+    title: "StatQuest (ML & Stats)",
+    provider: "YouTube · StatQuest",
+    topic: "Machine Learning",
+    type: "Video",
+    free: true,
+    url: "https://www.youtube.com/@statquest",
+  },
+  {
+    id: "yt-nana",
+    title: "TechWorld with Nana (DevOps)",
+    provider: "YouTube · Nana",
+    topic: "DevOps / Cloud",
+    type: "Video",
+    free: true,
+    url: "https://www.youtube.com/@TechWorldwithNana",
+  },
+  {
+    id: "yt-networkchuck",
+    title: "NetworkChuck (Cloud & Networking)",
+    provider: "YouTube · NetworkChuck",
+    topic: "DevOps / Cloud",
+    type: "Video",
+    free: true,
+    url: "https://www.youtube.com/@NetworkChuck",
+  },
+  {
+    id: "yt-alextheanalyst",
+    title: "Alex The Analyst (Data Analytics)",
+    provider: "YouTube · Alex The Analyst",
+    topic: "Data Science / ML",
+    type: "Video",
+    free: true,
+    url: "https://www.youtube.com/@AlexTheAnalyst",
+  },
 ];
 
 export const FIELDS = [

@@ -1,13 +1,15 @@
 # Ezvor
 
-> Free AI-powered career platform for students and professionals — unified roadmaps and skill graphs, live opportunities, a DSA arena, an online compiler, free resources, and an AI advisor. Covers opportunities like GSoC, LFX, ICPC, and Meta Hacker Cup.
+> Free interview-prep and career platform: 3,900+ coding problems with a verified in-app judge (Python and JavaScript run in the browser; C++ and Java on free cloud runners), curated study lists (Blind 75, NeetCode 150, Grind 75), an AI coach, progress tracking with spaced repetition, roadmaps, live opportunities and an AI career advisor.
 
 ## Pages
-- [Dashboard](/): Overview, featured opportunities, and quick AI ask.
-- [Opportunities](/opportunities): Live jobs plus curated programs and contests across open source, hackathons, internships, scholarships, and fellowships.
-- [Roadmaps & Graphs](/roadmaps): Interactive skill graphs and step-by-step checklists for every IT domain, plus AI-generated personalized paths.
-- [EzCode](/playground): LeetCode-style arena — open any of 3,977 problems in-app (no redirect), write and run in a polished editor, with verified auto-judging on curated problems and topic-wise / company-wise practice.
-- [Compiler](/compiler): Online multi-language IDE to write, compile, and run code.
-- [Problem Catalog](/problems): All LeetCode problems with free company lists.
-- [Resources](/resources): Hand-picked free learning resources.
-- [AI Advisor](/advisor): Chat-based AI career advisor.
+- [Home](/): Dashboard, daily challenge, streak, reviews due.
+- [Problems](/problems): Full catalog with topic, company and list filters.
+- [Problem page](/problems/two-sum): Editor, Run/Submit, editorial, verified solutions, AI coach, notes.
+- [Study Lists](/lists): Blind 75, NeetCode 150, Grind 75 with pattern roadmaps.
+- [Progress](/progress): Activity heatmap, streaks, topic mastery, review queue.
+- [Leaderboard](/leaderboard): Public profiles ranked by solved problems.
+- [Compiler](/compiler): Online IDE for 13 languages with shareable links.
+- [Roadmaps](/roadmaps): Skill graphs and AI-personalised learning paths.
+- [Opportunities](/opportunities): Live jobs, programs, contests and fellowships.
+- [AI Advisor](/advisor): Career advisor chat.

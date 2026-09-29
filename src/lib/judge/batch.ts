@@ -343,7 +343,9 @@ static int __ez_supervisor_token = __ez_supervise();
 
 function javaDriver(pre: string, userCode: string, post: string, nonce: string, tlMs: number) {
   const renameMain = (s: string) =>
-    s.replace(/\bpublic\s+(final\s+)?class\s+Main\b/g, "class __EzMain").replace(/\bMain\b/g, "__EzMain");
+    s
+      .replace(/\bpublic\s+(final\s+)?class\s+Main\b/g, "class __EzMain")
+      .replace(/\bMain\b/g, "__EzMain");
   const preR = renameMain(pre);
   const postR = renameMain(post);
   if (!/class\s+__EzMain\b/.test(preR + postR)) return null;
@@ -517,7 +519,14 @@ export function parseBatchOutput(
     const o = outSeg.get(i);
     const e = errSeg.get(i);
     if (!o || aborted) {
-      cases.push({ index: i, status: "skipped", stdout: "", stderr: "", timeMs: null, memoryKb: null });
+      cases.push({
+        index: i,
+        status: "skipped",
+        stdout: "",
+        stderr: "",
+        timeMs: null,
+        memoryKb: null,
+      });
       continue;
     }
     let status: CaseStatus;

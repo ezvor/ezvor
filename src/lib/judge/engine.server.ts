@@ -37,13 +37,24 @@ async function runEach(
   let engine = "remote";
   let infraError: string | null = null;
   const cases = await mapLimit(inputs, 3, async (stdin, index): Promise<CaseRun> => {
-    const r = await executeRemote({ language, source, stdin, timeoutMs: PER_TEST_TL[language] * 3 });
+    const r = await executeRemote({
+      language,
+      source,
+      stdin,
+      timeoutMs: PER_TEST_TL[language] * 3,
+    });
     engine = r.engine ?? engine;
     if (r.compileOutput) compileError = r.compileOutput;
     if (r.error) infraError = r.error;
     return {
       index,
-      status: r.error ? "skipped" : r.timedOut ? "tle" : r.exitCode && r.exitCode !== 0 ? "re" : "ok",
+      status: r.error
+        ? "skipped"
+        : r.timedOut
+          ? "tle"
+          : r.exitCode && r.exitCode !== 0
+            ? "re"
+            : "ok",
       stdout: r.stdout,
       stderr: r.stderr,
       timeMs: r.timeMs,

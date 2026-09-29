@@ -8,6 +8,40 @@
 
 import type { Roadmap } from "@/data/careerData";
 
+/* ------------------------------------------------ profile field helpers */
+
+export const HANDLE_RE = /^[a-zA-Z0-9_-]{3,30}$/;
+
+/** Accepts "octocat", "@octocat" or "https://github.com/octocat" → "octocat". */
+export function normalizeGithub(input: string | null | undefined): string | null {
+  const raw = (input ?? "").trim();
+  if (!raw) return null;
+  const m = raw.match(/github\.com\/([^/?#\s]+)/i);
+  const name = (m ? m[1] : raw).replace(/^@/, "");
+  return /^[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,38})$/.test(name) ? name : null;
+}
+
+/** Accepts "jane-doe" or "https://www.linkedin.com/in/jane-doe/" → "jane-doe". */
+export function normalizeLinkedin(input: string | null | undefined): string | null {
+  const raw = (input ?? "").trim();
+  if (!raw) return null;
+  const m = raw.match(/linkedin\.com\/(?:in|pub)\/([^/?#\s]+)/i);
+  const slug = decodeURIComponentSafe(m ? m[1] : raw).replace(/^@/, "");
+  return /^[\p{L}\p{N}_-]{2,100}$/u.test(slug) ? slug : null;
+}
+
+function decodeURIComponentSafe(s: string) {
+  try {
+    return decodeURIComponent(s);
+  } catch {
+    return s;
+  }
+}
+
+export const githubUrl = (name: string) => `https://github.com/${encodeURIComponent(name)}`;
+export const linkedinUrl = (slug: string) =>
+  `https://www.linkedin.com/in/${encodeURIComponent(slug)}`;
+
 export interface SolvedRow {
   difficulty: string;
   solved_at: string;
@@ -95,14 +129,29 @@ function clamp(n: number) {
 
 function levelFor(score: number): { level: string; blurb: string } {
   if (score >= 90)
-    return { level: "Elite", blurb: "You're in the top tier for this target. Start applying and interviewing now." };
+    return {
+      level: "Elite",
+      blurb: "You're in the top tier for this target. Start applying and interviewing now.",
+    };
   if (score >= 75)
-    return { level: "Interview-ready", blurb: "Strong signal. Polish weak spots and go after real openings." };
+    return {
+      level: "Interview-ready",
+      blurb: "Strong signal. Polish weak spots and go after real openings.",
+    };
   if (score >= 50)
-    return { level: "Competitive", blurb: "Solid base. Close the gaps below to become interview-ready." };
+    return {
+      level: "Competitive",
+      blurb: "Solid base. Close the gaps below to become interview-ready.",
+    };
   if (score >= 25)
-    return { level: "Building", blurb: "Good momentum. Keep stacking verified proof consistently." };
-  return { level: "Exploring", blurb: "Early days. Pick your target and start earning verified evidence." };
+    return {
+      level: "Building",
+      blurb: "Good momentum. Keep stacking verified proof consistently.",
+    };
+  return {
+    level: "Exploring",
+    blurb: "Early days. Pick your target and start earning verified evidence.",
+  };
 }
 
 function distinctActiveDays(dates: string[], windowDays: number): number {
@@ -131,7 +180,9 @@ export function computeReadiness(
     else medium++;
   }
   const dsaPoints = easy * 1 + medium * 3 + hard * 6;
-  const dsaTargetPoints = roadmap ? (DSA_TARGET_POINTS[roadmap.id] ?? DEFAULT_DSA_TARGET) : DEFAULT_DSA_TARGET;
+  const dsaTargetPoints = roadmap
+    ? (DSA_TARGET_POINTS[roadmap.id] ?? DEFAULT_DSA_TARGET)
+    : DEFAULT_DSA_TARGET;
   const dsaScore = clamp((dsaPoints / dsaTargetPoints) * 100);
 
   // ---- Foundations coverage (target roadmap skills mastered) ----
@@ -265,4 +316,43 @@ export function computeReadiness(
       dsaTargetPoints,
     },
   };
+}
+
+/* ------------------------------------------ guest target (browser only) */
+
+/** Guests' target + checked skills, kept in this browser. */
+export const LOCAL_READINESS_KEY = "ezvor:readiness";
+
+export interface LocalReadiness {
+  roadmapId: string;
+  company: string;
+  completed: string[];
+}
+
+export function loadLocalReadiness(): LocalReadiness | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.localStorage.getItem(LOCAL_READINESS_KEY);
+    if (!raw) return null;
+    const v = JSON.parse(raw) as Partial<LocalReadiness>;
+    return {
+      roadmapId: typeof v.roadmapId === "string" ? v.roadmapId : "",
+      company: typeof v.company === "string" ? v.company.slice(0, 120) : "",
+      completed: Array.isArray(v.completed)
+        ? v.completed.filter((x): x is string => typeof x === "string").slice(0, 2000)
+        : [],
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function saveLocalReadiness(value: LocalReadiness | null) {
+  if (typeof window === "undefined") return;
+  try {
+    if (value) window.localStorage.setItem(LOCAL_READINESS_KEY, JSON.stringify(value));
+    else window.localStorage.removeItem(LOCAL_READINESS_KEY);
+  } catch {
+    /* storage blocked or full */
+  }
 }

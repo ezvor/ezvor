@@ -2,11 +2,25 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Sparkles, Search, Loader2, History, Briefcase, Compass, MapPin, Clock, Wifi } from "lucide-react";
+import {
+  Sparkles,
+  Search,
+  Loader2,
+  History,
+  Briefcase,
+  Compass,
+  MapPin,
+  Clock,
+  Wifi,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/PageHeader";
-import { OpportunityCard, type OppCardData, type StatusCitation } from "@/components/OpportunityCard";
+import {
+  OpportunityCard,
+  type OppCardData,
+  type StatusCitation,
+} from "@/components/OpportunityCard";
 import { JobCard } from "@/components/JobCard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,18 +40,25 @@ import {
   WORK_MODES,
   LOCATIONS,
   SOURCES,
+  SOURCE_HINTS,
   type JobResult,
+  type SourceReport,
 } from "@/lib/jobs.functions";
-import { getLiveStatuses, getStatusChangeLog, recheckStatus, type LiveStatus } from "@/lib/status.functions";
+import {
+  getLiveStatuses,
+  getStatusChangeLog,
+  recheckStatus,
+  type LiveStatus,
+} from "@/lib/status.functions";
 
 export const Route = createFileRoute("/opportunities")({
   head: () => ({
     meta: [
-      { title: "Job Search & Opportunities: LinkedIn, Indeed, Glassdoor | Ezvor" },
+      { title: "Job Search & Opportunities: Live Tech Jobs — Ezvor" },
       {
         name: "description",
         content:
-          "Search live jobs across LinkedIn, Indeed, Glassdoor and remote boards with time, work-mode and location filters. Plus curated tech programs with source-verified statuses.",
+          "Search live tech jobs from company career boards, Remotive, Remote OK, Hacker News, Arbeitnow, LinkedIn, Indeed and Glassdoor with time, work-mode and location filters. Plus curated tech programs with source-verified statuses.",
       },
     ],
   }),
@@ -58,7 +79,11 @@ function OpportunitiesPage() {
         description="Search real, live job postings across the major platforms, or browse curated tech programs with source-verified statuses."
       >
         <div className="flex gap-2 rounded-2xl border border-border/70 bg-card/70 p-1.5 shadow-soft backdrop-blur">
-          <TabButton active={tab === "jobs"} onClick={() => setTab("jobs")} icon={<Briefcase className="h-4 w-4" />}>
+          <TabButton
+            active={tab === "jobs"}
+            onClick={() => setTab("jobs")}
+            icon={<Briefcase className="h-4 w-4" />}
+          >
             Live Jobs
           </TabButton>
           <TabButton
@@ -94,7 +119,9 @@ function TabButton({
       onClick={onClick}
       className={cn(
         "flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition-colors",
-        active ? "bg-gradient-primary text-primary-foreground shadow-glow" : "text-muted-foreground hover:text-foreground",
+        active
+          ? "bg-gradient-primary text-primary-foreground shadow-glow"
+          : "text-muted-foreground hover:text-foreground",
       )}
     >
       {icon}
@@ -113,6 +140,8 @@ function JobsSearch() {
   const [activeSources, setActiveSources] = useState<(typeof SOURCES)[number][]>([...SOURCES]);
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<JobResult[] | null>(null);
+  const [reports, setReports] = useState<SourceReport[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [searched, setSearched] = useState("");
 
   const run = useServerFn(searchJobs);
@@ -126,8 +155,13 @@ function JobsSearch() {
       toast.error("Type a job title, e.g. Associate Software Engineer");
       return;
     }
+    if (activeSources.length === 0) {
+      toast.error("Pick at least one source");
+      return;
+    }
     setLoading(true);
     setResults(null);
+    setError(null);
     try {
       const res = await run({
         data: {
@@ -135,14 +169,16 @@ function JobsSearch() {
           timeframe,
           workMode,
           location,
-          sources: activeSources.length ? activeSources : undefined,
+          sources: activeSources.length === SOURCES.length ? undefined : activeSources,
         },
       });
       setResults(res.jobs);
+      setReports(res.sources);
       setSearched(q);
-      if (res.jobs.length === 0) toast.message("No matches — try widening the timeframe or location.");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Job search failed");
+      const msg = e instanceof Error ? e.message : "Job search failed";
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -166,7 +202,11 @@ function JobsSearch() {
           placeholder="e.g. Associate Software Engineer, Data Analyst, DevOps Engineer…"
           className="border-0 bg-transparent text-base focus-visible:ring-0"
         />
-        <Button onClick={doSearch} disabled={loading} className="shrink-0 bg-gradient-primary shadow-glow">
+        <Button
+          onClick={doSearch}
+          disabled={loading}
+          className="shrink-0 bg-gradient-primary shadow-glow"
+        >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
           Search
         </Button>
@@ -192,14 +232,22 @@ function JobsSearch() {
 
         <FilterRow icon={<Briefcase className="h-3.5 w-3.5" />} label="Sources">
           {SOURCES.map((s) => (
-            <Pill key={s} active={activeSources.includes(s)} onClick={() => toggleSource(s)}>
+            <Pill
+              key={s}
+              active={activeSources.includes(s)}
+              onClick={() => toggleSource(s)}
+              title={SOURCE_HINTS[s]}
+            >
               {s}
             </Pill>
           ))}
         </FilterRow>
 
         <FilterRow icon={<MapPin className="h-3.5 w-3.5" />} label="Location">
-          <Select value={location} onValueChange={(v) => setLocation(v as (typeof LOCATIONS)[number])}>
+          <Select
+            value={location}
+            onValueChange={(v) => setLocation(v as (typeof LOCATIONS)[number])}
+          >
             <SelectTrigger className="h-8 w-56 rounded-full text-sm">
               <SelectValue />
             </SelectTrigger>
@@ -217,7 +265,18 @@ function JobsSearch() {
       {/* Results */}
       {loading && (
         <div className="mt-8 flex items-center gap-2 rounded-2xl border border-border/60 bg-card p-6 text-sm text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin" /> Searching LinkedIn, Indeed, Glassdoor, Greenhouse, Lever, Ashby, YC and remote boards…
+          <Loader2 className="h-4 w-4 shrink-0 animate-spin" /> Scanning company career boards,
+          remote job boards, Hacker News and the web… this can take up to 20 seconds.
+        </div>
+      )}
+
+      {!loading && error && (
+        <div className="mt-8 rounded-2xl border border-destructive/40 bg-destructive/10 p-6 text-sm">
+          <p className="font-medium text-destructive">Search didn’t finish</p>
+          <p className="mt-1 text-muted-foreground">{error}</p>
+          <Button variant="outline" size="sm" className="mt-3" onClick={doSearch}>
+            Try again
+          </Button>
         </div>
       )}
 
@@ -228,15 +287,27 @@ function JobsSearch() {
               {results.length} result{results.length === 1 ? "" : "s"} for “{searched}”
             </h2>
             {Object.entries(bySource).map(([s, n]) => (
-              <span key={s} className="rounded-full border border-border/60 px-2.5 py-0.5 text-xs text-muted-foreground">
+              <span
+                key={s}
+                className="rounded-full border border-border/60 px-2.5 py-0.5 text-xs text-muted-foreground"
+              >
                 {s} · {n}
               </span>
             ))}
           </div>
           {results.length === 0 ? (
-            <p className="rounded-2xl border border-border/60 bg-card p-6 text-sm text-muted-foreground">
-              No postings matched. Try “Any time”, switch location to Remote (Worldwide), or enable more sources.
-            </p>
+            <div className="rounded-2xl border border-border/60 bg-card p-6 text-sm text-muted-foreground">
+              <p className="font-medium text-foreground">No postings matched “{searched}”.</p>
+              <ul className="mt-2 list-disc space-y-1 pl-5">
+                <li>
+                  Use a short role title, e.g. “Software Engineer” rather than a full job-ad title.
+                </li>
+                <li>
+                  Widen “Posted” to Any time, or switch location to Anywhere / Remote (Worldwide).
+                </li>
+                <li>Enable more sources — LinkedIn and Indeed carry the most local roles.</li>
+              </ul>
+            </div>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {results.map((job, i) => (
@@ -244,20 +315,36 @@ function JobsSearch() {
               ))}
             </div>
           )}
-          <p className="mt-3 text-xs text-muted-foreground">
-            Results are pulled live from public job platforms. Always confirm details and apply on the official listing.
+          {reports.length > 0 && (
+            <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
+              Scanned:{" "}
+              {reports.map((r, i) => (
+                <span key={r.name} className={cn(!r.ok && "opacity-60")}>
+                  {i > 0 && " · "}
+                  {r.name} ({r.ok ? r.count : "unavailable"})
+                </span>
+              ))}
+            </p>
+          )}
+          <p className="mt-1 text-xs text-muted-foreground">
+            Postings come live from public job APIs (Greenhouse, Lever, Ashby, Remotive, Remote OK,
+            Arbeitnow, Hacker News) and web search. Always confirm details and apply on the official
+            listing.
           </p>
         </section>
       )}
 
-      {!loading && !results && (
+      {!loading && !results && !error && (
         <div className="mt-10 rounded-2xl border border-dashed border-border/60 bg-card/40 p-8 text-center">
           <Briefcase className="mx-auto h-8 w-8 text-primary-glow" />
-          <p className="mt-3 font-display text-lg font-semibold">Search live jobs across every major platform</p>
+          <p className="mt-3 font-display text-lg font-semibold">
+            Search live jobs across every major platform
+          </p>
           <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
-            Type a role like “Associate Software Engineer”, pick your filters, and pull fresh, verified postings from
-            LinkedIn, Indeed, Glassdoor, Greenhouse, Lever, Ashby, Y Combinator and top remote boards. Every result is
-            AI-checked to be a real, currently-open listing.
+            Type a role like “Associate Software Engineer”, pick your filters, and pull fresh
+            postings straight from the career boards of 55+ tech companies, Remotive, Remote OK,
+            Hacker News “Who is hiring?” and Arbeitnow, plus LinkedIn, Indeed and Glassdoor via web
+            search. Free, no sign-up needed.
           </p>
         </div>
       )}
@@ -289,14 +376,18 @@ function Pill({
   active,
   onClick,
   children,
+  title,
 }: {
   active: boolean;
   onClick: () => void;
   children: React.ReactNode;
+  title?: string;
 }) {
   return (
     <button
       onClick={onClick}
+      title={title}
+      aria-pressed={active}
       className={cn(
         "rounded-full border px-3 py-1 text-xs transition-colors",
         active
@@ -316,6 +407,7 @@ function ProgramsView() {
   const [search, setSearch] = useState("");
   const [aiQuery, setAiQuery] = useState("");
   const [aiResults, setAiResults] = useState<OppCardData[] | null>(null);
+  const [aiNotice, setAiNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [overrides, setOverrides] = useState<Record<string, LiveStatus>>({});
   const [rechecking, setRechecking] = useState<Record<string, boolean>>({});
@@ -355,7 +447,12 @@ function ProgramsView() {
           checkedAt: r.checkedAt,
         },
       }));
-      toast.success(r.changed ? `Status updated: ${r.oldStatus ?? "?"} → ${r.status}` : `Confirmed: ${r.status}`);
+      const how = r.method === "heuristic" ? " (read from the page’s dates)" : "";
+      toast.success(
+        r.changed
+          ? `Status updated: ${r.oldStatus ?? "?"} → ${r.status}${how}`
+          : `Confirmed: ${r.status}${how}`,
+      );
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not re-check");
     } finally {
@@ -401,9 +498,11 @@ function ProgramsView() {
     if (!q) return;
     setLoading(true);
     setAiResults(null);
+    setAiNotice(null);
     try {
       const res = await discover({ data: { query: q } });
       setAiResults(res.opportunities);
+      setAiNotice(res.fallback ?? null);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not fetch opportunities");
     } finally {
@@ -424,8 +523,16 @@ function ProgramsView() {
           placeholder="Discover with AI… e.g. UX design internships"
           className="border-0 bg-transparent focus-visible:ring-0"
         />
-        <Button onClick={runDiscover} disabled={loading} className="shrink-0 bg-gradient-primary shadow-glow">
-          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+        <Button
+          onClick={runDiscover}
+          disabled={loading}
+          className="shrink-0 bg-gradient-primary shadow-glow"
+        >
+          {loading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Sparkles className="h-4 w-4" />
+          )}
           Find
         </Button>
       </div>
@@ -459,6 +566,10 @@ function ProgramsView() {
             <div className="flex items-center gap-2 rounded-2xl border border-border/60 bg-card p-6 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" /> Searching for the best opportunities…
             </div>
+          ) : aiResults && aiResults.length === 0 ? (
+            <p className="rounded-2xl border border-border/60 bg-card p-6 text-sm text-muted-foreground">
+              Nothing relevant came back. Try a broader interest, e.g. “data science internships”.
+            </p>
           ) : (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
               {aiResults!.map((o, i) => (
@@ -467,7 +578,8 @@ function ProgramsView() {
             </div>
           )}
           <p className="mt-3 text-xs text-muted-foreground">
-            AI-generated suggestions — always confirm details on official sites.
+            {aiNotice ??
+              "AI suggestions grounded on a web search — always confirm details on the official sites."}
           </p>
         </section>
       )}

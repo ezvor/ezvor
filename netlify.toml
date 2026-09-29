@@ -1,0 +1,9 @@
+# Netlify is supported; Vercel is recommended (longer function time limits for
+# AI judge generation). Nitro detects Netlify automatically during the build.
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+  NITRO_PRESET = "netlify"

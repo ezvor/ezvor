@@ -1,15 +1,17 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { buildCompanyIntel, type CompanyIntel } from "./company.server";
+import { optionalSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { CompanyIntel } from "./company.server";
 
 export type { CompanyIntel, IntelResource, IntelFocusArea } from "./company.server";
 
 /**
- * Public (no auth) company + role intelligence. Researches the web with
- * Firecrawl and distills a compact hiring brief with the AI gateway.
+ * Public (no auth) company + role intelligence. Grounds on a web search and
+ * the company's Wikipedia summary, then distills a compact hiring brief.
  */
 export const getCompanyIntel = createServerFn({ method: "POST" })
+  .middleware([optionalSupabaseAuth])
   .validator((input) =>
     z
       .object({
@@ -18,6 +20,11 @@ export const getCompanyIntel = createServerFn({ method: "POST" })
       })
       .parse(input),
   )
-  .handler(async ({ data }): Promise<CompanyIntel> => {
+  .handler(async ({ data, context }): Promise<CompanyIntel> => {
+    const [{ enforceRateLimit }, { buildCompanyIntel }] = await Promise.all([
+      import("./rate-limit.server"),
+      import("./company.server"),
+    ]);
+    enforceRateLimit("search", { userId: context.userId as string | null });
     return buildCompanyIntel(data.company, data.role);
   });

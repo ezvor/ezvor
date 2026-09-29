@@ -36,11 +36,50 @@ const LANG_SLUG_MAP: Record<string, LangKey> = {
 function sanitizeHtml(html: string): string {
   return sanitizeHtmlLib(html, {
     allowedTags: [
-      "p", "br", "hr", "b", "strong", "i", "em", "u", "s", "sub", "sup", "small",
-      "code", "pre", "kbd", "samp", "var", "span", "div", "blockquote",
-      "ul", "ol", "li", "dl", "dt", "dd",
-      "table", "thead", "tbody", "tfoot", "tr", "th", "td", "caption",
-      "h1", "h2", "h3", "h4", "h5", "h6", "a", "img", "figure", "figcaption",
+      "p",
+      "br",
+      "hr",
+      "b",
+      "strong",
+      "i",
+      "em",
+      "u",
+      "s",
+      "sub",
+      "sup",
+      "small",
+      "code",
+      "pre",
+      "kbd",
+      "samp",
+      "var",
+      "span",
+      "div",
+      "blockquote",
+      "ul",
+      "ol",
+      "li",
+      "dl",
+      "dt",
+      "dd",
+      "table",
+      "thead",
+      "tbody",
+      "tfoot",
+      "tr",
+      "th",
+      "td",
+      "caption",
+      "h1",
+      "h2",
+      "h3",
+      "h4",
+      "h5",
+      "h6",
+      "a",
+      "img",
+      "figure",
+      "figcaption",
     ],
     allowedAttributes: {
       a: ["href", "title", "target", "rel"],
@@ -56,7 +95,6 @@ function sanitizeHtml(html: string): string {
     },
   });
 }
-
 
 const QUERY = `query q($slug: String!) {
   question(titleSlug: $slug) {
@@ -100,7 +138,7 @@ export async function fetchLeetProblem(slug: string): Promise<LeetProblem> {
     snippets[key] = s.code;
   }
 
-  const difficulty = (q.difficulty as string) as LeetProblem["difficulty"];
+  const difficulty = q.difficulty as string as LeetProblem["difficulty"];
 
   return {
     slug,

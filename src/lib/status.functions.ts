@@ -1,61 +1,50 @@
 // Client-callable server functions for live opportunity statuses + citations.
+// Works with or without a database (see status-refresh.server.ts).
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { recheckOne } from "@/lib/status-refresh.server";
+import { optionalSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { RecheckResult, StatusChange, StatusRecord } from "./status-refresh.server";
 
-export interface LiveStatus {
-  oppId: string;
-  status: string;
-  statusNote: string | null;
-  sourceUrl: string | null;
-  sourceTitle: string | null;
-  reason: string | null;
-  confidence: string | null;
-  checkedAt: string;
-}
+export type LiveStatus = StatusRecord;
+export type { RecheckResult, StatusChange };
 
-/** All persisted live statuses (public, read-only). */
-export const getLiveStatuses = createServerFn({ method: "GET" }).handler(async () => {
-  const { data, error } = await supabaseAdmin
-    .from("opportunity_status")
-    .select("opp_id, status, status_note, source_url, source_title, reason, confidence, checked_at");
-  if (error) {
-    console.error("getLiveStatuses error", error);
-    return { statuses: [] as LiveStatus[] };
-  }
-  const statuses: LiveStatus[] = (data ?? []).map((r) => ({
-    oppId: r.opp_id,
-    status: r.status,
-    statusNote: r.status_note,
-    sourceUrl: r.source_url,
-    sourceTitle: r.source_title,
-    reason: r.reason,
-    confidence: r.confidence,
-    checkedAt: r.checked_at,
-  }));
-  return { statuses };
-});
+/** All known live statuses (public, read-only). */
+export const getLiveStatuses = createServerFn({ method: "GET" }).handler(
+  async (): Promise<{ statuses: LiveStatus[] }> => {
+    const { readStatuses } = await import("./status-refresh.server");
+    try {
+      return { statuses: await readStatuses() };
+    } catch (e) {
+      console.error("getLiveStatuses error", e);
+      return { statuses: [] };
+    }
+  },
+);
 
 /** Recent status-change history. */
-export const getStatusChangeLog = createServerFn({ method: "GET" }).handler(async () => {
-  const { data, error } = await supabaseAdmin
-    .from("opportunity_status_log")
-    .select("opp_id, old_status, new_status, reason, source_url, changed_at")
-    .order("changed_at", { ascending: false })
-    .limit(15);
-  if (error) {
-    console.error("getStatusChangeLog error", error);
-    return { changes: [] };
-  }
-  return { changes: data ?? [] };
-});
+export const getStatusChangeLog = createServerFn({ method: "GET" }).handler(
+  async (): Promise<{ changes: StatusChange[] }> => {
+    const { readChangeLog } = await import("./status-refresh.server");
+    try {
+      return { changes: await readChangeLog(15) };
+    } catch (e) {
+      console.error("getStatusChangeLog error", e);
+      return { changes: [] };
+    }
+  },
+);
 
 /** Re-verify a single opportunity now against its official page. */
 export const recheckStatus = createServerFn({ method: "POST" })
+  .middleware([optionalSupabaseAuth])
   .validator(z.object({ oppId: z.string().min(1).max(64) }))
-  .handler(async ({ data }) => {
+  .handler(async ({ data, context }): Promise<RecheckResult> => {
+    const [{ enforceRateLimit }, { recheckOne }] = await Promise.all([
+      import("./rate-limit.server"),
+      import("./status-refresh.server"),
+    ]);
+    enforceRateLimit("search", { userId: context.userId as string | null });
     try {
       return await recheckOne(data.oppId);
     } catch (e) {

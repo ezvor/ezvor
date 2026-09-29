@@ -200,9 +200,16 @@ export async function browserExecute(opts: {
   };
 
   if (opts.language === "python") {
-    const o = await host("py").run({ source: opts.source, stdin: opts.stdin }, budget, opts.onChunk);
+    const o = await host("py").run(
+      { source: opts.source, stdin: opts.stdin },
+      budget,
+      opts.onChunk,
+    );
     if (o.fatal) return { ...base, error: o.fatal };
-    const compileFailed = o.exitCode === 1 && /^\s*File "main\.py", line \d+[\s\S]*SyntaxError/m.test(o.stderr) && !o.stdout;
+    const compileFailed =
+      o.exitCode === 1 &&
+      /^\s*File "main\.py", line \d+[\s\S]*SyntaxError/m.test(o.stderr) &&
+      !o.stdout;
     return {
       ...base,
       ok: !o.timedOut && (o.exitCode ?? 0) === 0,
@@ -262,7 +269,8 @@ export async function browserRunBatch(opts: {
     const program = buildBatchProgram("python", opts.harness, opts.userCode, inputs, {
       timeLimitMs: tl,
     });
-    if (!program) return { compileError: null, cases: [], engine: "browser", error: "Unsupported harness" };
+    if (!program)
+      return { compileError: null, cases: [], engine: "browser", error: "Unsupported harness" };
     const o = await host("py").run({ source: program.source, stdin: program.stdin }, budget);
     if (o.fatal) return { compileError: null, cases: [], engine: "browser", error: o.fatal };
     const parsed = parseBatchOutput(program, inputs.length, o.stdout, o.stderr, o.timedOut);
@@ -278,7 +286,8 @@ export async function browserRunBatch(opts: {
   if (language === "javascript") {
     const nonce = makeNonce();
     const source = spliceUserCode(opts.harness, opts.userCode);
-    const offset = opts.harness.slice(0, opts.harness.indexOf("__USER_CODE__")).split("\n").length - 1;
+    const offset =
+      opts.harness.slice(0, opts.harness.indexOf("__USER_CODE__")).split("\n").length - 1;
     const userLines = opts.userCode.split("\n").length;
     const o = await host("js").run(
       { language: "javascript", source, inputs, nonce, timeLimitMs: tl },
@@ -295,5 +304,10 @@ export async function browserRunBatch(opts: {
     };
   }
 
-  return { compileError: null, cases: [], engine: "browser", error: `${language} can't run in the browser` };
+  return {
+    compileError: null,
+    cases: [],
+    engine: "browser",
+    error: `${language} can't run in the browser`,
+  };
 }

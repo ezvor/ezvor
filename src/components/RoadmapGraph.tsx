@@ -27,7 +27,10 @@ const kindIcon: Record<ResourceKind, LucideIcon> = {
 type Category = NonNullable<GraphNode["category"]>;
 
 /** Colour + copy for each transition category (uses approved --sec-* accent tokens). */
-const CATEGORY_META: Record<Category, { label: string; short: string; token: string; hint: string }> = {
+const CATEGORY_META: Record<
+  Category,
+  { label: string; short: string; token: string; hint: string }
+> = {
   transfer: {
     label: "Already yours",
     short: "Transfer",
@@ -87,10 +90,7 @@ export function RoadmapGraph({ graph }: { graph: GraphRoadmap }) {
                 }}
                 title={meta.hint}
               >
-                <span
-                  className="h-2 w-2 rounded-full"
-                  style={{ background: meta.token }}
-                />
+                <span className="h-2 w-2 rounded-full" style={{ background: meta.token }} />
                 <span className="font-medium" style={{ color: meta.token }}>
                   {meta.short}
                 </span>
@@ -100,10 +100,7 @@ export function RoadmapGraph({ graph }: { graph: GraphRoadmap }) {
           })}
         </div>
       )}
-      <div
-        className="relative mx-auto w-full max-w-3xl"
-        style={{ height, perspective: "1200px" }}
-      >
+      <div className="relative mx-auto w-full max-w-3xl" style={{ height, perspective: "1200px" }}>
         {/* edges */}
         <svg
           className="absolute inset-0 h-full w-full"
@@ -186,7 +183,9 @@ export function RoadmapGraph({ graph }: { graph: GraphRoadmap }) {
               <span
                 className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold"
                 style={{
-                  background: isDone ? "var(--success)" : `color-mix(in oklab, ${nodeAccent} 22%, transparent)`,
+                  background: isDone
+                    ? "var(--success)"
+                    : `color-mix(in oklab, ${nodeAccent} 22%, transparent)`,
                   color: isDone ? "var(--success-foreground)" : nodeAccent,
                 }}
               >
@@ -298,7 +297,10 @@ function NodeDetail({
               >
                 <span
                   className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg"
-                  style={{ background: `color-mix(in oklab, ${nodeAccent} 18%, transparent)`, color: nodeAccent }}
+                  style={{
+                    background: `color-mix(in oklab, ${nodeAccent} 18%, transparent)`,
+                    color: nodeAccent,
+                  }}
                 >
                   <Icon className="h-4 w-4" />
                 </span>

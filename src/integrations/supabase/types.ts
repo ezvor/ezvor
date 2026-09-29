@@ -2,13 +2,7 @@
 // Regenerate with `npx supabase gen types typescript --linked > src/integrations/supabase/types.ts`
 // after changing the schema, or keep this hand-maintained file in sync.
 
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[];
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
 
 /** Row type + which columns are required on insert (everything else is optional). */
 type Table<Row, Required extends keyof Row = never> = {
@@ -151,7 +145,10 @@ export type Database = {
       chat_threads: Table<ChatThread, "user_id">;
       chat_messages: Table<ChatMessage, "thread_id" | "user_id" | "role" | "content">;
       code_submissions: Table<CodeSubmission, "user_id" | "problem_slug" | "status" | "language">;
-      solved_problems: Table<SolvedProblem, "user_id" | "problem_id" | "problem_title" | "difficulty">;
+      solved_problems: Table<
+        SolvedProblem,
+        "user_id" | "problem_id" | "problem_title" | "difficulty"
+      >;
       roadmap_progress: Table<RoadmapProgress, "user_id" | "roadmap_id" | "stage_title" | "item">;
       career_targets: Table<CareerTarget, "user_id" | "roadmap_id" | "role_label">;
       user_data: Table<UserData, "user_id" | "key" | "value">;
