@@ -29,7 +29,7 @@ export interface ProfileRow {
 /** Create the profile row if missing, backfilling name/avatar from the provider. */
 export const ensureProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { displayName?: string | null; avatarUrl?: string | null }) => ({
+  .validator((d: { displayName?: string | null; avatarUrl?: string | null }) => ({
     displayName: d?.displayName ?? null,
     avatarUrl: d?.avatarUrl ?? null,
   }))
@@ -69,7 +69,7 @@ export const ensureProfile = createServerFn({ method: "POST" })
 
 export const updateProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { displayName?: string | null; avatarUrl?: string | null }) => ({
+  .validator((d: { displayName?: string | null; avatarUrl?: string | null }) => ({
     displayName: d?.displayName ?? null,
     avatarUrl: d?.avatarUrl ?? null,
   }))
@@ -100,7 +100,7 @@ export const listThreads = createServerFn({ method: "GET" })
 
 export const createThread = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { title?: string }) => ({ title: d?.title?.slice(0, 80) || "New chat" }))
+  .validator((d: { title?: string }) => ({ title: d?.title?.slice(0, 80) || "New chat" }))
   .handler(async ({ data, context }): Promise<ThreadRow> => {
     const { data: thread, error } = await context.supabase
       .from("chat_threads")
@@ -113,7 +113,7 @@ export const createThread = createServerFn({ method: "POST" })
 
 export const getMessages = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { threadId: string }) => ({ threadId: uuid.parse(d.threadId) }))
+  .validator((d: { threadId: string }) => ({ threadId: uuid.parse(d.threadId) }))
   .handler(
     async ({ data, context }): Promise<{ thread: ThreadRow | null; messages: MessageRow[] }> => {
       const { data: thread } = await context.supabase
@@ -138,7 +138,7 @@ export const getMessages = createServerFn({ method: "GET" })
 /** Persist a completed user+assistant exchange and bump the thread. */
 export const saveExchange = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { threadId: string; userContent: string; assistantContent: string }) => ({
+  .validator((d: { threadId: string; userContent: string; assistantContent: string }) => ({
     threadId: uuid.parse(d.threadId),
     userContent: z.string().min(1).max(12000).parse(d.userContent),
     assistantContent: z.string().min(1).max(40000).parse(d.assistantContent),
@@ -179,7 +179,7 @@ export const saveExchange = createServerFn({ method: "POST" })
 
 export const renameThread = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { threadId: string; title: string }) => ({
+  .validator((d: { threadId: string; title: string }) => ({
     threadId: uuid.parse(d.threadId),
     title: z.string().min(1).max(80).parse(d.title),
   }))
@@ -195,7 +195,7 @@ export const renameThread = createServerFn({ method: "POST" })
 
 export const deleteThread = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((d: { threadId: string }) => ({ threadId: uuid.parse(d.threadId) }))
+  .validator((d: { threadId: string }) => ({ threadId: uuid.parse(d.threadId) }))
   .handler(async ({ data, context }) => {
     const { error } = await context.supabase
       .from("chat_threads")

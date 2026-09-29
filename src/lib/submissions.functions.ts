@@ -28,7 +28,7 @@ export type StreakInfo = {
 // ---- Record a submission (any status) ----
 export const recordSubmissionDb = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) =>
+  .validator((input) =>
     z
       .object({
         problemSlug: z.string().min(1).max(200),
@@ -62,7 +62,7 @@ export const recordSubmissionDb = createServerFn({ method: "POST" })
 // ---- List a user's submissions for one problem ----
 export const listSubmissions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) => z.object({ slug: z.string().min(1).max(200) }).parse(input))
+  .validator((input) => z.object({ slug: z.string().min(1).max(200) }).parse(input))
   .handler(async ({ data, context }): Promise<SubmissionRow[]> => {
     const { supabase, userId } = context;
     const { data: rows } = await supabase

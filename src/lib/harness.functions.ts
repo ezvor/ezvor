@@ -1,58 +1,73 @@
-// Client-callable server function that returns a runnable execution harness +
-// test cases for any catalog problem, so it can be run/judged in-app. Generated
-// on-demand via AI and cached per-slug in `problem_harnesses`.
+// Returns the (verified) judge for a catalog problem, generating it on first use.
+// Clients only send the slug; the server fetches the statement itself.
 
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { generateHarness, type HarnessData } from "./harness.server";
+import { optionalSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { HarnessData } from "./harness.server";
 
 export type { HarnessData };
 
+export type HarnessResponse =
+  | { status: "ready"; harness: HarnessData }
+  | { status: "unsupported"; reason: string }
+  | { status: "error"; reason: string };
+
+const inflight = new Map<string, Promise<HarnessData>>();
+
 export const getProblemHarness = createServerFn({ method: "POST" })
-  .inputValidator((input) =>
+  .middleware([optionalSupabaseAuth])
+  .validator((input) =>
     z
       .object({
-        slug: z
-          .string()
-          .trim()
-          .min(1)
-          .max(200)
-          .regex(/^[a-z0-9-]+$/i, "invalid slug"),
-        title: z.string().min(1).max(200),
-        difficulty: z.string().max(20).default("Medium"),
-        statement: z.string().max(30000).default(""),
-        exampleTestcases: z.string().max(10000).default(""),
-        pythonSignature: z.string().max(2000).default(""),
+        slug: z.string().trim().min(1).max(120).regex(/^[a-z0-9-]+$/),
+        /** Rebuild the judge (signed-in users only, e.g. after reporting a bad test). */
         refresh: z.boolean().optional(),
+        /** Only return a cached judge; never generate. */
+        cachedOnly: z.boolean().optional(),
       })
       .parse(input),
   )
-  .handler(async ({ data }): Promise<HarnessData> => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  .handler(async ({ data, context }): Promise<HarnessResponse> => {
+    const [{ cacheGet, cacheSet }, harnessMod, { getStatement }, { enforceRateLimit, RateLimitError }] =
+      await Promise.all([
+        import("./cache.server"),
+        import("./harness.server"),
+        import("./problem-source.server"),
+        import("./rate-limit.server"),
+      ]);
+    const { generateHarness, publicHarness, UnsupportedProblemError, HARNESS_VERSION } = harnessMod;
+    const refresh = !!data.refresh && !!context.userId;
 
-    if (!data.refresh) {
-      const { data: cached } = await supabaseAdmin
-        .from("problem_harnesses")
-        .select("data")
-        .eq("slug", data.slug)
-        .maybeSingle();
-      if (cached?.data) return cached.data as HarnessData;
+    if (!refresh) {
+      const cached = await cacheGet<HarnessData>("problem_harnesses", data.slug);
+      if (cached && (cached.version ?? 1) >= HARNESS_VERSION) {
+        return { status: "ready", harness: publicHarness(cached) };
+      }
     }
+    if (data.cachedOnly) return { status: "error", reason: "not cached" };
 
-    const harness = await generateHarness({
-      slug: data.slug,
-      title: data.title,
-      difficulty: data.difficulty,
-      statement: data.statement,
-      exampleTestcases: data.exampleTestcases,
-      pythonSignature: data.pythonSignature,
-    });
-
-    await supabaseAdmin
-      .from("problem_harnesses")
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .upsert({ slug: data.slug, data: harness as any }, { onConflict: "slug" });
-
-    return harness;
+    try {
+      let job = inflight.get(data.slug);
+      if (!job) {
+        enforceRateLimit("generate", { userId: context.userId as string | null });
+        job = (async () => {
+          const problem = await getStatement(data.slug);
+          const harness = await generateHarness(problem);
+          // Unverified judges stay in this instance's memory only, so a later
+          // generation (e.g. once the runners are back) can replace them.
+          await cacheSet("problem_harnesses", data.slug, harness, { persist: !!harness.verified });
+          return harness;
+        })();
+        inflight.set(data.slug, job);
+        job.finally(() => inflight.delete(data.slug)).catch(() => undefined);
+      }
+      return { status: "ready", harness: publicHarness(await job) };
+    } catch (e) {
+      if (e instanceof UnsupportedProblemError) return { status: "unsupported", reason: e.message };
+      if (e instanceof RateLimitError) return { status: "error", reason: e.message };
+      console.error("[harness]", data.slug, e);
+      return { status: "error", reason: "Couldn't prepare the judge for this problem right now." };
+    }
   });

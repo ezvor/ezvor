@@ -62,11 +62,13 @@ import {
   type Problem,
   type Difficulty,
 } from "@/data/problems";
-import type { LangKey } from "@/lib/judge.server";
-import { executeCode, submitCode } from "@/lib/judge.functions";
-import type { SubmitResult } from "@/lib/judge.functions";
-import { recordSolved } from "@/lib/readiness.functions";
-import { supabase } from "@/integrations/supabase/client";
+import type { JudgeLang, LangKey } from "@/lib/judge/languages";
+import { submitSolution, type SubmitResult } from "@/lib/judge.functions";
+import { preload, runProgram, runWithHarness, runsInBrowser } from "@/lib/judge/client";
+import { gradeBatch } from "@/lib/judge/grade";
+import { outputsMatch } from "@/lib/judge/compare";
+import { recordSubmission as recordLocalSubmission } from "@/lib/local/store";
+import { isSupabaseConfigured, supabase } from "@/integrations/supabase/client";
 import {
   loadCatalog,
   prettyTag,
@@ -77,15 +79,10 @@ import {
 import { getLeetProblem, type LeetProblem } from "@/lib/leetcode.functions";
 import { getProblemEditorial, type EditorialData } from "@/lib/editorial.functions";
 import { getProblemHarness, type HarnessData } from "@/lib/harness.functions";
-import {
-  recordSubmissionDb,
-  listSubmissions,
-  getStreak,
-  type StreakInfo,
-} from "@/lib/submissions.functions";
+import { listSubmissions, getStreak, type StreakInfo } from "@/lib/submissions.functions";
 
 export const Route = createFileRoute("/playground")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): { problem?: string } => ({
     problem: typeof search.problem === "string" ? search.problem : undefined,
   }),
   head: () => ({
@@ -266,6 +263,7 @@ function PlaygroundPage() {
   // Run and auto-judged in-app exactly like the curated set.
   const [harness, setHarness] = useState<HarnessData | null>(null);
   const [harnessLoading, setHarnessLoading] = useState(false);
+  const [harnessIssue, setHarnessIssue] = useState<string | null>(null);
 
   // Editable custom test cases (LeetCode "Case 1 / Case 2").
   const [caseInputs, setCaseInputs] = useState<string[]>(() =>
@@ -331,15 +329,17 @@ function PlaygroundPage() {
   const langLabel = LANGUAGES.find((l) => l.key === lang)?.label ?? lang;
   const storageKey = `${CODE_PREFIX}.${problemId}.${lang}`;
 
-  const runFn = useServerFn(executeCode);
-  const submitFn = useServerFn(submitCode);
-  const recordSolvedFn = useServerFn(recordSolved);
+  const submitFn = useServerFn(submitSolution);
   const getLeetFn = useServerFn(getLeetProblem);
   const getEditorialFn = useServerFn(getProblemEditorial);
   const getHarnessFn = useServerFn(getProblemHarness);
-  const recordSubFn = useServerFn(recordSubmissionDb);
   const listSubsFn = useServerFn(listSubmissions);
   const getStreakFn = useServerFn(getStreak);
+
+  // Boot the in-browser Python runtime as soon as Python is selected.
+  useEffect(() => {
+    void preload(lang);
+  }, [lang]);
 
   useEffect(() => {
     setSolved(loadSet(SOLVED_KEY));
@@ -355,6 +355,7 @@ function PlaygroundPage() {
 
   // Detect sign-in and load the practice streak.
   useEffect(() => {
+    if (!isSupabaseConfigured) return;
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         setSignedIn(true);
@@ -439,22 +440,19 @@ function PlaygroundPage() {
     let cancelled = false;
     setHarnessLoading(true);
     setHarness(null);
-    getHarnessFn({
-      data: {
-        slug,
-        title: remote.title,
-        difficulty: remote.difficulty,
-        statement: remote.contentHtml,
-        exampleTestcases: remote.exampleTestcases,
-        pythonSignature: remote.snippets.python ?? "",
-      },
-    })
-      .then((h) => {
+    setHarnessIssue(null);
+    getHarnessFn({ data: { slug } })
+      .then((res) => {
+        if (res.status !== "ready") {
+          if (!cancelled) setHarnessIssue(res.reason);
+          return;
+        }
+        const h = res.harness;
         if (h.slug === slug) harnessCache.set(slug, h);
         if (!cancelled && h.slug === slug) setHarness(h);
       })
       .catch(() => {
-        /* fall back to Run-only mode for this problem */
+        if (!cancelled) setHarnessIssue("Couldn't prepare the judge for this problem right now.");
       })
       .finally(() => {
         if (!cancelled) setHarnessLoading(false);
@@ -537,23 +535,6 @@ function PlaygroundPage() {
     return () => clearInterval(id);
   }, [timerOn]);
 
-  // Build a plain-text statement to feed the editorial generator.
-  const buildStatement = useCallback((): string => {
-    if (!isLocal) return remote?.contentHtml ?? "";
-    const parts: string[] = [problem.description];
-    problem.examples.forEach((ex, i) => {
-      parts.push(
-        `Example ${i + 1}:\nInput: ${ex.input}\nOutput: ${ex.output}${
-          ex.explanation ? `\nExplanation: ${ex.explanation}` : ""
-        }`,
-      );
-    });
-    if (problem.constraints.length) {
-      parts.push(`Constraints:\n${problem.constraints.join("\n")}`);
-    }
-    return parts.join("\n\n");
-  }, [isLocal, remote, problem]);
-
   const loadEditorial = useCallback(
     async (refresh = false) => {
       // Wait for a remote problem's statement before generating.
@@ -576,15 +557,7 @@ function PlaygroundPage() {
       setEditorialLoading(true);
       setEditorialError(null);
       try {
-        const data = await getEditorialFn({
-          data: {
-            slug,
-            title: problem.title,
-            difficulty: problem.difficulty,
-            statement: buildStatement(),
-            refresh,
-          },
-        });
+        const data = await getEditorialFn({ data: { slug, refresh } });
         if (!data) throw new Error("empty editorial");
         editorialCache.set(slug, data);
         setEditorial(data);
@@ -598,7 +571,7 @@ function PlaygroundPage() {
         setEditorialLoading(false);
       }
     },
-    [isLocal, remote, problem, editorial, getEditorialFn, buildStatement],
+    [isLocal, remote, problem, editorial, getEditorialFn],
   );
 
   // Auto-load the editorial when the user opens Editorial or Solutions.
@@ -619,15 +592,7 @@ function PlaygroundPage() {
     const slug = problem.id;
     if (editorialCache.has(slug)) return;
     let cancelled = false;
-    getEditorialFn({
-      data: {
-        slug,
-        title: problem.title,
-        difficulty: problem.difficulty,
-        statement: "",
-        cachedOnly: true,
-      },
-    })
+    getEditorialFn({ data: { slug, cachedOnly: true } })
       .then((data) => {
         if (cancelled || !data) return;
         editorialCache.set(slug, data);
@@ -708,50 +673,69 @@ function PlaygroundPage() {
     setRunning(true);
     setBottomTab("result");
     try {
-      const results = await Promise.all(
-        caseInputs.map((input) =>
-          runFn({
-            data: { language: lang, source: buildSource(problem, lang, code), stdin: input },
+      const harnessSrc = problem.harness[lang];
+      if (!harnessSrc) {
+        // No judge for this language/problem: run the editor contents as a program.
+        const results = await Promise.all(
+          caseInputs.map((input) => runProgram({ language: lang, source: code, stdin: input })),
+        );
+        setCaseOutcomes(
+          results.map((r, i) => ({
+            input: caseInputs[i],
+            expected: null,
+            got: r.stdout ?? "",
+            stderr: r.stderr ?? "",
+            compileOutput: r.compileOutput ?? "",
+            timeMs: r.timeMs,
+            timedOut: r.timedOut,
+            error: r.error,
+            passed: null,
+          })),
+        );
+        const firstErr = results.find((r) => r.error);
+        if (firstErr?.error) toast.error(firstErr.error);
+      } else {
+        const run = await runWithHarness({ language: lang as JudgeLang, harness: harnessSrc, code, inputs: caseInputs });
+        if (run.error && run.cases.every((c) => c.status === "skipped")) toast.error(run.error);
+        setCaseOutcomes(
+          caseInputs.map((input, i) => {
+            const c = run.cases[i];
+            // Only show an expected answer while the case still matches an official example.
+            const example = problem.examples.find((e) => e.input === input);
+            const expected = example?.output ?? null;
+            const ok = c?.status === "ok";
+            return {
+              input,
+              expected,
+              got: c?.stdout ?? "",
+              stderr: c?.stderr ?? "",
+              compileOutput: i === 0 ? (run.compileError ?? "") : "",
+              timeMs: c?.timeMs ?? null,
+              timedOut: c?.status === "tle",
+              error: c?.status === "re" ? "Runtime Error" : c?.status === "skipped" && !run.compileError ? "Not run" : null,
+              passed: expected == null || run.compileError ? (run.compileError ? false : null) : ok && outputsMatch(c.stdout, expected),
+            };
           }),
-        ),
-      );
-      const outcomes: CaseOutcome[] = results.map((r, i) => {
-        const expected = problem.examples[i]?.output ?? null;
-        const got = r.stdout ?? "";
-        const passed =
-          expected == null
-            ? null
-            : !r.error && !r.timedOut && !r.compileOutput && normalize(got) === normalize(expected);
-        return {
-          input: caseInputs[i],
-          expected,
-          got,
-          stderr: r.stderr ?? "",
-          compileOutput: r.compileOutput ?? "",
-          timeMs: r.timeMs,
-          timedOut: r.timedOut,
-          error: r.error,
-          passed,
-        };
-      });
-      setCaseOutcomes(outcomes);
+        );
+      }
       setLastRanCode(true);
-      const firstErr = results.find((r) => r.error);
-      if (firstErr?.error) toast.error(firstErr.error);
     } catch {
       toast.error("Failed to run code. Please try again.");
     } finally {
       setRunning(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lang, code, caseInputs, problem]);
 
   const recordSubmission = useCallback(
     (res: SubmitResult) => {
-      let status: SubStatus = "Accepted";
-      if (res.compileError) status = "Compile Error";
-      else if (res.cases.some((c) => c.error || c.timedOut)) status = "Runtime Error";
-      else if (!res.allPassed) status = "Wrong Answer";
+      const status: SubStatus =
+        res.verdict === "Accepted"
+          ? "Accepted"
+          : res.verdict === "Compile Error"
+            ? "Compile Error"
+            : res.verdict === "Wrong Answer"
+              ? "Wrong Answer"
+              : "Runtime Error";
       const sub: Submission = {
         id: `${Date.now()}`,
         status,
@@ -768,59 +752,90 @@ function PlaygroundPage() {
         saveSubs(problem.id, next);
         return next;
       });
-      // Persist durable history to the cloud + refresh streak (signed-in).
-      if (signedIn) {
-        recordSubFn({
-          data: {
-            problemSlug: problem.id,
-            problemTitle: problem.title,
-            status,
-            language: lang,
-            passed: res.passedCount,
-            total: res.total,
-            runtimeMs: res.runtimeMs != null ? Math.round(res.runtimeMs) : null,
-            memoryKb: res.memoryKb != null ? Math.round(res.memoryKb) : null,
-          },
-        })
-          .then(() => refreshStreak())
-          .catch(() => {
-            /* history sync is best-effort */
-          });
-      }
+      recordLocalSubmission({
+        slug: problem.id,
+        title: problem.title,
+        status: res.verdict,
+        language: lang,
+        passed: res.passedCount,
+        total: res.total,
+        runtimeMs: res.runtimeMs,
+        memoryKb: res.memoryKb,
+        code,
+        verified: res.verified,
+        difficulty: problem.difficulty,
+        topic: problem.topic ?? null,
+      });
+      // The server records verified submissions for signed-in users; refresh the streak.
+      if (signedIn && res.recorded) refreshStreak();
     },
-    [lang, langLabel, problem.id, problem.title, signedIn, recordSubFn, refreshStreak],
+    [lang, langLabel, code, problem, signedIn, refreshStreak],
   );
+
+  /** In-browser judge, used when the remote runners are unavailable (unverified). */
+  const judgeInBrowser = useCallback(async (): Promise<SubmitResult | null> => {
+    const harnessSrc = problem.harness[lang];
+    if (!harnessSrc || !runsInBrowser(lang) || !problem.tests.length) return null;
+    const run = await runWithHarness({
+      language: lang as JudgeLang,
+      harness: harnessSrc,
+      code,
+      inputs: problem.tests.map((t) => t.input),
+    });
+    return gradeBatch(problem.tests, run, { verified: false });
+  }, [problem, lang, code]);
 
   const handleSubmit = useCallback(async () => {
     if (!judgeable) {
       toast.info(
         harnessLoading
           ? "Preparing the judge for this problem — try again in a moment."
-          : "Auto-judging isn't ready for this problem yet. Use Run to test your code.",
+          : harnessIssue ?? "Auto-judging isn't ready for this problem yet. Use Run to test your code.",
       );
+      return;
+    }
+    if (!problem.harness[lang]) {
+      toast.info(`Submissions in ${langLabel} aren't available for this problem yet — try another language.`);
       return;
     }
     setSubmitting(true);
     setBottomTab("result");
     try {
-      const res = await submitFn({
-        data: {
-          language: lang,
-          source: buildSource(problem, lang, code),
-          tests: problem.tests.map((t) => ({
-            input: t.input,
-            expected: t.expected,
-            hidden: t.hidden ?? false,
-          })),
-        },
-      });
+      let res: SubmitResult | null = null;
+      try {
+        res = await submitFn({
+          data: {
+            slug: problem.id,
+            language: lang as JudgeLang,
+            code,
+            fallback: isLocal
+              ? undefined
+              : { harness: problem.harness[lang]!, tests: problem.tests.map((t) => ({ ...t, hidden: !!t.hidden })) },
+            meta: { title: problem.title, difficulty: problem.difficulty, topic: problem.topic ?? null },
+          },
+        });
+      } catch {
+        res = null;
+      }
+      if (!res || res.verdict === "Judge Error") {
+        const local = await judgeInBrowser();
+        if (local) {
+          res = local;
+          toast.info("Judged in your browser — the cloud judge is busy right now.");
+        }
+      }
+      if (!res || res.verdict === "Judge Error") {
+        toast.error(res?.judgeError ?? "Failed to submit. Please try again.");
+        if (res) setSubmitResult(res);
+        return;
+      }
       setSubmitResult(res);
       setCaseOutcomes(null);
       recordSubmission(res);
       if (res.compileError) {
         toast.error("Compilation error");
       } else if (res.allPassed) {
-        toast.success(`Accepted — ${res.passedCount}/${res.total} passed 🎉`);
+        toast.success(`Accepted — ${res.passedCount}/${res.total} test cases passed`);
         setSolved((prev) => {
           const next = new Set(prev);
           next.add(problem.id);
@@ -831,33 +846,13 @@ function PlaygroundPage() {
           }
           return next;
         });
-        // Record verified proof for the Readiness Engine (only when signed in).
-        supabase.auth.getSession().then(({ data: { session } }) => {
-          if (!session) return;
-          recordSolvedFn({
-            data: {
-              problemId: problem.id,
-              title: problem.title,
-              difficulty: problem.difficulty,
-              topic: problem.topic ?? null,
-              language: lang,
-              runtimeMs: res.runtimeMs != null ? Math.round(res.runtimeMs) : null,
-              memoryKb: res.memoryKb != null ? Math.round(res.memoryKb) : null,
-            },
-          }).catch(() => {
-            /* proof sync is best-effort */
-          });
-        });
       } else {
-        toast.error(`${res.passedCount}/${res.total} test cases passed`);
+        toast.error(`${res.verdict} — ${res.passedCount}/${res.total} test cases passed`);
       }
-    } catch {
-      toast.error("Failed to submit. Please try again.");
     } finally {
       setSubmitting(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lang, code, problem, recordSubmission, judgeable, harnessLoading]);
+  }, [lang, langLabel, code, problem, isLocal, recordSubmission, judgeable, harnessLoading, harnessIssue, submitFn, judgeInBrowser]);
 
   // Keyboard shortcuts: Ctrl/Cmd+Enter = Run, Ctrl/Cmd+Shift+Enter = Submit.
   useEffect(() => {

@@ -1,13 +1,11 @@
 // Server-only company-intelligence helpers.
 //
-// Given a target role + company, we gather fresh public context with Firecrawl
+// Given a target role + company, we gather fresh public context from the web
 // (blogs, articles, interview write-ups) and distill it into a compact,
-// structured brief with the AI gateway. The .server.ts suffix keeps API keys
-// and the Firecrawl SDK out of the client bundle.
-
-import Firecrawl from "@mendable/firecrawl-js";
+// structured brief with the AI layer.
 
 import { callAI, type ChatMessage } from "./ai.server";
+import { webSearch } from "./web.server";
 
 export interface IntelResource {
   title: string;
@@ -45,22 +43,10 @@ interface SearchHit {
 
 /** Search public sources for interview / culture / hiring context. */
 async function gatherContext(company: string, role: string): Promise<SearchHit[]> {
-  const apiKey = process.env.FIRECRAWL_API_KEY;
-  if (!apiKey) return [];
-
-  const fc = new Firecrawl({ apiKey });
   const query = `${company} ${role} interview process hiring rounds coding system design culture`;
 
   try {
-    const res = (await fc.search(query, {
-      limit: 6,
-      scrapeOptions: { formats: ["markdown"] },
-    })) as {
-      web?: { title?: string; url?: string; description?: string; markdown?: string }[];
-      data?: { title?: string; url?: string; description?: string; markdown?: string }[];
-    };
-
-    const rows = res.web ?? res.data ?? [];
+    const rows = await webSearch(query, { limit: 6 });
     return rows
       .filter((r) => r.url)
       .slice(0, 6)

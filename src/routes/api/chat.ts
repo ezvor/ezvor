@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
 import { streamAI, type ChatMessage } from "@/lib/ai.server";
+import { enforceRateLimit, RateLimitError } from "@/lib/rate-limit.server";
 
 const SYSTEM_PROMPT = `You are Ezvor, an expert career advisor for students and professionals — especially in tech and computer science.
 
@@ -33,6 +34,18 @@ export const Route = createFileRoute("/api/chat")({
   server: {
     handlers: {
       POST: async ({ request }) => {
+        try {
+          enforceRateLimit("chat", { request });
+        } catch (e) {
+          if (e instanceof RateLimitError) {
+            return new Response(JSON.stringify({ error: e.message }), {
+              status: 429,
+              headers: { "Content-Type": "application/json", "Retry-After": String(e.retryAfterSec) },
+            });
+          }
+          throw e;
+        }
+
         let json: unknown;
         try {
           json = await request.json();
@@ -56,27 +69,19 @@ export const Route = createFileRoute("/api/chat")({
           ...parsed.data.messages,
         ];
 
-        const response = await streamAI(messages);
+        const response = await streamAI(messages, { tier: "smart", reasoning: "low" });
 
         if (!response.ok) {
-          if (response.status === 429) {
-            return new Response(
-              JSON.stringify({ error: "Rate limit reached. Please try again in a moment." }),
-              { status: 429, headers: { "Content-Type": "application/json" } },
-            );
-          }
-          if (response.status === 402) {
-            return new Response(
-              JSON.stringify({ error: "AI credits exhausted. Please add credits to continue." }),
-              { status: 402, headers: { "Content-Type": "application/json" } },
-            );
-          }
-          const text = await response.text();
-          console.error("AI gateway error:", response.status, text);
-          return new Response(JSON.stringify({ error: "AI service error" }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          });
+          const status = response.status === 429 ? 429 : 503;
+          return new Response(
+            JSON.stringify({
+              error:
+                status === 429
+                  ? "The AI is busy right now. Please try again in a moment."
+                  : "The AI service is temporarily unavailable. Please try again shortly.",
+            }),
+            { status, headers: { "Content-Type": "application/json" } },
+          );
         }
 
         return new Response(response.body, {

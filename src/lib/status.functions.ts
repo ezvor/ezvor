@@ -54,7 +54,7 @@ export const getStatusChangeLog = createServerFn({ method: "GET" }).handler(asyn
 
 /** Re-verify a single opportunity now against its official page. */
 export const recheckStatus = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ oppId: z.string().min(1).max(64) }))
+  .validator(z.object({ oppId: z.string().min(1).max(64) }))
   .handler(async ({ data }) => {
     try {
       return await recheckOne(data.oppId);

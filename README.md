@@ -6,7 +6,7 @@
 
 **The career platform that measures real work and tells you the truth: are you hireable yet?**
 
-[Live App](https://ezvor.lovable.app) · [Report a Bug](https://github.com/ezvor/ezvor/issues) · [Request a Feature](https://github.com/ezvor/ezvor/issues)
+[Live App](https://qeelo.cloud) · [Report a Bug](https://github.com/ezvor/ezvor/issues) · [Request a Feature](https://github.com/ezvor/ezvor/issues)
 
 </div>
 
@@ -88,51 +88,39 @@ supabase/migrations/   database schema
 
 ## Running it locally
 
-Requires **Bun >= 1.0** (Node 20+ works too) and **Git**.
+Requires **Node 20+** and **Git**.
 
 ```bash
 git clone https://github.com/ezvor/ezvor.git
 cd ezvor
-bun install
-bun run dev
+npm install
+npm run dev
 ```
 
 The app comes up on http://localhost:8080.
 
 ### Environment
 
-Create a `.env` in the project root:
+Copy `.env.example` to `.env`. **Nothing is required**: with no keys the app runs local-first (progress saved in the browser), code runs on free engines (in-browser Python/JS, Wandbox/Paiza for compiled languages) and the AI falls back to a keyless model.
 
-```env
-# Supabase
-VITE_SUPABASE_URL="https://YOUR_PROJECT.supabase.co"
-VITE_SUPABASE_PUBLISHABLE_KEY="your-anon-key"
-VITE_SUPABASE_PROJECT_ID="your-project-id"
-SUPABASE_URL="https://YOUR_PROJECT.supabase.co"
-SUPABASE_PUBLISHABLE_KEY="your-anon-key"
+Recommended for production:
 
-# Server-only
-SUPABASE_SERVICE_ROLE_KEY="your-service-role-key"
-GEMINI_API_KEY="your-google-ai-studio-key"   # free tier is fine
-FIRECRAWL_API_KEY="your-firecrawl-key"        # for live opportunity status
-```
+- `GEMINI_API_KEY` (free, https://aistudio.google.com/apikey) plus optionally `GROQ_API_KEY` / `OPENROUTER_API_KEY` as automatic fallbacks.
+- Your own free Supabase project (`VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY`) for accounts, sync, public profiles and the shared problem cache. Run `supabase/migrations/20260928000000_init.sql` once in the SQL editor.
+- `CRON_SECRET` for the daily opportunity-status refresh (also keeps a free Supabase project from pausing).
 
-A few notes:
-
-- `VITE_*` values are exposed to the browser, so keep them public-safe.
-- Server secrets are read via `process.env` inside server functions. Never prefix them with `VITE_`.
-- Grab a free Gemini key from https://aistudio.google.com/apikey and a Firecrawl key from https://firecrawl.dev.
+`VITE_*` values are exposed to the browser; never prefix secrets with `VITE_`.
 
 ## Scripts
 
 | Command | What it does |
 | :--- | :--- |
-| `bun run dev` | Dev server with hot reload |
-| `bun run build` | Production build |
-| `bun run build:dev` | Dev-mode build (useful for debugging SSR) |
-| `bun run preview` | Preview a production build |
-| `bun run lint` | ESLint |
-| `bun run format` | Prettier |
+| `npm run dev` | Dev server with hot reload |
+| `npm run build` | Production build |
+| `npm run build:dev` | Dev-mode build (useful for debugging SSR) |
+| `npm run preview` | Preview a production build |
+| `npm run lint` | ESLint |
+| `npm run format` | Prettier |
 
 ## Database
 
@@ -140,7 +128,7 @@ Postgres via Supabase. The schema lives in `supabase/migrations/`. If you are se
 
 ## Deployment
 
-Ezvor is server-rendered, so it needs a host that runs server functions. A static host will not work. It is currently deployed at https://ezvor.lovable.app. Any platform that supports Node or edge SSR (Vercel, Netlify, and similar) works: connect the repo, set the environment variables above, and deploy.
+Ezvor is server-rendered, so it needs a host that runs server functions. A static host will not work. It is deployed on Vercel at https://qeelo.cloud (Nitro auto-detects Vercel and Netlify; elsewhere it builds a Node server: `node .output/server/index.mjs`). Import the repo in Vercel, add the environment variables, and point the domain at the project. `vercel.json` schedules the daily status-refresh cron.
 
 ## Roadmap
 

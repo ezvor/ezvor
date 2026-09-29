@@ -10,7 +10,7 @@ export type { CompanyIntel, IntelResource, IntelFocusArea } from "./company.serv
  * Firecrawl and distills a compact hiring brief with the AI gateway.
  */
 export const getCompanyIntel = createServerFn({ method: "POST" })
-  .inputValidator((input) =>
+  .validator((input) =>
     z
       .object({
         company: z.string().trim().min(2).max(80),
