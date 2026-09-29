@@ -42,7 +42,7 @@ export type JobSearchInput = z.infer<typeof inputSchema>;
 
 /** Search live job postings across LinkedIn, Indeed, Glassdoor and remote boards. */
 export const searchJobs = createServerFn({ method: "POST" })
-  .inputValidator(inputSchema)
+  .validator(inputSchema)
   .handler(async ({ data }): Promise<{ jobs: JobResult[]; query: string }> => {
     const jobs = await searchJobsOnPlatforms(data);
     return { jobs, query: data.query };

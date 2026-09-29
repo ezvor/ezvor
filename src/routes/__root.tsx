@@ -7,11 +7,12 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import { useEffect, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Rocket, LogIn, LogOut } from "lucide-react";
 
 import appCss from "../styles.css?url";
-import { reportLovableError } from "../lib/lovable-error-reporting";
+import { SITE, absoluteUrl } from "@/config/site";
+import { isSupabaseConfigured } from "@/integrations/supabase/client";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Toaster } from "@/components/ui/sonner";
@@ -44,9 +45,6 @@ function NotFoundComponent() {
 function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   console.error(error);
   const router = useRouter();
-  useEffect(() => {
-    reportLovableError(error, { boundary: "tanstack_root_error_component" });
-  }, [error]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -83,31 +81,26 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Ezvor Free AI Career Platform for Engineers" },
-      {
-        name: "description",
-        content:
-          "Ezvor is a free AI career platform: unified roadmaps and skill graphs, live opportunities, a DSA arena, an online compiler, and an AI advisor for students and professionals.",
-      },
-      { name: "author", content: "Ezvor" },
-      { property: "og:title", content: "Ezvor Free AI Career Platform for Engineers" },
-      {
-        property: "og:description",
-        content:
-          "Unified roadmaps and skill graphs, live opportunities, a DSA arena, an online compiler, and an AI advisor — all free.",
-      },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
+      { title: `${SITE.name} — ${SITE.tagline}` },
+      { name: "description", content: SITE.description },
+      { name: "author", content: SITE.name },
+      { name: "theme-color", content: "#0b0b14" },
+      { name: "color-scheme", content: "dark" },
+      { property: "og:site_name", content: SITE.name },
+      { property: "og:title", content: `${SITE.name} — ${SITE.tagline}` },
+      { property: "og:description", content: SITE.description },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: SITE.url },
+      { property: "og:image", content: absoluteUrl(SITE.ogImage) },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "Ezvor Free AI Career Platform for Engineers" },
-      {
-        name: "twitter:description",
-        content:
-          "Unified roadmaps and skill graphs, live opportunities, a DSA arena, an online compiler, and an AI advisor — all free.",
-      },
-
+      { name: "twitter:title", content: `${SITE.name} — ${SITE.tagline}` },
+      { name: "twitter:description", content: SITE.description },
+      { name: "twitter:image", content: absoluteUrl(SITE.ogImage) },
     ],
     links: [
+      { rel: "canonical", href: SITE.url },
+      { rel: "manifest", href: "/manifest.webmanifest" },
       { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
       { rel: "apple-touch-icon", href: "/favicon.svg" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
@@ -174,7 +167,6 @@ function RootComponent() {
               </header>
 
               <main className="min-w-0 flex-1">
-                {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
                 <Outlet />
               </main>
             </div>
@@ -188,6 +180,8 @@ function RootComponent() {
 
 function HeaderAuth() {
   const { user, signOut } = useAuth();
+
+  if (!isSupabaseConfigured) return null;
 
   if (!user) {
     return (

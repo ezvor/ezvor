@@ -1,8 +1,8 @@
 // Server-only engine that verifies opportunity application statuses against the
-// official source pages (scraped with Firecrawl) and an AI judgement, then
+// official source pages (read with the free web layer) and an AI judgement, then
 // persists the verdict + a citation and logs any change.
 import { callAI, type ChatMessage } from "./ai.server";
-import { scrapePage, batchScrapePages, type ScrapedPage } from "./firecrawl.server";
+import { scrapePage, batchScrapePages, type ScrapedPage } from "./web.server";
 import { OPPORTUNITIES, type Opportunity, type OppStatus } from "@/data/careerData";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 

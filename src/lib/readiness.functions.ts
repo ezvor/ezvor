@@ -43,7 +43,7 @@ function roadmapById(id: string | undefined) {
 // ---- Set / update the user's career target ----
 export const setTarget = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) =>
+  .validator((input) =>
     z
       .object({
         roadmapId: z.string().min(1).max(80),
@@ -71,7 +71,7 @@ export const setTarget = createServerFn({ method: "POST" })
 // ---- Toggle a roadmap skill item as mastered / not ----
 export const toggleRoadmapItem = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) =>
+  .validator((input) =>
     z
       .object({
         roadmapId: z.string().min(1).max(80),
@@ -110,7 +110,7 @@ export const toggleRoadmapItem = createServerFn({ method: "POST" })
 // ---- Record a verified accepted submission from the DSA Arena ----
 export const recordSolved = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) =>
+  .validator((input) =>
     z
       .object({
         problemId: z.string().min(1).max(120),
@@ -183,7 +183,7 @@ export const getProgress = createServerFn({ method: "GET" })
 // ---- Update the public proof profile settings ----
 export const updateProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input) =>
+  .validator((input) =>
     z
       .object({
         displayName: z.string().max(80).nullable().optional(),
@@ -271,7 +271,7 @@ export interface PublicProof {
 
 // ---- Public proof page (no auth). Reads only public profiles. ----
 export const getPublicProof = createServerFn({ method: "GET" })
-  .inputValidator((input) => z.object({ handle: z.string().min(1).max(40) }).parse(input))
+  .validator((input) => z.object({ handle: z.string().min(1).max(40) }).parse(input))
   .handler(async ({ data }): Promise<PublicProof | null> => {
     const { createClient } = await import("@supabase/supabase-js");
     const supabase = createClient(process.env.SUPABASE_URL!, process.env.SUPABASE_PUBLISHABLE_KEY!, {

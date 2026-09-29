@@ -16,7 +16,7 @@ function extractToolArgs(data: ToolCallResult): unknown {
 
 /** Generate a personalized learning roadmap for any role or goal. */
 export const generateRoadmap = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ goal: z.string().min(2).max(120) }))
+  .validator(z.object({ goal: z.string().min(2).max(120) }))
   .handler(async ({ data }) => {
     const messages: ChatMessage[] = [
       {
@@ -81,7 +81,7 @@ export const generateRoadmap = createServerFn({ method: "POST" })
 
 /** Discover opportunities tailored to a field or interest. */
 export const discoverOpportunities = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ query: z.string().min(2).max(160) }))
+  .validator(z.object({ query: z.string().min(2).max(160) }))
   .handler(async ({ data }) => {
     const messages: ChatMessage[] = [
       {
@@ -156,7 +156,7 @@ export const discoverOpportunities = createServerFn({ method: "POST" })
 
 /** Generate a personalized, NeetCode-style skill graph from current skills + target role. */
 export const generatePersonalGraph = createServerFn({ method: "POST" })
-  .inputValidator(
+  .validator(
     z.object({
       role: z.string().min(2).max(80),
       skills: z.string().max(400).optional(),

@@ -1,64 +1,57 @@
-// Client-callable server functions for problem editorials + worked solutions.
-// Generates on-demand via AI and caches per-slug in `problem_solutions`.
+// Editorial + verified multi-language solutions, generated once per problem
+// and shared by everyone through the cache.
 
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
-import { generateEditorial, type EditorialData } from "./editorial.server";
+import { optionalSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { EditorialData } from "./editorial.server";
 
 export type { EditorialData };
 
+const inflight = new Map<string, Promise<EditorialData>>();
+
 export const getProblemEditorial = createServerFn({ method: "POST" })
-  .inputValidator((input) =>
+  .middleware([optionalSupabaseAuth])
+  .validator((input) =>
     z
       .object({
-        slug: z
-          .string()
-          .trim()
-          .min(1)
-          .max(200)
-          .regex(/^[a-z0-9-]+$/i, "invalid slug"),
-        title: z.string().min(1).max(200),
-        difficulty: z.string().max(20).default("Medium"),
-        statement: z.string().max(30000).default(""),
+        slug: z.string().trim().min(1).max(120).regex(/^[a-z0-9-]+$/),
+        /** Regenerate (signed-in users only). */
         refresh: z.boolean().optional(),
-        // When true, return the cached editorial if present, otherwise null —
-        // never trigger a (slow, costly) fresh AI generation. Used to warm the
-        // client cache in the background the instant a problem opens, so the
-        // Editorial/Solutions tabs are instant for already-generated problems.
+        /** Return the cached editorial or null — never generate. */
         cachedOnly: z.boolean().optional(),
       })
       .parse(input),
   )
-  .handler(async ({ data }): Promise<EditorialData | null> => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  .handler(async ({ data, context }): Promise<EditorialData | null> => {
+    const [{ cacheGet, cacheSet }, ed, src, { enforceRateLimit }] = await Promise.all([
+      import("./cache.server"),
+      import("./editorial.server"),
+      import("./problem-source.server"),
+      import("./rate-limit.server"),
+    ]);
+    const refresh = !!data.refresh && !!context.userId;
 
-    // 1) Serve from cache unless a refresh was explicitly requested.
-    if (!data.refresh) {
-      const { data: cached } = await supabaseAdmin
-        .from("problem_solutions")
-        .select("data")
-        .eq("slug", data.slug)
-        .maybeSingle();
-      if (cached?.data) return cached.data as EditorialData;
+    if (!refresh) {
+      const cached = await cacheGet<EditorialData>("problem_solutions", data.slug);
+      if (cached && (cached.version ?? 1) >= ed.EDITORIAL_VERSION) return cached;
+      if (data.cachedOnly) return cached ?? null;
     }
 
-    // Cache-only prefetch: nothing cached yet, so don't generate — bail out.
-    if (data.cachedOnly) return null;
-
-    // 2) Generate fresh.
-    const editorial = await generateEditorial({
-      slug: data.slug,
-      title: data.title,
-      difficulty: data.difficulty,
-      statement: data.statement,
-    });
-
-    // 3) Cache (best-effort).
-    await supabaseAdmin
-      .from("problem_solutions")
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .upsert({ slug: data.slug, data: editorial as any }, { onConflict: "slug" });
-
-    return editorial;
+    let job = inflight.get(data.slug);
+    if (!job) {
+      enforceRateLimit("generate", { userId: context.userId as string | null });
+      job = (async () => {
+        const ctx = await src.getProblemContext(data.slug);
+        const editorial = await ed.generateEditorial(ctx);
+        const judge = await src.getJudge(data.slug);
+        if (judge) await ed.verifyEditorial(editorial, judge);
+        await cacheSet("problem_solutions", data.slug, editorial);
+        return editorial;
+      })();
+      inflight.set(data.slug, job);
+      job.finally(() => inflight.delete(data.slug)).catch(() => undefined);
+    }
+    return job;
   });

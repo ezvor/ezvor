@@ -1,1 +1,2 @@
-project_id = "mqtthkwtojzcibypjoac"
+# Supabase CLI config. Link your own project with: supabase link --project-ref <your-ref>
+project_id = "ezvor"

@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 import { listThreads, createThread } from "@/lib/threads.functions";
 
 export const Route = createFileRoute("/_authenticated/advisor/")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): { q?: string } => ({
     q: typeof search.q === "string" ? search.q : undefined,
   }),
   component: AdvisorIndex,

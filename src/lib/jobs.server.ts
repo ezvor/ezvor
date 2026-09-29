@@ -11,10 +11,9 @@
 //      requested location + work mode, and (d) currently open. The AI answers
 //      with the ROW INDEX so URLs can never be hallucinated — we always keep
 //      the real scraped URL.
-//   3. Fall back to a heuristic parser when no AI key is present.
-import Firecrawl from "@mendable/firecrawl-js";
-
+//   3. Fall back to a heuristic parser when the AI is unavailable.
 import { callAI, type ChatMessage } from "./ai.server";
+import { webSearch, type Freshness } from "./web.server";
 
 export interface JobResult {
   title: string;
@@ -39,22 +38,15 @@ interface SearchArgs {
   sources?: string[];
 }
 
-function getClient() {
-  const apiKey = process.env.FIRECRAWL_API_KEY;
-  if (!apiKey) throw new Error("FIRECRAWL_API_KEY is not configured");
-  return new Firecrawl({ apiKey });
-}
-
-// Firecrawl/Google time-based-search codes.
-function tbsFor(t: Timeframe): string | undefined {
+function freshnessFor(t: Timeframe): Freshness {
   switch (t) {
     case "Past 24 hours":
-      return "qdr:d";
+      return "day";
     case "Past 3 days":
     case "Past week":
-      return "qdr:w";
+      return "week";
     case "Past month":
-      return "qdr:m";
+      return "month";
     default:
       return undefined;
   }
@@ -118,14 +110,6 @@ interface RawResult {
   description?: string;
 }
 
-function extractResults(res: unknown): RawResult[] {
-  const r = res as { web?: RawResult[]; data?: RawResult[] } | RawResult[];
-  if (Array.isArray(r)) return r;
-  if (Array.isArray(r?.web)) return r.web;
-  if (Array.isArray(r?.data)) return r.data;
-  return [];
-}
-
 interface RawItem {
   source: JobResult["source"];
   url: string;
@@ -147,8 +131,7 @@ async function aiFilterAndExtract(
   raw: RawItem[],
   args: SearchArgs,
 ): Promise<JobResult[] | null> {
-  const hasKey = !!(process.env.LOVABLE_API_KEY || process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY);
-  if (!hasKey || raw.length === 0) return null;
+  if (raw.length === 0) return null;
 
   const numbered = raw
     .map(
@@ -235,8 +218,7 @@ function extractJson(text: string): string | null {
 }
 
 export async function searchJobsOnPlatforms(args: SearchArgs): Promise<JobResult[]> {
-  const fc = getClient();
-  const tbs = tbsFor(args.timeframe);
+  const freshness = freshnessFor(args.timeframe);
 
   const activePlatforms = PLATFORMS.filter(
     (p) => !args.sources || args.sources.length === 0 || args.sources.includes(p.key),
@@ -248,12 +230,7 @@ export async function searchJobsOnPlatforms(args: SearchArgs): Promise<JobResult
   const searches = activePlatforms.map(async (platform) => {
     const q = `${args.query}${modePart} jobs${locPart} site:${platform.site}`;
     try {
-      const res = await fc.search(q, {
-        limit: platform.limit,
-        tbs,
-        scrapeOptions: undefined,
-      } as Parameters<typeof fc.search>[1]);
-      const raw = extractResults(res);
+      const raw: RawResult[] = await webSearch(q, { limit: platform.limit, freshness });
       return raw
         .map((item): RawItem | null => {
           if (!item.url) return null;

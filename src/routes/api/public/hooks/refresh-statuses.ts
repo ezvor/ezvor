@@ -1,4 +1,4 @@
-// Scheduled endpoint (called by pg_cron) that refreshes opportunity statuses
+// Scheduled endpoint (Vercel Cron, daily) that refreshes opportunity statuses
 // from their official pages and logs what changed. Lives under /api/public/*
 // so it bypasses published-site auth; it performs no destructive user actions
 // and returns no PII.
@@ -7,10 +7,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { refreshAllStatuses } from "@/lib/status-refresh.server";
 
 async function run(request: Request) {
-  // This endpoint runs paid Firecrawl scrapes + AI calls, so it must only be
-  // callable by the trusted scheduler. Require a shared secret that only the
-  // pg_cron job (or an operator) knows before doing any work.
-  const secret = process.env.STATUS_REFRESH_SECRET;
+  // Runs web reads + AI calls, so only the scheduler (or an operator) may call it.
+  // Vercel Cron sends `Authorization: Bearer $CRON_SECRET` automatically.
+  const secret = process.env.CRON_SECRET || process.env.STATUS_REFRESH_SECRET;
   const provided =
     request.headers.get("x-cron-secret") ??
     request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ??

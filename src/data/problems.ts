@@ -1,4 +1,5 @@
-import type { LangKey } from "@/lib/judge.server";
+import { spliceUserCode } from "@/lib/judge/batch";
+import type { LangKey } from "@/lib/judge/languages";
 
 export type Difficulty = "Easy" | "Medium" | "Hard";
 
@@ -973,7 +974,7 @@ export const LANGUAGES: { key: LangKey; label: string; monaco: string }[] = [
 export function buildSource(problem: Problem, lang: LangKey, userCode: string): string {
   const harness = problem.harness[lang];
   if (!harness) return userCode;
-  return harness.replace("__USER_CODE__", userCode);
+  return spliceUserCode(harness, userCode);
 }
 
 export const FALLBACK_STARTER: Partial<Record<LangKey, string>> = {

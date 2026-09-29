@@ -31,7 +31,7 @@ import { getMessages, saveExchange } from "@/lib/threads.functions";
 import advisorOrb from "@/assets/advisor-orb.png";
 
 export const Route = createFileRoute("/_authenticated/advisor/$threadId")({
-  validateSearch: (search: Record<string, unknown>) => ({
+  validateSearch: (search: Record<string, unknown>): { q?: string } => ({
     q: typeof search.q === "string" ? search.q : undefined,
   }),
   component: ChatPage,

@@ -30,3 +30,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local environment (never commit secrets)
+.env
+.env.*
+!.env.example
+
+# Deploy output
+.vercel
+.netlify

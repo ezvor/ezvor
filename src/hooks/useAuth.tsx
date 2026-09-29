@@ -11,12 +11,14 @@ import type { Session, User } from "@supabase/supabase-js";
 import { useRouter } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 
-import { supabase } from "@/integrations/supabase/client";
+import { isSupabaseConfigured, supabase } from "@/integrations/supabase/client";
 
 interface AuthContextValue {
   session: Session | null;
   user: User | null;
   loading: boolean;
+  /** False when this deployment runs without Supabase (local-only mode). */
+  enabled: boolean;
   signOut: () => Promise<void>;
 }
 
@@ -24,6 +26,7 @@ const AuthContext = createContext<AuthContextValue>({
   session: null,
   user: null,
   loading: true,
+  enabled: isSupabaseConfigured,
   signOut: async () => {},
 });
 
@@ -33,12 +36,13 @@ const AuthContext = createContext<AuthContextValue>({
  */
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(isSupabaseConfigured);
   const router = useRouter();
   const queryClient = useQueryClient();
   const lastUserId = useRef<string | null>(null);
 
   useEffect(() => {
+    if (!isSupabaseConfigured) return;
     let mounted = true;
 
     supabase.auth.getSession().then(({ data }) => {
@@ -76,8 +80,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       session,
       user: session?.user ?? null,
       loading,
+      enabled: isSupabaseConfigured,
       signOut: async () => {
-        await supabase.auth.signOut();
+        if (isSupabaseConfigured) await supabase.auth.signOut();
       },
     }),
     [session, loading],
