@@ -76,7 +76,9 @@ function redactHidden(result: SubmitResult): SubmitResult {
   return {
     ...result,
     cases: result.cases.map((c) =>
-      c.hidden && c.index !== firstFail ? { ...c, input: "", expected: "", got: c.passed ? "" : c.got } : c,
+      c.hidden && c.index !== firstFail
+        ? { ...c, input: "", expected: "", got: c.passed ? "" : c.got }
+        : c,
     ),
   };
 }
@@ -90,12 +92,23 @@ export const submitSolution = createServerFn({ method: "POST" })
   .validator((input) =>
     z
       .object({
-        slug: z.string().trim().min(1).max(120).regex(/^[a-z0-9-]+$/),
+        slug: z
+          .string()
+          .trim()
+          .min(1)
+          .max(120)
+          .regex(/^[a-z0-9-]+$/),
         language: z.enum(JUDGE_LANGS),
         code: z.string().min(1).max(MAX_SOURCE),
         /** Used only when the server has no trusted judge for the problem (result is unverified). */
         fallback: z
-          .object({ harness: z.string().min(1).max(MAX_SOURCE * 2), tests: z.array(TestSchema).min(1).max(40) })
+          .object({
+            harness: z
+              .string()
+              .min(1)
+              .max(MAX_SOURCE * 2),
+            tests: z.array(TestSchema).min(1).max(40),
+          })
           .optional(),
         meta: z
           .object({
@@ -115,7 +128,8 @@ export const submitSolution = createServerFn({ method: "POST" })
     const language = data.language as JudgeLang;
     const trusted = await getTrustedSpec(data.slug, language);
     const spec: { harness: string; tests: JudgeTest[] } | null =
-      trusted ?? (data.fallback ? { harness: data.fallback.harness, tests: data.fallback.tests } : null);
+      trusted ??
+      (data.fallback ? { harness: data.fallback.harness, tests: data.fallback.tests } : null);
     if (!spec) {
       return {
         verdict: "Judge Error",
@@ -161,7 +175,8 @@ async function recordResult(
   result: SubmitResult,
   meta: { title: string; difficulty: string; topic: string | null },
 ): Promise<boolean> {
-  const { isAdminConfigured, supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { isAdminConfigured, supabaseAdmin } =
+    await import("@/integrations/supabase/client.server");
   if (!isAdminConfigured()) return false;
 
   const { error } = await supabaseAdmin.from("code_submissions").insert({
@@ -193,7 +208,8 @@ async function recordResult(
         memory_kb: result.memoryKb,
         solved_at: new Date().toISOString(),
       },
-      { onConflict: "user_id,problem_id" },
+      // Keep the first-solve record (date + stats) stable on re-solves.
+      { onConflict: "user_id,problem_id", ignoreDuplicates: true },
     );
     if (solvedError) throw solvedError;
   }

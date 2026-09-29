@@ -3,10 +3,7 @@ import { Group, Panel, Separator } from "react-resizable-panels";
 
 import { cn } from "@/lib/utils";
 
-const ResizablePanelGroup = ({
-  className,
-  ...props
-}: React.ComponentProps<typeof Group>) => (
+const ResizablePanelGroup = ({ className, ...props }: React.ComponentProps<typeof Group>) => (
   <Group className={cn("h-full w-full", className)} {...props} />
 );
 

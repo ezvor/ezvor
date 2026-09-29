@@ -104,9 +104,13 @@ async function discoverGemini(key: string): Promise<{ flash: string[]; lite: str
       .map((m) => m.name.replace(/^models\//, ""));
   });
   const byVersion = (xs: string[]) => [...xs].sort((a, b) => versionOf(b) - versionOf(a));
-  const plain = names.filter((n) => !/tts|image|live|audio|embedding|transcribe|thinking|exp/.test(n));
+  const plain = names.filter(
+    (n) => !/tts|image|live|audio|embedding|transcribe|thinking|exp/.test(n),
+  );
   return {
-    flash: byVersion(plain.filter((n) => /^gemini-[\d.]+-flash(-preview.*)?$/.test(n) && !n.includes("lite"))),
+    flash: byVersion(
+      plain.filter((n) => /^gemini-[\d.]+-flash(-preview.*)?$/.test(n) && !n.includes("lite")),
+    ),
     lite: byVersion(plain.filter((n) => /^gemini-[\d.]+-flash-lite(-preview.*)?$/.test(n))),
   };
 }
@@ -147,7 +151,12 @@ const PROVIDERS: ProviderDef[] = [
     async models(tier, key) {
       const found = await discoverGemini(key);
       return tier === "fast"
-        ? uniq([env("GEMINI_FAST_MODEL"), "gemini-flash-lite-latest", ...found.lite, "gemini-flash-latest"])
+        ? uniq([
+            env("GEMINI_FAST_MODEL"),
+            "gemini-flash-lite-latest",
+            ...found.lite,
+            "gemini-flash-latest",
+          ])
         : uniq([env("GEMINI_MODEL"), "gemini-flash-latest", ...found.flash]);
     },
     extra: (_model, opts) => (opts.reasoning ? { reasoning_effort: opts.reasoning } : {}),
@@ -173,7 +182,12 @@ const PROVIDERS: ProviderDef[] = [
     async models(tier) {
       return tier === "fast"
         ? uniq([env("CEREBRAS_FAST_MODEL"), "llama3.1-8b", "gpt-oss-120b"])
-        : uniq([env("CEREBRAS_MODEL"), "gpt-oss-120b", "qwen-3-235b-a22b-instruct-2507", "llama-3.3-70b"]);
+        : uniq([
+            env("CEREBRAS_MODEL"),
+            "gpt-oss-120b",
+            "qwen-3-235b-a22b-instruct-2507",
+            "llama-3.3-70b",
+          ]);
     },
   },
   {
@@ -223,7 +237,9 @@ const PROVIDERS: ProviderDef[] = [
     label: "Pollinations (keyless)",
     url: "https://text.pollinations.ai/openai",
     key: () =>
-      env("AI_KEYLESS_FALLBACK") === "false" ? undefined : (env("POLLINATIONS_API_KEY") ?? "anonymous"),
+      env("AI_KEYLESS_FALLBACK") === "false"
+        ? undefined
+        : (env("POLLINATIONS_API_KEY") ?? "anonymous"),
     async models() {
       return ["openai"];
     },
@@ -303,7 +319,11 @@ type Completion = {
     message?: {
       role?: string;
       content?: string | null;
-      tool_calls?: { id?: string; type?: string; function?: { name?: string; arguments?: string } }[];
+      tool_calls?: {
+        id?: string;
+        type?: string;
+        function?: { name?: string; arguments?: string };
+      }[];
     };
     finish_reason?: string;
   }[];
@@ -317,7 +337,9 @@ type Completion = {
 function normaliseToolCompletion(json: Completion, toolName: string): Completion | null {
   const msg = json.choices?.[0]?.message;
   if (!msg) return null;
-  const call = msg.tool_calls?.find((c) => !c.function?.name || c.function.name === toolName) ?? msg.tool_calls?.[0];
+  const call =
+    msg.tool_calls?.find((c) => !c.function?.name || c.function.name === toolName) ??
+    msg.tool_calls?.[0];
   const args = call?.function?.arguments;
   if (args) {
     try {
@@ -342,7 +364,11 @@ function normaliseToolCompletion(json: Completion, toolName: string): Completion
           role: "assistant",
           content: null,
           tool_calls: [
-            { id: "call_0", type: "function", function: { name: toolName, arguments: fromContent } },
+            {
+              id: "call_0",
+              type: "function",
+              function: { name: toolName, arguments: fromContent },
+            },
           ],
         },
       },
@@ -391,7 +417,8 @@ async function post(
   });
   if (res.ok) return res;
   const text = await res.text().catch(() => "");
-  const retryable = res.status === 429 || res.status >= 500 || res.status === 404 || res.status === 408;
+  const retryable =
+    res.status === 429 || res.status >= 500 || res.status === 404 || res.status === 408;
   throw new ProviderError(`${def.id} ${res.status}: ${text.slice(0, 300)}`, res.status, retryable);
 }
 
@@ -429,7 +456,10 @@ function buildBody(
 function jsonResponse(payload: unknown, status = 200, provider?: string): Response {
   return new Response(JSON.stringify(payload), {
     status,
-    headers: { "Content-Type": "application/json", ...(provider ? { "x-ai-provider": provider } : {}) },
+    headers: {
+      "Content-Type": "application/json",
+      ...(provider ? { "x-ai-provider": provider } : {}),
+    },
   });
 }
 
@@ -457,7 +487,9 @@ export async function callAI(messages: ChatMessage[], opts: AIOptions = {}): Pro
   let lastStatus = 503;
   const errors: string[] = [];
 
-  const ordered = [...providers].sort((a, b) => Number(isCooling(a.def.id)) - Number(isCooling(b.def.id)));
+  const ordered = [...providers].sort(
+    (a, b) => Number(isCooling(a.def.id)) - Number(isCooling(b.def.id)),
+  );
   for (const { def, key } of ordered) {
     const models = await def.models(tier, key).catch(() => [] as string[]);
     for (const model of models) {
@@ -472,7 +504,8 @@ export async function callAI(messages: ChatMessage[], opts: AIOptions = {}): Pro
             const normalised = normaliseToolCompletion(json, toolName);
             if (normalised) return jsonResponse(normalised, 200, `${def.id}/${model}`);
             errors.push(`${slot} (${mode}): no usable structured output`);
-            if (process.env.AI_DEBUG) console.warn(`[ai] ${slot} raw:`, JSON.stringify(json).slice(0, 1500));
+            if (process.env.AI_DEBUG)
+              console.warn(`[ai] ${slot} raw:`, JSON.stringify(json).slice(0, 1500));
             continue; // try JSON mode, then the next model/provider
           }
           if (!json.choices?.[0]?.message) {
@@ -521,14 +554,21 @@ export async function streamAI(
   }
   const tier = tierFor(opts);
   let lastStatus = 503;
-  const ordered = [...providers].sort((a, b) => Number(isCooling(a.def.id)) - Number(isCooling(b.def.id)));
+  const ordered = [...providers].sort(
+    (a, b) => Number(isCooling(a.def.id)) - Number(isCooling(b.def.id)),
+  );
   for (const { def, key } of ordered) {
     const models = await def.models(tier, key).catch(() => [] as string[]);
     for (const model of models) {
       const slot = `${def.id}:${model}`;
       if (isCooling(slot)) continue;
       try {
-        const res = await post(def, key, buildBody(model, messages, opts, def, "plain", true), opts.timeoutMs ?? 30_000);
+        const res = await post(
+          def,
+          key,
+          buildBody(model, messages, opts, def, "plain", true),
+          opts.timeoutMs ?? 30_000,
+        );
         const headers = new Headers(res.headers);
         headers.set("x-ai-provider", `${def.id}/${model}`);
         return new Response(res.body, { status: 200, headers });

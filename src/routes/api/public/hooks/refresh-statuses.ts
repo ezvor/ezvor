@@ -2,41 +2,82 @@
 // from their official pages and logs what changed. Lives under /api/public/*
 // so it bypasses published-site auth; it performs no destructive user actions
 // and returns no PII.
+//
+// Auth (any one of):
+//   Authorization: Bearer <CRON_SECRET | STATUS_REFRESH_SECRET>   (Vercel Cron sends CRON_SECRET)
+//   x-cron-secret / x-refresh-secret: <secret>
+//   ?secret=<secret>
+//
+// Each run checks a bounded batch (least recently verified first) inside a
+// ~45s budget, so it fits a 60s function limit. Tune with ?limit=1-25 (or a
+// JSON body {"limit": n}); repeated runs rotate through every opportunity.
 import { createFileRoute } from "@tanstack/react-router";
 
-import { refreshAllStatuses } from "@/lib/status-refresh.server";
+import { refreshStatuses } from "@/lib/status-refresh.server";
+
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+  });
+}
+
+function safeEqual(a: string, b: string): boolean {
+  if (!a || !b || a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+function authorized(request: Request, url: URL): boolean {
+  const secrets = [process.env.CRON_SECRET, process.env.STATUS_REFRESH_SECRET]
+    .map((s) => s?.trim())
+    .filter((s): s is string => !!s);
+  if (!secrets.length) return false;
+  const provided = [
+    request.headers
+      .get("authorization")
+      ?.replace(/^Bearer\s+/i, "")
+      .trim(),
+    request.headers.get("x-cron-secret")?.trim(),
+    request.headers.get("x-refresh-secret")?.trim(),
+    url.searchParams.get("secret")?.trim(),
+  ].filter((s): s is string => !!s);
+  return provided.some((p) => secrets.some((s) => safeEqual(p, s)));
+}
 
 async function run(request: Request) {
+  const url = new URL(request.url);
   // Runs web reads + AI calls, so only the scheduler (or an operator) may call it.
-  // Vercel Cron sends `Authorization: Bearer $CRON_SECRET` automatically.
-  const secret = process.env.CRON_SECRET || process.env.STATUS_REFRESH_SECRET;
-  const provided =
-    request.headers.get("x-cron-secret") ??
-    request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ??
-    "";
-  if (!secret || provided !== secret) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), {
-      status: 401,
-      headers: { "Content-Type": "application/json" },
-    });
+  if (!authorized(request, url)) return json({ error: "Unauthorized" }, 401);
+
+  let limit = Number(url.searchParams.get("limit")) || undefined;
+  if (request.method === "POST") {
+    try {
+      const body = (await request.json()) as { limit?: number };
+      if (typeof body?.limit === "number" && body.limit > 0) limit = body.limit;
+    } catch {
+      // no body / not JSON — use the default batch size
+    }
   }
+  const ids = url.searchParams
+    .get("ids")
+    ?.split(",")
+    .map((s) => s.trim())
+    .filter(Boolean);
 
-  let limit: number | undefined;
-  try {
-    const body = (await request.json()) as { limit?: number };
-    if (typeof body?.limit === "number" && body.limit > 0) limit = Math.min(body.limit, 50);
-  } catch {
-    // no body / not JSON — fine, refresh everything
-  }
-
-  const started = Date.now();
-  const summary = await refreshAllStatuses(limit);
-  console.log("Status refresh complete", { ...summary, ms: Date.now() - started });
-
-  return new Response(JSON.stringify({ success: true, ...summary }), {
-    status: 200,
-    headers: { "Content-Type": "application/json" },
+  const summary = await refreshStatuses({
+    limit: limit ? Math.min(Math.max(1, Math.floor(limit)), 25) : undefined,
+    ids: ids?.length ? ids : undefined,
   });
+  console.log("Status refresh complete", {
+    checked: summary.checked,
+    updated: summary.updated,
+    changed: summary.changed,
+    failed: summary.failed,
+    ms: summary.ms,
+  });
+  return json({ success: true, ...summary });
 }
 
 export const Route = createFileRoute("/api/public/hooks/refresh-statuses")({

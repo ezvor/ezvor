@@ -1,7 +1,6 @@
 // Full LeetCode problem catalog (all problems), served as a lazy-loaded public
 // asset at /leetcode-catalog.json. Generated from LeetCode's public API +
 // GraphQL, enriched with community company-tag data (187 companies).
-import { PROBLEMS } from "@/data/problems";
 
 export type LcDifficulty = "Easy" | "Medium" | "Hard";
 
@@ -23,7 +22,19 @@ export type LcCatalog = {
 };
 
 /** Slugs we can actually run + judge locally in the Code Playground. */
-export const SOLVABLE_SLUGS = new Set(PROBLEMS.map((p) => p.id));
+// A literal (not derived from PROBLEMS) so catalog-only pages don't bundle the curated harnesses.
+export const SOLVABLE_SLUGS = new Set([
+  "two-sum",
+  "reverse-string",
+  "fizzbuzz",
+  "max-subarray",
+  "contains-duplicate",
+  "valid-anagram",
+  "valid-parentheses",
+  "binary-search",
+  "best-time-stock",
+  "climbing-stairs",
+]);
 
 let cache: LcCatalog | null = null;
 let inflight: Promise<LcCatalog> | null = null;

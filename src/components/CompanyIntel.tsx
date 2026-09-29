@@ -165,7 +165,9 @@ export function CompanyIntel({ role, company }: { role: string; company: string 
           <div
             className={cn(
               "rounded-xl border p-4",
-              data.recognized ? "border-primary/25 bg-background/40" : "border-border/60 bg-background/30",
+              data.recognized
+                ? "border-primary/25 bg-background/40"
+                : "border-border/60 bg-background/30",
             )}
           >
             <div className="flex items-center gap-2">
@@ -179,7 +181,31 @@ export function CompanyIntel({ role, company }: { role: string; company: string 
               )}
             </div>
             <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{data.overview}</p>
+            {data.grounding && (data.grounding.wikipedia || data.grounding.webSources > 0) && (
+              <p className="mt-2 text-[11px] text-muted-foreground/80">
+                Grounded on{" "}
+                {[
+                  data.grounding.wikipedia ? "Wikipedia" : null,
+                  data.grounding.webSources > 0
+                    ? `${data.grounding.webSources} web source${data.grounding.webSources === 1 ? "" : "s"}`
+                    : null,
+                ]
+                  .filter(Boolean)
+                  .join(" + ")}
+                .
+              </p>
+            )}
           </div>
+
+          {data.fallback && (
+            <div className="flex items-start gap-3 rounded-xl border border-border/60 bg-muted/30 p-3 text-xs text-muted-foreground">
+              <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-sec-amber" />
+              <p>
+                Our free AI providers are busy, so this is a role-based prep template plus the
+                sources we found. Try again in a minute for a company-specific brief.
+              </p>
+            </div>
+          )}
 
           {/* Focus matrix — the small horizontal/vertical table */}
           <Section accent="blue" icon={Gauge} title="What they test (and how much)">
@@ -255,11 +281,21 @@ export function CompanyIntel({ role, company }: { role: string; company: string 
 
           <div className="grid gap-5 sm:grid-cols-2">
             <ListPanel accent="green" icon={Users} title="Culture & values" items={data.culture} />
-            <ListPanel accent="blue" icon={ClipboardList} title="Requirements" items={data.requirements} />
+            <ListPanel
+              accent="blue"
+              icon={ClipboardList}
+              title="Requirements"
+              items={data.requirements}
+            />
           </div>
 
           <div className="grid gap-5 sm:grid-cols-2">
-            <ListPanel accent="amber" icon={Lightbulb} title="Tips to stand out" items={data.tips} />
+            <ListPanel
+              accent="amber"
+              icon={Lightbulb}
+              title="Tips to stand out"
+              items={data.tips}
+            />
             <Section accent="teal" icon={Rocket} title="Onboarding">
               <p className="rounded-xl border border-l-2 border-border/60 border-l-sec-teal/50 bg-background/40 p-4 text-sm leading-relaxed text-muted-foreground">
                 {data.onboarding}

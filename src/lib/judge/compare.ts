@@ -34,7 +34,9 @@ function parseLoose(text: string): { ok: true; value: unknown } | { ok: false } 
       .replace(/\bNone\b/g, "null")
       .replace(/^\(/, "[")
       .replace(/\)$/, "]")
-      .replace(/'((?:[^'\\]|\\.)*)'/g, (_, inner: string) => JSON.stringify(inner.replace(/\\'/g, "'")));
+      .replace(/'((?:[^'\\]|\\.)*)'/g, (_, inner: string) =>
+        JSON.stringify(inner.replace(/\\'/g, "'")),
+      );
     try {
       return { ok: true, value: JSON.parse(converted) };
     } catch {

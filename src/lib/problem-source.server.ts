@@ -47,7 +47,10 @@ export async function getProblemContext(slug: string): Promise<ProblemContext> {
   const curated = PROBLEMS.find((p) => p.id === slug);
   if (curated) {
     const examples = curated.examples
-      .map((e, i) => `Example ${i + 1}:\nInput: ${e.input}\nOutput: ${e.output}${e.explanation ? `\nExplanation: ${e.explanation}` : ""}`)
+      .map(
+        (e, i) =>
+          `Example ${i + 1}:\nInput: ${e.input}\nOutput: ${e.output}${e.explanation ? `\nExplanation: ${e.explanation}` : ""}`,
+      )
       .join("\n\n");
     return {
       slug,
@@ -73,7 +76,8 @@ export async function getJudge(
   slug: string,
 ): Promise<{ harness: Partial<Record<JudgeLang, string>>; tests: JudgeTest[] } | null> {
   const curated = PROBLEMS.find((p) => p.id === slug);
-  if (curated) return { harness: curated.harness as Partial<Record<JudgeLang, string>>, tests: curated.tests };
+  if (curated)
+    return { harness: curated.harness as Partial<Record<JudgeLang, string>>, tests: curated.tests };
   const h = await cacheGet<HarnessData>("problem_harnesses", slug);
   return h?.tests?.length ? { harness: h.harness, tests: h.tests } : null;
 }
@@ -87,7 +91,10 @@ export type TrustedSpec = {
 };
 
 /** The judge spec the server trusts for (slug, language), or null if unknown. */
-export async function getTrustedSpec(slug: string, language: JudgeLang): Promise<TrustedSpec | null> {
+export async function getTrustedSpec(
+  slug: string,
+  language: JudgeLang,
+): Promise<TrustedSpec | null> {
   const curated = PROBLEMS.find((p) => p.id === slug);
   if (curated) {
     const harness = curated.harness[language];

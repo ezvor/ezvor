@@ -36,7 +36,9 @@ function inspect(value: unknown, depth = 0, seen = new WeakSet<object>()): strin
       return `[ ${value.map((v) => inspect(v, depth + 1, seen)).join(", ")} ]`;
     }
     if (value instanceof Map) {
-      const items = [...value].map(([k, v]) => `${inspect(k, depth + 1, seen)} => ${inspect(v, depth + 1, seen)}`);
+      const items = [...value].map(
+        ([k, v]) => `${inspect(k, depth + 1, seen)} => ${inspect(v, depth + 1, seen)}`,
+      );
       return `Map(${value.size}) { ${items.join(", ")} }`;
     }
     if (value instanceof Set) {
@@ -181,9 +183,11 @@ function createRuntime(input: string, out: string[], err: string[]) {
     }
   };
 
-  const push = (target: string[]) => (...a: unknown[]) => {
-    target.push(format(a) + "\n");
-  };
+  const push =
+    (target: string[]) =>
+    (...a: unknown[]) => {
+      target.push(format(a) + "\n");
+    };
   const console = {
     log: push(out),
     info: push(out),
@@ -214,7 +218,9 @@ function createRuntime(input: string, out: string[], err: string[]) {
       return proc;
     },
     nextTick: (fn: () => void) => queueMicrotask(fn),
-    hrtime: Object.assign(() => [0, 0], { bigint: () => BigInt(Math.round(performance.now() * 1e6)) }),
+    hrtime: Object.assign(() => [0, 0], {
+      bigint: () => BigInt(Math.round(performance.now() * 1e6)),
+    }),
     memoryUsage: () => ({ rss: 0, heapUsed: 0 }),
   };
 
@@ -225,7 +231,8 @@ function createRuntime(input: string, out: string[], err: string[]) {
 
 function compile(language: Job["language"], source: string): string {
   if (language !== "typescript") return source;
-  return transform(source, { transforms: ["typescript", "imports"], disableESTransforms: true }).code;
+  return transform(source, { transforms: ["typescript", "imports"], disableESTransforms: true })
+    .code;
 }
 
 async function drain(pending: (() => void)[], deadline: number) {
@@ -277,7 +284,10 @@ self.onmessage = async (e: MessageEvent<Job>) => {
     }
     const ms = performance.now() - t0;
     emit("out", `${out.join("")}\n@@EZ:${job.nonce}:E:${i}:${status}:${ms.toFixed(3)}:0\n`);
-    emit("err", `@@EZ:${job.nonce}:B:${i}\n${err.join("").slice(-8000)}\n@@EZ:${job.nonce}:E:${i}\n`);
+    emit(
+      "err",
+      `@@EZ:${job.nonce}:B:${i}\n${err.join("").slice(-8000)}\n@@EZ:${job.nonce}:E:${i}\n`,
+    );
   }
   self.postMessage({ id: job.id, type: "done" });
 };

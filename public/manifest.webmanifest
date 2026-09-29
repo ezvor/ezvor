@@ -1,0 +1,10 @@
+{
+  "name": "Ezvor — Practice DSA, plan your career",
+  "short_name": "Ezvor",
+  "description": "Free interview prep: 3,900+ problems with an in-browser judge, study lists, AI coach, roadmaps and opportunities.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0b0b14",
+  "theme_color": "#0b0b14",
+  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }]
+}

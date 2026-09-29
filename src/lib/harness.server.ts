@@ -147,10 +147,16 @@ Submit:
   }`;
 }
 
-function portPrompt(problem: LeetProblem, lang: JudgeLang, py: { harness: string }, samples: HarnessTest[]) {
+function portPrompt(
+  problem: LeetProblem,
+  lang: JudgeLang,
+  py: { harness: string },
+  samples: HarnessTest[],
+) {
   const langRules: Record<JudgeLang, string> = {
     python: "",
-    javascript: "JavaScript: the starter is a plain function (or a class for design problems) — call it directly.",
+    javascript:
+      "JavaScript: the starter is a plain function (or a class for design problems) — call it directly.",
     cpp: "C++: write int main(). Use ez::read<T> with the exact parameter types of the starter's method.",
     java: 'Java: the entry class must be exactly "public class Main" with "public static void main(String[] args) throws Exception"; read input ONLY via Ez.lines().',
   };
@@ -238,7 +244,12 @@ function passes(r: BatchRunResult, expected: string[]): boolean {
   );
 }
 
-function describeFailure(lang: JudgeLang, r: BatchRunResult, tests: HarnessTest[], expected: string[]): string {
+function describeFailure(
+  lang: JudgeLang,
+  r: BatchRunResult,
+  tests: HarnessTest[],
+  expected: string[],
+): string {
   if (r.compileError) return `${lang} compile error:\n${r.compileError.slice(0, 1500)}`;
   if (r.error) return `${lang} could not run: ${r.error}`;
   for (let i = 0; i < tests.length; i++) {
@@ -263,8 +274,7 @@ type PyStage = {
 };
 
 type PyResult =
-  | { ok: true; stage: PyStage }
-  | { ok: false; feedback: string; infra?: boolean; draft?: PyStage };
+  { ok: true; stage: PyStage } | { ok: false; feedback: string; infra?: boolean; draft?: PyStage };
 
 function cleanTests(raw: unknown): HarnessTest[] {
   return (Array.isArray(raw) ? raw : [])
@@ -278,14 +288,24 @@ function cleanTests(raw: unknown): HarnessTest[] {
     .slice(0, 16);
 }
 
-async function pythonStage(problem: LeetProblem, officials: string[], feedback?: string): Promise<PyResult> {
-  const raw = await aiJSON<{ ioFormat?: string; harness?: string; reference?: string; tests?: unknown }>(
+async function pythonStage(
+  problem: LeetProblem,
+  officials: string[],
+  feedback?: string,
+): Promise<PyResult> {
+  const raw = await aiJSON<{
+    ioFormat?: string;
+    harness?: string;
+    reference?: string;
+    tests?: unknown;
+  }>(
     [
       { role: "system", content: SYSTEM },
       { role: "user", content: pythonPrompt(problem, officials, feedback) },
     ],
     PY_SCHEMA,
-    { tier: "smart", timeoutMs: 120_000 },
+    // Low thinking keeps first-open latency down; execution verification catches mistakes.
+    { tier: "smart", reasoning: "low", timeoutMs: 120_000 },
   );
   const draft: PyStage = {
     ioFormat: String(raw.ioFormat ?? ""),
@@ -299,9 +319,19 @@ async function pythonStage(problem: LeetProblem, officials: string[], feedback?:
   if (draft.tests.length < 3) return { ok: false, feedback: "Provide 10–14 tests.", draft };
 
   const r = await run("python", draft.harness, draft.reference, draft.tests);
-  if (infraFailed(r)) return { ok: false, feedback: r.error ?? "runner unavailable", infra: true, draft };
+  if (infraFailed(r))
+    return { ok: false, feedback: r.error ?? "runner unavailable", infra: true, draft };
   if (r.compileError) {
-    return { ok: false, feedback: describeFailure("python", r, draft.tests, draft.tests.map((t) => t.expected)), draft };
+    return {
+      ok: false,
+      feedback: describeFailure(
+        "python",
+        r,
+        draft.tests,
+        draft.tests.map((t) => t.expected),
+      ),
+      draft,
+    };
   }
 
   const exampleCount = draft.tests.filter((t) => !t.hidden).length;
@@ -314,7 +344,16 @@ async function pythonStage(problem: LeetProblem, officials: string[], feedback?:
   for (let i = 0; i < exampleCount; i++) {
     const c = r.cases[i];
     if (!c || c.status !== "ok") {
-      return { ok: false, feedback: describeFailure("python", r, draft.tests, draft.tests.map((t) => t.expected)), draft };
+      return {
+        ok: false,
+        feedback: describeFailure(
+          "python",
+          r,
+          draft.tests,
+          draft.tests.map((t) => t.expected),
+        ),
+        draft,
+      };
     }
     if (officialsUsable && !validatorMode && !matchesOfficial(c.stdout, officials[i])) {
       return {
@@ -333,7 +372,11 @@ async function pythonStage(problem: LeetProblem, officials: string[], feedback?:
     if (out) tests.push({ input: t.input, expected: out, hidden: t.hidden });
   });
   if (tests.length < Math.min(3, draft.tests.length)) {
-    return { ok: false, feedback: "Most tests crashed or timed out with the reference solution.", draft };
+    return {
+      ok: false,
+      feedback: "Most tests crashed or timed out with the reference solution.",
+      draft,
+    };
   }
   return { ok: true, stage: { ...draft, tests } };
 }
@@ -350,7 +393,9 @@ async function portStage(
     { role: "user", content: portPrompt(problem, lang, py, py.tests.slice(0, 3)) },
   ];
   let attempt = await aiJSON<{ harness: string; reference: string }>(base, PORT_SCHEMA, {
+    // Porting a verified harness is mechanical: keep thinking short for speed.
     tier: "smart",
+    reasoning: "low",
     timeoutMs: 90_000,
   }).catch(() => null);
 
@@ -372,7 +417,7 @@ async function portStage(
         },
       ],
       PORT_SCHEMA,
-      { tier: "smart", timeoutMs: 90_000 },
+      { tier: "smart", reasoning: "medium", timeoutMs: 90_000 },
     ).catch(() => null);
   }
   return null;
@@ -395,8 +440,16 @@ export async function generateHarness(problem: LeetProblem): Promise<HarnessData
   }
   const officials = officialExampleOutputs(problem.contentHtml);
 
+  const t0 = Date.now();
+  const debug = (msg: string) =>
+    process.env.AI_DEBUG &&
+    console.log(`[harness] ${problem.slug} ${msg} +${((Date.now() - t0) / 1000).toFixed(1)}s`);
   let py = await pythonStage(problem, officials);
-  if (!py.ok && !py.infra) py = await pythonStage(problem, officials, py.feedback);
+  debug(`python stage ${py.ok ? "ok" : "failed"}`);
+  if (!py.ok && !py.infra) {
+    py = await pythonStage(problem, officials, py.feedback);
+    debug(`python retry ${py.ok ? "ok" : "failed"}`);
+  }
 
   if (!py.ok) {
     // Couldn't verify (runners down or the model kept failing). Serve the
@@ -419,10 +472,14 @@ export async function generateHarness(problem: LeetProblem): Promise<HarnessData
 
   const stage = py.stage;
   const ports = await Promise.all(
-    (["javascript", "cpp", "java"] as const).map(async (lang) => [lang, await portStage(problem, lang, stage)] as const),
+    (["javascript", "cpp", "java"] as const).map(
+      async (lang) => [lang, await portStage(problem, lang, stage)] as const,
+    ),
   );
 
-  const harness: Partial<Record<JudgeLang, string>> = { python: fullHarness("python", stage.harness) };
+  const harness: Partial<Record<JudgeLang, string>> = {
+    python: fullHarness("python", stage.harness),
+  };
   const reference: Partial<Record<JudgeLang, string>> = { python: stage.reference };
   for (const [lang, port] of ports) {
     if (!port) continue;

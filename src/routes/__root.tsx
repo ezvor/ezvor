@@ -7,8 +7,8 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
-import type { ReactNode } from "react";
-import { Rocket, LogIn, LogOut } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
+import { Cloud, CloudOff, Loader2, LogIn, LogOut, Rocket, Settings, UserRound } from "lucide-react";
 
 import appCss from "../styles.css?url";
 import { SITE, absoluteUrl } from "@/config/site";
@@ -18,7 +18,16 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { Toaster } from "@/components/ui/sonner";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { AuthProvider, useAuth } from "@/hooks/useAuth";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { AuthProvider, useAuth, userIdentity } from "@/hooks/useAuth";
+import { CloudSync, getSyncStatus, onSyncStatus, type SyncStatus } from "@/lib/local/sync";
 
 function NotFoundComponent() {
   return (
@@ -145,6 +154,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
+        <CloudSync />
         <SidebarProvider>
           <div className="flex min-h-screen w-full bg-background">
             <AppSidebar />
@@ -159,7 +169,7 @@ function RootComponent() {
                   <span className="font-display text-sm font-semibold tracking-tight">Ezvor</span>
                 </Link>
                 <span className="hidden text-xs text-muted-foreground sm:inline">
-                  Free AI career copilot
+                  Interview prep &amp; careers
                 </span>
                 <div className="ml-auto">
                   <HeaderAuth />
@@ -179,54 +189,98 @@ function RootComponent() {
 }
 
 function HeaderAuth() {
-  const { user, signOut } = useAuth();
+  const { user, loading, enabled } = useAuth();
 
-  if (!isSupabaseConfigured) return null;
+  // Accounts disabled on this deployment: no sign-in UI at all.
+  if (!enabled || !isSupabaseConfigured) return null;
+  if (loading) return <div className="h-8 w-8" aria-hidden />;
 
   if (!user) {
     return (
-      <Link to="/auth">
-        <Button size="sm" variant="secondary" className="gap-1.5">
+      <Button asChild size="sm" variant="secondary" className="gap-1.5">
+        <Link to="/auth">
           <LogIn className="h-4 w-4" /> Sign in
-        </Button>
-      </Link>
+        </Link>
+      </Button>
     );
   }
 
-  const meta = user.user_metadata ?? {};
-  const displayName: string =
-    meta.display_name || meta.full_name || meta.name || user.email?.split("@")[0] || "Account";
-  const avatarUrl: string | undefined = meta.avatar_url || meta.picture;
-  const initials =
-    displayName
-      .split(" ")
-      .map((s: string) => s[0])
-      .slice(0, 2)
-      .join("")
-      .toUpperCase() || "U";
-
-  return (
-    <div className="flex items-center gap-2">
-      <Avatar className="h-7 w-7">
-        {avatarUrl && <AvatarImage src={avatarUrl} alt={displayName} />}
-        <AvatarFallback className="bg-gradient-primary text-[11px] text-primary-foreground">
-          {initials}
-        </AvatarFallback>
-      </Avatar>
-      <span className="hidden max-w-[120px] truncate text-sm font-medium sm:inline">
-        {displayName}
-      </span>
-      <Button
-        size="icon"
-        variant="ghost"
-        className="h-8 w-8 text-muted-foreground hover:text-destructive"
-        aria-label="Sign out"
-        onClick={() => signOut()}
-      >
-        <LogOut className="h-4 w-4" />
-      </Button>
-    </div>
-  );
+  return <AccountMenu />;
 }
 
+function useSyncStatus(): SyncStatus {
+  const [status, setStatus] = useState<SyncStatus>(getSyncStatus);
+  useEffect(() => onSyncStatus(setStatus), []);
+  return status;
+}
 
+function AccountMenu() {
+  const { user, profile, signOut } = useAuth();
+  const router = useRouter();
+  const sync = useSyncStatus();
+  const { displayName, avatarUrl, initials } = userIdentity(user, profile);
+
+  const handleSignOut = async () => {
+    await signOut();
+    void router.navigate({ to: "/" });
+  };
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          className="flex items-center gap-2 rounded-full border border-border/60 bg-card/70 py-0.5 pl-0.5 pr-2.5 transition-colors hover:bg-card focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          aria-label="Account menu"
+        >
+          <Avatar className="h-7 w-7">
+            {avatarUrl && <AvatarImage src={avatarUrl} alt="" />}
+            <AvatarFallback className="bg-gradient-primary text-[11px] text-primary-foreground">
+              {initials}
+            </AvatarFallback>
+          </Avatar>
+          <span className="hidden max-w-[120px] truncate text-sm font-medium sm:inline">
+            {displayName}
+          </span>
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-60">
+        <DropdownMenuLabel className="font-normal">
+          <p className="truncate text-sm font-medium">{displayName}</p>
+          {user?.email && <p className="truncate text-xs text-muted-foreground">{user.email}</p>}
+          <p className="mt-1.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            {sync === "syncing" ? (
+              <>
+                <Loader2 className="h-3 w-3 animate-spin" /> Syncing…
+              </>
+            ) : sync === "error" ? (
+              <>
+                <CloudOff className="h-3 w-3 text-warning" /> Sync paused — saved on this device
+              </>
+            ) : (
+              <>
+                <Cloud className="h-3 w-3 text-success" /> Progress synced
+              </>
+            )}
+          </p>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        {profile?.handle && profile.isPublic && (
+          <DropdownMenuItem asChild>
+            <Link to="/p/$handle" params={{ handle: profile.handle }}>
+              <UserRound className="mr-2 h-4 w-4" /> Public profile
+            </Link>
+          </DropdownMenuItem>
+        )}
+        <DropdownMenuItem asChild>
+          <Link to="/settings">
+            <Settings className="mr-2 h-4 w-4" /> Settings
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={() => void handleSignOut()} className="text-destructive">
+          <LogOut className="mr-2 h-4 w-4" /> Sign out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}

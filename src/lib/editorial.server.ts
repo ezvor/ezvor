@@ -60,9 +60,21 @@ const SCHEMA = {
     properties: {
       overview: { type: "string", description: "1–2 sentences: what the problem asks." },
       intuition: { type: "string", description: "2–4 sentences building the key insight." },
-      hints: { type: "array", items: { type: "string" }, description: "3 progressive hints, vague to specific." },
-      pitfalls: { type: "array", items: { type: "string" }, description: "2–4 common mistakes / edge cases." },
-      followUps: { type: "array", items: { type: "string" }, description: "1–3 follow-up questions interviewers ask." },
+      hints: {
+        type: "array",
+        items: { type: "string" },
+        description: "3 progressive hints, vague to specific.",
+      },
+      pitfalls: {
+        type: "array",
+        items: { type: "string" },
+        description: "2–4 common mistakes / edge cases.",
+      },
+      followUps: {
+        type: "array",
+        items: { type: "string" },
+        description: "1–3 follow-up questions interviewers ask.",
+      },
       approaches: {
         type: "array",
         items: {
@@ -93,8 +105,15 @@ export type EditorialInput = {
 };
 
 function clean(d: Partial<EditorialData>, input: EditorialInput): EditorialData {
-  if (!Array.isArray(d.approaches) || !d.approaches.length) throw new Error("Editorial missing approaches");
-  const strs = (x: unknown) => (Array.isArray(x) ? x.map(String).map((s) => s.trim()).filter(Boolean) : []);
+  if (!Array.isArray(d.approaches) || !d.approaches.length)
+    throw new Error("Editorial missing approaches");
+  const strs = (x: unknown) =>
+    Array.isArray(x)
+      ? x
+          .map(String)
+          .map((s) => s.trim())
+          .filter(Boolean)
+      : [];
   return {
     slug: input.slug,
     title: input.title,
@@ -156,7 +175,7 @@ Requirements:
       },
     ],
     SCHEMA,
-    { tier: "smart", timeoutMs: 150_000 },
+    { tier: "smart", reasoning: "low", timeoutMs: 150_000 },
   );
   return clean(raw, input);
 }
@@ -192,7 +211,10 @@ export async function verifyEditorial(
     }).catch(() => null);
     if (!r || (r.error && r.cases.every((c) => c.status === "skipped"))) return; // unknown
     a.verified![lang] =
-      !r.compileError && tests.every((t, i) => r.cases[i]?.status === "ok" && outputsMatch(r.cases[i].stdout, t.expected));
+      !r.compileError &&
+      tests.every(
+        (t, i) => r.cases[i]?.status === "ok" && outputsMatch(r.cases[i].stdout, t.expected),
+      );
   });
   return editorial;
 }

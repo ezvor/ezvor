@@ -1,384 +1,571 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import {
-  motion,
-  useInView,
-  useMotionValue,
-  useSpring,
-  useTransform,
-  animate,
-  useReducedMotion,
-} from "motion/react";
-import {
-  Compass,
-  Map as MapIcon,
-  BookOpen,
   ArrowRight,
   ArrowUpRight,
-  Send,
-  Terminal,
+  BookOpen,
+  Compass,
+  Flame,
+  Gauge,
   GitBranch,
-  Layers,
-  Cpu,
-  Command,
+  ListChecks,
+  Map as MapIcon,
+  Repeat,
+  Send,
+  Sparkles,
+  TerminalSquare,
+  Trophy,
+  type LucideIcon,
 } from "lucide-react";
 
 import { OpportunityCard } from "@/components/OpportunityCard";
+import { DailyChallengeCard } from "@/components/progress/DailyChallengeCard";
+import { DIFF_TEXT } from "@/components/progress/Difficulty";
+import { ProblemLink } from "@/components/progress/ProblemLink";
+import { ProgressRing } from "@/components/progress/ProgressRing";
 import { Button } from "@/components/ui/button";
-import { OPPORTUNITIES, ROADMAPS, RESOURCES, CATEGORIES } from "@/data/careerData";
+import { OPPORTUNITIES, ROADMAPS } from "@/data/careerData";
+import { DEFAULT_LIST_ID, listSlugs, STUDY_LISTS } from "@/data/lists";
+import { useAuth } from "@/hooks/useAuth";
+import { streakStats, useCollection } from "@/lib/local/store";
+import { titleFromSlug, useCatalog } from "@/lib/progress/catalog";
+import { useHydrated } from "@/lib/progress/hydrated";
+import { activeList, dueReviews, relativeTime } from "@/lib/progress/stats";
+import { SITE } from "@/config/site";
+import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Ezvor: Career Platform for Engineers" },
-      {
-        name: "description",
-        content:
-          "A free platform for developers: curated opportunities like GSoC, LFX, ICPC and Meta Hacker Cup, structured role roadmaps, hand-picked resources, and a DSA arena.",
-      },
+      { title: `${SITE.name} — Free coding interview practice` },
+      { name: "description", content: SITE.description },
     ],
   }),
-  component: Dashboard,
+  component: Home,
 });
 
-const stats = [
-  { label: "Opportunities tracked", value: OPPORTUNITIES.length, suffix: "+", icon: Compass },
-  { label: "Role roadmaps", value: ROADMAPS.length, suffix: "", icon: MapIcon },
-  { label: "Free resources", value: RESOURCES.length, suffix: "+", icon: BookOpen },
-  { label: "Domains covered", value: CATEGORIES.length, suffix: "", icon: Layers },
-];
-
-const ease = [0.22, 1, 0.36, 1] as const;
-
-function AnimatedNumber({ value, suffix = "" }: { value: number; suffix?: string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once: true, margin: "-40px" });
-  const reduce = useReducedMotion();
-  const [display, setDisplay] = useState(reduce ? value : 0);
-
-  useEffect(() => {
-    if (!inView || reduce) return;
-    const controls = animate(0, value, {
-      duration: 1.1,
-      ease: "easeOut",
-      onUpdate: (v) => setDisplay(Math.round(v)),
-    });
-    return () => controls.stop();
-  }, [inView, value, reduce]);
-
-  return (
-    <span ref={ref}>
-      {display}
-      {suffix}
-    </span>
-  );
-}
-
-function Dashboard() {
-  const navigate = useNavigate();
-  const [prompt, setPrompt] = useState("");
-  const reduce = useReducedMotion();
-
-  // Pointer-reactive glow in the hero.
-  const glowX = useMotionValue(28);
-  const glowY = useMotionValue(20);
-  const sx = useSpring(glowX, { stiffness: 60, damping: 20 });
-  const sy = useSpring(glowY, { stiffness: 60, damping: 20 });
-  const glowLeft = useTransform(sx, (v) => `${v}%`);
-  const glowTop = useTransform(sy, (v) => `${v}%`);
-
-  const ask = () => {
-    const q = prompt.trim();
-    navigate({ to: "/advisor", search: q ? { q } : undefined });
-  };
-
-  const featured = OPPORTUNITIES.slice(0, 6);
-  const roadmapPreview = ROADMAPS.slice(0, 6);
-
-  const onHeroMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (reduce) return;
-    const r = e.currentTarget.getBoundingClientRect();
-    glowX.set(((e.clientX - r.left) / r.width) * 100);
-    glowY.set(((e.clientY - r.top) / r.height) * 100);
-  };
+function Home() {
+  const activity = useCollection("activity");
+  const solved = useCollection("solved");
+  const returning = Object.keys(activity).length > 0 || Object.keys(solved).length > 0;
 
   return (
     <div className="pb-20">
-      {/* ───────────────── Hero ───────────────── */}
-      <section
-        onMouseMove={onHeroMove}
-        className="relative overflow-hidden border-b border-border/60"
-      >
-        {/* layered background */}
-        <div className="absolute inset-0 bg-gradient-hero" />
-        <div
-          className="pointer-events-none absolute inset-0 opacity-[0.14]"
-          style={{
-            backgroundImage:
-              "linear-gradient(to right, oklch(0.7 0.1 280 / 40%) 1px, transparent 1px), linear-gradient(to bottom, oklch(0.7 0.1 280 / 40%) 1px, transparent 1px)",
-            backgroundSize: "44px 44px",
-            maskImage: "radial-gradient(circle at 30% 20%, black, transparent 75%)",
-            WebkitMaskImage: "radial-gradient(circle at 30% 20%, black, transparent 75%)",
-          }}
-        />
-        <motion.div
-          className="pointer-events-none absolute -z-0 h-[34rem] w-[34rem] -translate-x-1/2 -translate-y-1/2 rounded-full blur-[130px]"
-          style={{
-            left: glowLeft,
-            top: glowTop,
-            background:
-              "radial-gradient(circle, oklch(0.6 0.2 285 / 40%), transparent 70%)",
-          }}
-        />
+      {returning ? <Dashboard /> : <Hero />}
+      <CareerSections compact={returning} />
+    </div>
+  );
+}
 
+/* ================================================================= new users */
 
-        <div className="relative mx-auto grid w-full max-w-6xl gap-10 px-5 py-16 sm:px-8 sm:py-20 lg:grid-cols-[1.1fr_0.9fr] lg:items-center">
-          {/* Left: copy + search */}
-          <div>
-            <motion.span
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease }}
-              className="inline-flex items-center gap-2 rounded-full border border-primary/25 bg-primary/10 px-3.5 py-1.5 text-xs font-medium text-primary-glow"
-            >
-              <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-success/70" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-success" />
-              </span>
-              Free forever · Built for developers
-            </motion.span>
+const FEATURES: { title: string; body: string; icon: LucideIcon; to: string }[] = [
+  {
+    title: "Problems",
+    body: "The full LeetCode catalog with topic and company tags, each solvable in the browser.",
+    icon: ListChecks,
+    to: "/problems",
+  },
+  {
+    title: "Study lists",
+    body: "Blind 75, NeetCode 150, Grind 75, LeetCode 75 and Top Interview 150, with a pattern roadmap.",
+    icon: GitBranch,
+    to: "/lists",
+  },
+  {
+    title: "Spaced review",
+    body: "Solved problems come back for review on a schedule, so patterns stick past the interview.",
+    icon: Repeat,
+    to: "/progress",
+  },
+  {
+    title: "AI coach",
+    body: "Ask for hints without spoilers, or plan the rest of your prep and career.",
+    icon: Sparkles,
+    to: "/advisor",
+  },
+];
 
-            <motion.h1
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease, delay: 0.05 }}
-              className="mt-5 max-w-2xl text-4xl font-bold leading-[1.05] sm:text-5xl"
-            >
-              Ship a serious engineering career,{" "}
-              <span className="text-gradient">from first commit to offer letter</span>.
-            </motion.h1>
-
-            <motion.p
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease, delay: 0.12 }}
-              className="mt-4 max-w-xl text-base leading-relaxed text-muted-foreground"
-            >
-              Real opportunities like GSoC, LFX, ICPC and Meta Hacker Cup, structured
-              roadmaps for every domain, a built-in DSA arena, and only the resources
-              worth your time. No paywalls, no fluff.
-            </motion.p>
-
-            <motion.div
-              initial={{ opacity: 0, y: 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, ease, delay: 0.2 }}
-              className="mt-7 flex w-full max-w-xl items-center gap-2 rounded-2xl border border-border/70 bg-card/70 p-2 shadow-soft backdrop-blur transition-colors focus-within:border-primary/50"
-            >
-              <span className="ml-2 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/12 text-primary-glow">
-                <Terminal className="h-4 w-4" />
-              </span>
-              <input
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && ask()}
-                placeholder="How do I get selected for GSoC?"
-                className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-              />
-              <Button onClick={ask} className="shrink-0 bg-gradient-primary shadow-glow">
-                <Send className="h-4 w-4" /> Ask
-              </Button>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
-              className="mt-4 flex flex-wrap items-center gap-2 text-xs text-muted-foreground"
-            >
-              <span className="opacity-70">Popular:</span>
-              {["System design in 8 weeks", "Break into open source", "SDE interview prep"].map(
-                (chip) => (
-                  <button
-                    key={chip}
-                    onClick={() => navigate({ to: "/advisor", search: { q: chip } })}
-                    className="rounded-full border border-border/60 bg-card/50 px-3 py-1 transition-colors hover:border-primary/50 hover:text-foreground"
-                  >
-                    {chip}
-                  </button>
-                ),
-              )}
-            </motion.div>
+function Hero() {
+  return (
+    <section className="relative overflow-hidden border-b border-border/60 bg-gradient-hero">
+      <div
+        className="pointer-events-none absolute inset-0 opacity-[0.08]"
+        style={{
+          backgroundImage:
+            "linear-gradient(to right, var(--foreground) 1px, transparent 1px), linear-gradient(to bottom, var(--foreground) 1px, transparent 1px)",
+          backgroundSize: "44px 44px",
+          maskImage: "radial-gradient(circle at 30% 20%, black, transparent 70%)",
+          WebkitMaskImage: "radial-gradient(circle at 30% 20%, black, transparent 70%)",
+        }}
+        aria-hidden
+      />
+      <div className="relative mx-auto grid w-full max-w-6xl gap-10 px-4 py-14 sm:px-8 sm:py-20 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
+        <div>
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            Free · No account needed
+          </p>
+          <h1 className="mt-4 max-w-2xl text-4xl font-bold leading-[1.05] sm:text-5xl">
+            Practice coding interviews with a real judge, in your browser.
+          </h1>
+          <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground">
+            3,900+ problems, the study lists everyone recommends, an AI coach, career roadmaps and
+            live opportunities. Your progress is saved locally from the first submission.
+          </p>
+          <div className="mt-7 flex flex-wrap items-center gap-3">
+            <Button asChild size="lg" className="gap-2">
+              <Link to="/lists/$listId" params={{ listId: "blind-75" }}>
+                Start practicing <ArrowRight className="h-4 w-4" />
+              </Link>
+            </Button>
+            <Button asChild size="lg" variant="outline">
+              <Link to="/problems">Browse problems</Link>
+            </Button>
           </div>
+          <p className="mt-4 text-xs text-muted-foreground">
+            Starts with Blind 75. Prefer more coverage?{" "}
+            <Link
+              to="/lists/$listId"
+              params={{ listId: "neetcode-150" }}
+              className="text-foreground underline-offset-2 hover:underline"
+            >
+              NeetCode 150
+            </Link>{" "}
+            or{" "}
+            <Link to="/lists" className="text-foreground underline-offset-2 hover:underline">
+              compare lists
+            </Link>
+            .
+          </p>
+        </div>
+        <div className="space-y-3">
+          <DailyChallengeCard className="shadow-soft" />
+          <div className="grid grid-cols-2 gap-3">
+            {STUDY_LISTS.slice(0, 2).map((l) => (
+              <Link
+                key={l.id}
+                to="/lists/$listId"
+                params={{ listId: l.id }}
+                className="rounded-2xl border border-border/60 bg-card p-4 transition-colors hover:border-foreground/30"
+              >
+                <p className="font-display font-semibold">{l.name}</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {listSlugs(l).length} problems · {l.sections.length}{" "}
+                  {l.id === "neetcode-150" ? "patterns" : "topics"}
+                </p>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </div>
 
-          {/* Right: terminal card */}
-          <motion.div
-            initial={{ opacity: 0, y: 28, rotateX: 8 }}
-            animate={{ opacity: 1, y: 0, rotateX: 0 }}
-            transition={{ duration: 0.7, ease, delay: 0.15 }}
-            className="hidden lg:block"
+      <div className="relative mx-auto grid w-full max-w-6xl gap-px overflow-hidden border-t border-border/60 sm:grid-cols-2 lg:grid-cols-4">
+        {FEATURES.map((f) => (
+          <Link
+            key={f.title}
+            to={f.to}
+            className="group bg-background/40 px-4 py-5 transition-colors hover:bg-card/60 sm:px-8 lg:px-6"
           >
-            <TerminalCard />
-          </motion.div>
+            <f.icon className="h-4 w-4 text-muted-foreground transition-colors group-hover:text-foreground" />
+            <p className="mt-3 text-sm font-semibold">{f.title}</p>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{f.body}</p>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* =========================================================== returning users */
+
+function Dashboard() {
+  const { user } = useAuth();
+  const solved = useCollection("solved");
+  const submissions = useCollection("submissions");
+  const activity = useCollection("activity");
+  const review = useCollection("review");
+  const { bySlug } = useCatalog();
+  const hydrated = useHydrated();
+  const now = hydrated ? Date.now() : 0;
+
+  const streak = streakStats(activity);
+  const due = hydrated ? dueReviews(review, now) : [];
+  const active = activeList(solved, DEFAULT_LIST_ID);
+  const last = submissions[0];
+  const lastProblem = last ? bySlug.get(last.slug) : undefined;
+  const lastSolved = last ? Boolean(solved[last.slug]) : false;
+
+  const meta = user?.user_metadata ?? {};
+  const name: string = meta.display_name || meta.full_name || meta.name || "";
+  const firstName = name.split(" ")[0];
+
+  const nextTitle = active.next
+    ? (bySlug.get(active.next)?.title ?? titleFromSlug(active.next))
+    : null;
+  const nextDifficulty = active.next ? bySlug.get(active.next)?.difficulty : undefined;
+  const nextSection = active.list.sections.find(
+    (s) => active.next && s.slugs.includes(active.next),
+  );
+
+  return (
+    <section className="border-b border-border/60 bg-gradient-hero">
+      <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-8 sm:py-10">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h1 className="font-display text-2xl font-bold sm:text-3xl">
+              {firstName ? `Welcome back, ${firstName}` : "Welcome back"}
+            </h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {Object.keys(solved).length} solved
+              {streak.today > 0
+                ? ` · ${streak.today} submission${streak.today === 1 ? "" : "s"} today`
+                : " · nothing submitted today yet"}
+            </p>
+          </div>
+          <Link
+            to="/progress"
+            className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+          >
+            Full progress <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
+
+        <div className="mt-6 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {/* Continue */}
+          <section
+            aria-labelledby="continue-heading"
+            className="flex flex-col rounded-2xl border border-border/60 bg-card p-5"
+          >
+            <h2
+              id="continue-heading"
+              className="text-xs font-medium uppercase tracking-wide text-muted-foreground"
+            >
+              Continue where you left off
+            </h2>
+            {last ? (
+              <>
+                <ProblemLink
+                  slug={last.slug}
+                  className="mt-3 font-display text-lg font-semibold leading-snug hover:underline"
+                >
+                  {lastProblem ? `${lastProblem.id}. ` : ""}
+                  {last.title}
+                </ProblemLink>
+                <p className="mt-1.5 flex flex-wrap gap-x-3 text-xs text-muted-foreground">
+                  {lastProblem && (
+                    <span className={cn("font-medium", DIFF_TEXT[lastProblem.difficulty])}>
+                      {lastProblem.difficulty}
+                    </span>
+                  )}
+                  <span
+                    className={last.status === "Accepted" ? "text-success" : "text-destructive"}
+                  >
+                    {last.status}
+                  </span>
+                  {hydrated && <span>{relativeTime(last.at, now)}</span>}
+                </p>
+                <div className="mt-auto pt-5">
+                  <ProblemLink
+                    slug={last.slug}
+                    className="inline-flex h-9 items-center gap-1.5 rounded-lg bg-primary px-4 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+                  >
+                    {lastSolved ? "Open again" : "Keep going"} <ArrowRight className="h-4 w-4" />
+                  </ProblemLink>
+                </div>
+              </>
+            ) : (
+              <p className="mt-3 text-sm text-muted-foreground">
+                Your latest submission shows up here.{" "}
+                <Link to="/problems" className="text-foreground hover:underline">
+                  Pick a problem
+                </Link>
+                .
+              </p>
+            )}
+          </section>
+
+          <DailyChallengeCard />
+
+          {/* Streak + reviews */}
+          <div className="grid gap-4 md:col-span-2 md:grid-cols-2 lg:col-span-1 lg:grid-cols-1">
+            <div className="flex items-center gap-4 rounded-2xl border border-border/60 bg-card p-5">
+              <span
+                className={cn(
+                  "flex h-11 w-11 shrink-0 items-center justify-center rounded-full",
+                  streak.today > 0
+                    ? "bg-warning/15 text-warning"
+                    : "bg-muted text-muted-foreground",
+                )}
+              >
+                <Flame className="h-5 w-5" />
+              </span>
+              <div className="min-w-0">
+                <p className="font-display text-2xl font-bold tabular-nums">
+                  {streak.current}
+                  <span className="ml-1 text-sm font-normal text-muted-foreground">day streak</span>
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Longest {streak.longest} · {streak.activeDays} active days
+                </p>
+              </div>
+            </div>
+            <Link
+              to="/progress"
+              hash="review"
+              className="group flex items-center gap-4 rounded-2xl border border-border/60 bg-card p-5 transition-colors hover:border-foreground/30"
+            >
+              <span
+                className={cn(
+                  "flex h-11 w-11 shrink-0 items-center justify-center rounded-full",
+                  due.length ? "bg-warning/15 text-warning" : "bg-muted text-muted-foreground",
+                )}
+              >
+                <Repeat className="h-5 w-5" />
+              </span>
+              <div className="min-w-0 flex-1">
+                <p className="font-display text-2xl font-bold tabular-nums">
+                  {due.length}
+                  <span className="ml-1 text-sm font-normal text-muted-foreground">
+                    review{due.length === 1 ? "" : "s"} due
+                  </span>
+                </p>
+                <p className="truncate text-xs text-muted-foreground">
+                  {due.length
+                    ? due
+                        .slice(0, 2)
+                        .map((r) => r.title)
+                        .join(", ")
+                    : "Nothing to review right now"}
+                </p>
+              </div>
+              <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+            </Link>
+          </div>
+        </div>
+
+        {/* Active list */}
+        <section
+          aria-labelledby="active-list-heading"
+          className="mt-4 flex flex-col gap-5 rounded-2xl border border-border/60 bg-card p-5 md:flex-row md:items-center"
+        >
+          <ProgressRing
+            value={active.pct}
+            size={64}
+            stroke={5}
+            color={active.done === active.total ? "var(--success)" : "var(--foreground)"}
+            label={`${active.done} of ${active.total} solved`}
+          >
+            <span className="text-xs font-semibold tabular-nums">
+              {Math.round(active.pct * 100)}%
+            </span>
+          </ProgressRing>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+              Active list
+            </p>
+            <h2 id="active-list-heading" className="mt-0.5 font-display text-lg font-semibold">
+              <Link
+                to="/lists/$listId"
+                params={{ listId: active.list.id }}
+                className="hover:underline"
+              >
+                {active.list.name}
+              </Link>{" "}
+              <span className="text-sm font-normal tabular-nums text-muted-foreground">
+                {active.done}/{active.total}
+              </span>
+            </h2>
+            <div className="mt-2 flex h-1.5 gap-0.5" aria-hidden>
+              {active.sections.map((s) => (
+                <span
+                  key={s.title}
+                  className="relative flex-1 overflow-hidden rounded-full bg-muted"
+                  style={{ flexGrow: s.total }}
+                  title={`${s.title}: ${s.done}/${s.total}`}
+                >
+                  <span
+                    className={cn(
+                      "absolute inset-y-0 left-0 rounded-full",
+                      s.done === s.total ? "bg-success" : "bg-foreground/60",
+                    )}
+                    style={{ width: `${(s.done / s.total) * 100}%` }}
+                  />
+                </span>
+              ))}
+            </div>
+          </div>
+          {active.next && nextTitle ? (
+            <ProblemLink
+              slug={active.next}
+              list={active.list.id}
+              className="group flex min-w-0 items-center gap-3 rounded-xl border border-border/60 px-4 py-3 transition-colors hover:border-foreground/30 md:w-80"
+            >
+              <div className="min-w-0 flex-1">
+                <p className="text-[11px] text-muted-foreground">
+                  Next{nextSection ? ` in ${nextSection.title}` : ""}
+                </p>
+                <p className="truncate text-sm font-medium">{nextTitle}</p>
+                {nextDifficulty && (
+                  <p className={cn("text-[11px] font-medium", DIFF_TEXT[nextDifficulty])}>
+                    {nextDifficulty}
+                  </p>
+                )}
+              </div>
+              <ArrowRight className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5" />
+            </ProblemLink>
+          ) : (
+            <Link to="/lists" className="text-sm font-medium hover:underline">
+              List complete. Pick another
+            </Link>
+          )}
+        </section>
+
+        {/* Quick links */}
+        <nav
+          aria-label="Quick links"
+          className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6"
+        >
+          {(
+            [
+              ["Problems", "/problems", ListChecks],
+              ["Study lists", "/lists", GitBranch],
+              ["Leaderboard", "/leaderboard", Trophy],
+              ["Compiler", "/compiler", TerminalSquare],
+              ["Readiness", "/readiness", Gauge],
+              ["AI Advisor", "/advisor", Sparkles],
+            ] as const
+          ).map(([label, to, Icon]) => (
+            <Link
+              key={to}
+              to={to}
+              className="flex items-center gap-2 rounded-xl border border-border/60 bg-card/60 px-3 py-2.5 text-sm transition-colors hover:border-foreground/30"
+            >
+              <Icon className="h-4 w-4 text-muted-foreground" />
+              {label}
+            </Link>
+          ))}
+        </nav>
+      </div>
+    </section>
+  );
+}
+
+/* ============================================================ career sections */
+
+function CareerSections({ compact }: { compact: boolean }) {
+  const navigate = useNavigate();
+  const [prompt, setPrompt] = useState("");
+  const ask = (q = prompt.trim()) => navigate({ to: "/advisor", search: q ? { q } : {} });
+
+  return (
+    <div className="mx-auto w-full max-w-6xl px-4 sm:px-8">
+      {/* Advisor */}
+      <section
+        aria-labelledby="advisor-heading"
+        className="mt-12 rounded-2xl border border-border/60 bg-card p-5 sm:p-6"
+      >
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div>
+            <h2
+              id="advisor-heading"
+              className="flex items-center gap-2 font-display text-lg font-semibold"
+            >
+              <Sparkles className="h-4 w-4 text-muted-foreground" /> Ask the AI advisor
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Interview plans, study schedules, roadmaps and programs worth applying to.
+            </p>
+          </div>
+          <form
+            className="flex w-full items-center gap-2 rounded-xl border border-border/70 bg-background/60 p-1.5 focus-within:border-foreground/40 lg:max-w-md"
+            onSubmit={(e) => {
+              e.preventDefault();
+              ask();
+            }}
+          >
+            <input
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="How should I prepare for a Google interview in 6 weeks?"
+              aria-label="Ask the AI advisor"
+              className="min-w-0 flex-1 bg-transparent px-2 text-sm outline-none placeholder:text-muted-foreground"
+            />
+            <Button type="submit" size="sm" className="shrink-0 gap-1.5">
+              <Send className="h-3.5 w-3.5" /> Ask
+            </Button>
+          </form>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-2 text-xs">
+          {[
+            "Plan my NeetCode 150 in 8 weeks",
+            "How do I get into GSoC?",
+            "Backend roadmap for a student",
+          ].map((chip) => (
+            <button
+              key={chip}
+              type="button"
+              onClick={() => ask(chip)}
+              className="rounded-full border border-border/60 px-3 py-1 text-muted-foreground transition-colors hover:border-foreground/30 hover:text-foreground"
+            >
+              {chip}
+            </button>
+          ))}
         </div>
       </section>
 
-      <div className="mx-auto w-full max-w-6xl px-5 sm:px-8">
-        {/* ───────────────── Stats ───────────────── */}
-        <div className="-mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {stats.map((s, i) => (
-            <motion.div
-              key={s.label}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-40px" }}
-              transition={{ duration: 0.5, ease, delay: i * 0.06 }}
-              className="group relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-card p-4 shadow-soft"
-            >
-              <div className="absolute -right-6 -top-6 h-16 w-16 rounded-full bg-primary/10 opacity-0 blur-2xl transition-opacity group-hover:opacity-100" />
-              <s.icon className="h-5 w-5 text-primary-glow" />
-              <p className="mt-3 font-display text-3xl font-bold tabular-nums">
-                <AnimatedNumber value={s.value} suffix={s.suffix} />
-              </p>
-              <p className="text-xs text-muted-foreground">{s.label}</p>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* ───────────────── Primary actions ───────────────── */}
-        <div className="mt-14 grid gap-4 md:grid-cols-3">
-          {[
-            {
-              to: "/opportunities" as const,
-              title: "Explore opportunities",
-              desc: "GSoC, LFX, ICPC, hackathons, internships and scholarships, with live status.",
-              icon: Compass,
-            },
-            {
-              to: "/roadmaps" as const,
-              title: "Follow a roadmap",
-              desc: "Battle-tested paths for frontend, backend, data, DevOps and more.",
-              icon: MapIcon,
-            },
-            {
-              to: "/playground" as const,
-              title: "EzCode — solve any problem",
-              desc: "Open any of 3,977 problems in-app, write, run and benchmark like the top judges.",
-              icon: Cpu,
-            },
-          ].map((c, i) => (
-            <motion.div
-              key={c.to}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-60px" }}
-              transition={{ duration: 0.5, ease, delay: i * 0.08 }}
-            >
-              <Link
-                to={c.to}
-                className="group relative flex h-full flex-col overflow-hidden rounded-2xl border border-border/60 bg-card p-5 shadow-soft transition-all duration-300 hover:-translate-y-1.5 hover:border-primary/50 hover:shadow-elegant"
-              >
-                <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-primary/60 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-primary/12 text-primary-glow transition-transform duration-300 group-hover:scale-110">
-                  <c.icon className="h-5 w-5" />
-                </span>
-                <h3 className="mt-4 flex items-center gap-1 font-display text-lg font-semibold">
-                  {c.title}
-                  <ArrowRight className="h-4 w-4 opacity-0 -translate-x-1 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100" />
-                </h3>
-                <p className="mt-1 text-sm text-muted-foreground">{c.desc}</p>
-              </Link>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* ───────────────── Roadmaps rail ───────────────── */}
-        <SectionHeading
-          title="Roadmaps for every path"
-          subtitle="Pick a role and get a clear sequence, not a wall of links."
-          to="/roadmaps"
-          cta="All roadmaps"
-        />
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {roadmapPreview.map((r, i) => (
-            <motion.div
-              key={r.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-50px" }}
-              transition={{ duration: 0.45, ease, delay: i * 0.05 }}
-            >
-              <Link
-                to="/roadmaps"
-                className="group flex h-full items-start gap-3 rounded-xl border border-border/60 bg-gradient-card p-4 transition-all hover:-translate-y-1 hover:border-primary/50"
-              >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/12 text-primary-glow">
-                  <GitBranch className="h-5 w-5" />
-                </span>
-                <div className="min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <h4 className="truncate font-medium">{r.role}</h4>
-                    <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-primary-glow" />
-                  </div>
-                  <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{r.summary}</p>
-                  <span className="mt-2 inline-block rounded-md bg-muted/60 px-2 py-0.5 text-[11px] text-muted-foreground">
-                    {r.duration} · {r.stages.length} stages
-                  </span>
-                </div>
-              </Link>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* ───────────────── Featured opportunities ───────────────── */}
-        <SectionHeading
-          title="Opportunities worth applying to"
-          subtitle="High-signal programs, with application windows kept up to date."
-          to="/opportunities"
-          cta="View all"
-        />
-        <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {featured.map((opp, i) => (
-            <motion.div
-              key={opp.id}
-              initial={{ opacity: 0, y: 24 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, margin: "-60px" }}
-              transition={{ duration: 0.5, ease, delay: (i % 3) * 0.08 }}
-            >
-              <OpportunityCard opp={opp} />
-            </motion.div>
-          ))}
-        </div>
-
-        {/* ───────────────── Closing CTA ───────────────── */}
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.6, ease }}
-          className="relative mt-16 overflow-hidden rounded-3xl border border-primary/25 bg-gradient-card p-8 sm:p-12"
-        >
-          <div className="pointer-events-none absolute -right-10 -top-10 h-56 w-56 rounded-full bg-primary/25 blur-3xl" />
-          <div className="relative flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h3 className="font-display text-2xl font-bold sm:text-3xl">
-                Stop guessing your next move.
-              </h3>
-              <p className="mt-2 max-w-xl text-sm text-muted-foreground sm:text-base">
-                Tell it your current skills and target role. Get a personalized plan with the
-                exact opportunities and resources that fit.
+      {/* Roadmaps */}
+      <SectionHeading
+        title="Career roadmaps"
+        subtitle="A clear sequence of skills for each role."
+        to="/roadmaps"
+        cta="All roadmaps"
+        icon={MapIcon}
+      />
+      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {ROADMAPS.slice(0, compact ? 3 : 6).map((r) => (
+          <Link
+            key={r.id}
+            to="/roadmaps"
+            className="group flex h-full items-start gap-3 rounded-xl border border-border/60 bg-card p-4 transition-colors hover:border-foreground/30"
+          >
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center justify-between gap-2">
+                <h3 className="truncate font-medium">{r.role}</h3>
+                <ArrowUpRight className="h-4 w-4 shrink-0 text-muted-foreground transition-colors group-hover:text-foreground" />
+              </div>
+              <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">{r.summary}</p>
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                {r.duration} · {r.stages.length} stages
               </p>
             </div>
-            <Button
-              size="lg"
-              onClick={() => navigate({ to: "/advisor" })}
-              className="shrink-0 bg-gradient-primary shadow-glow"
-            >
-              <Command className="h-4 w-4" /> Start planning
-            </Button>
-          </div>
-        </motion.div>
+          </Link>
+        ))}
+      </div>
+
+      {/* Opportunities */}
+      <SectionHeading
+        title="Opportunities"
+        subtitle="Programs, contests and internships, with application windows kept current."
+        to="/opportunities"
+        cta="View all"
+        icon={Compass}
+      />
+      <div className="mt-4 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {OPPORTUNITIES.slice(0, 3).map((opp) => (
+          <OpportunityCard key={opp.id} opp={opp} />
+        ))}
+      </div>
+
+      <div className="mt-10 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
+        <Link to="/resources" className="inline-flex items-center gap-1.5 hover:text-foreground">
+          <BookOpen className="h-4 w-4" /> Free resources
+        </Link>
+        <Link to="/readiness" className="inline-flex items-center gap-1.5 hover:text-foreground">
+          <Gauge className="h-4 w-4" /> Readiness score
+        </Link>
+        <Link to="/compiler" className="inline-flex items-center gap-1.5 hover:text-foreground">
+          <TerminalSquare className="h-4 w-4" /> Online compiler
+        </Link>
       </div>
     </div>
   );
@@ -389,86 +576,28 @@ function SectionHeading({
   subtitle,
   to,
   cta,
+  icon: Icon,
 }: {
   title: string;
   subtitle: string;
   to: "/roadmaps" | "/opportunities";
   cta: string;
+  icon: LucideIcon;
 }) {
   return (
-    <div className="mt-16 flex items-end justify-between gap-4">
+    <div className="mt-12 flex items-end justify-between gap-4">
       <div>
-        <h2 className="font-display text-2xl font-bold">{title}</h2>
+        <h2 className="flex items-center gap-2 font-display text-xl font-bold">
+          <Icon className="h-4 w-4 text-muted-foreground" /> {title}
+        </h2>
         <p className="mt-1 text-sm text-muted-foreground">{subtitle}</p>
       </div>
       <Link
         to={to}
-        className="hidden shrink-0 items-center gap-1 text-sm text-primary-glow transition-transform hover:translate-x-0.5 sm:flex"
+        className="hidden shrink-0 items-center gap-1 text-sm text-muted-foreground hover:text-foreground sm:flex"
       >
         {cta} <ArrowRight className="h-4 w-4" />
       </Link>
     </div>
   );
 }
-
-const terminalLines = [
-  { p: "$", c: "ezvor init --role backend", muted: false },
-  { p: ">", c: "scanning opportunities…", muted: true },
-  { p: "✓", c: "3 open programs match your profile", muted: false },
-  { p: ">", c: "building roadmap: 4 stages, 5 months", muted: true },
-  { p: "✓", c: "ready. run `ezvor start`", muted: false },
-];
-
-function TerminalCard() {
-  const [shown, setShown] = useState(0);
-  const reduce = useReducedMotion();
-
-  useEffect(() => {
-    if (reduce) {
-      setShown(terminalLines.length);
-      return;
-    }
-    if (shown >= terminalLines.length) return;
-    const t = setTimeout(() => setShown((s) => s + 1), 520);
-    return () => clearTimeout(t);
-  }, [shown, reduce]);
-
-  return (
-    <div className="rounded-2xl border border-border/70 bg-card/80 shadow-elegant backdrop-blur">
-      <div className="flex items-center gap-2 border-b border-border/60 px-4 py-3">
-        <span className="h-3 w-3 rounded-full bg-destructive/70" />
-        <span className="h-3 w-3 rounded-full bg-warning/70" />
-        <span className="h-3 w-3 rounded-full bg-success/70" />
-        <span className="ml-2 font-mono text-xs text-muted-foreground">ezvor — zsh</span>
-      </div>
-      <div className="space-y-2 p-5 font-mono text-sm">
-        {terminalLines.slice(0, shown).map((l, i) => (
-          <motion.div
-            key={i}
-            initial={{ opacity: 0, x: -8 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3 }}
-            className="flex items-start gap-2"
-          >
-            <span
-              className={
-                l.p === "✓"
-                  ? "text-success"
-                  : l.p === "$"
-                    ? "text-primary-glow"
-                    : "text-muted-foreground"
-              }
-            >
-              {l.p}
-            </span>
-            <span className={l.muted ? "text-muted-foreground" : "text-foreground"}>{l.c}</span>
-          </motion.div>
-        ))}
-        {shown >= terminalLines.length && (
-          <span className="inline-block h-4 w-2 animate-pulse bg-primary-glow align-middle" />
-        )}
-      </div>
-    </div>
-  );
-}
-

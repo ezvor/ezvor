@@ -39,3 +39,6 @@ dist-ssr
 # Deploy output
 .vercel
 .netlify
+
+# Local tooling
+.claude/

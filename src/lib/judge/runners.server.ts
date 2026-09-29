@@ -184,8 +184,7 @@ const wandbox: Runner = {
     const programErr = d.program_error ?? "";
     const compilerErr = d.compiler_error ?? "";
     const exit = d.status != null && d.status !== "" ? Number(d.status) : null;
-    const compileFailed =
-      !programOut && !programErr && exit !== 0 && /error/i.test(compilerErr);
+    const compileFailed = !programOut && !programErr && exit !== 0 && /error/i.test(compilerErr);
     const signal = d.signal || null;
     const timedOut = signal === "Killed" || signal === "SIGKILL" || signal === "SIGXCPU";
     return {

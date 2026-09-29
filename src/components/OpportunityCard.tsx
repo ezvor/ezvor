@@ -1,4 +1,12 @@
-import { ArrowUpRight, Clock, Users, Coins, ShieldCheck, RefreshCw, ExternalLink } from "lucide-react";
+import {
+  ArrowUpRight,
+  Clock,
+  Users,
+  Coins,
+  ShieldCheck,
+  RefreshCw,
+  ExternalLink,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -63,10 +71,17 @@ export function OpportunityCard({ opp }: { opp: OppCardData }) {
     <div className="group flex flex-col rounded-2xl border border-border/60 bg-gradient-card p-5 shadow-soft transition-all duration-300 hover:-translate-y-1 hover:border-primary/50 hover:shadow-elegant">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <p className="text-xs font-medium uppercase tracking-wide text-primary-glow">{opp.category}</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-primary-glow">
+            {opp.category}
+          </p>
           <h3 className="mt-1 font-display text-lg font-semibold leading-snug">
             {opp.url ? (
-              <a href={opp.url} target="_blank" rel="noopener noreferrer" className="hover:text-primary-glow">
+              <a
+                href={opp.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-primary-glow"
+              >
                 {opp.title}
               </a>
             ) : (
@@ -76,7 +91,12 @@ export function OpportunityCard({ opp }: { opp: OppCardData }) {
           <p className="text-sm text-muted-foreground">{opp.org}</p>
         </div>
         {opp.url && (
-          <a href={opp.url} target="_blank" rel="noopener noreferrer" aria-label="Open official page">
+          <a
+            href={opp.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Open official page"
+          >
             <ArrowUpRight className="h-5 w-5 shrink-0 text-muted-foreground transition-colors group-hover:text-primary" />
           </a>
         )}

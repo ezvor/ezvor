@@ -119,7 +119,10 @@ function read<K extends CollectionName>(name: K): Collections[K] {
       const raw = window.localStorage.getItem(PREFIX + name);
       if (raw) {
         const parsed = JSON.parse(raw) as Collections[K];
-        value = name === "settings" ? ({ ...DEFAULT_EDITOR_SETTINGS, ...(parsed as EditorSettings) } as Collections[K]) : parsed;
+        value =
+          name === "settings"
+            ? ({ ...DEFAULT_EDITOR_SETTINGS, ...(parsed as EditorSettings) } as Collections[K])
+            : parsed;
       }
     } catch {
       /* corrupt or blocked storage — fall back to defaults */
@@ -133,7 +136,11 @@ function emit(name: CollectionName) {
   listeners.get(name)?.forEach((l) => l());
 }
 
-function write<K extends CollectionName>(name: K, value: Collections[K], opts: { silent?: boolean } = {}) {
+function write<K extends CollectionName>(
+  name: K,
+  value: Collections[K],
+  opts: { silent?: boolean } = {},
+) {
   memory.set(name, value);
   if (hasStorage()) {
     try {
@@ -155,7 +162,8 @@ export function setCollection<K extends CollectionName>(
   next: Collections[K] | ((prev: Collections[K]) => Collections[K]),
   opts: { silent?: boolean } = {},
 ) {
-  const value = typeof next === "function" ? (next as (p: Collections[K]) => Collections[K])(read(name)) : next;
+  const value =
+    typeof next === "function" ? (next as (p: Collections[K]) => Collections[K])(read(name)) : next;
   write(name, value, opts);
 }
 
@@ -205,7 +213,9 @@ export function dayKey(ts = Date.now()): string {
 }
 
 /** Record a judged submission locally (history, activity, solved set, review queue). */
-export function recordSubmission(entry: Omit<SubmissionEntry, "id" | "at"> & { difficulty: Difficulty; topic?: string | null }) {
+export function recordSubmission(
+  entry: Omit<SubmissionEntry, "id" | "at"> & { difficulty: Difficulty; topic?: string | null },
+) {
   const at = Date.now();
   const id = `${at.toString(36)}${Math.random().toString(36).slice(2, 6)}`;
   const { difficulty, topic, ...sub } = entry;
@@ -213,7 +223,9 @@ export function recordSubmission(entry: Omit<SubmissionEntry, "id" | "at"> & { d
   setCollection("submissions", (prev) => {
     const next = [{ ...sub, id, at }, ...prev].slice(0, MAX_SUBMISSIONS);
     // Only keep source code for the most recent submissions to stay within quota.
-    return next.map((s, i) => (i >= MAX_CODE_SUBMISSIONS && s.code ? { ...s, code: undefined } : s));
+    return next.map((s, i) =>
+      i >= MAX_CODE_SUBMISSIONS && s.code ? { ...s, code: undefined } : s,
+    );
   });
   setCollection("activity", (prev) => {
     const k = dayKey(at);
@@ -276,7 +288,14 @@ export function gradeReview(slug: string, grade: 0 | 1 | 2 | 3) {
     }
     return {
       ...prev,
-      [slug]: { ...card, ease, intervalDays, reps, lastReviewed: now, due: now + intervalDays * 86_400_000 },
+      [slug]: {
+        ...card,
+        ease,
+        intervalDays,
+        reps,
+        lastReviewed: now,
+        due: now + intervalDays * 86_400_000,
+      },
     };
   });
 }
@@ -308,7 +327,9 @@ export type StreakStats = { current: number; longest: number; activeDays: number
 
 /** Streaks from the local activity map (local calendar days). */
 export function streakStats(activity: Record<string, number>): StreakStats {
-  const days = Object.keys(activity).filter((k) => activity[k] > 0).sort();
+  const days = Object.keys(activity)
+    .filter((k) => activity[k] > 0)
+    .sort();
   const set = new Set(days);
   const today = dayKey();
   const yesterday = dayKey(Date.now() - 86_400_000);
@@ -332,7 +353,12 @@ export function streakStats(activity: Record<string, number>): StreakStats {
     longest = Math.max(longest, run);
     prev = d;
   }
-  return { current, longest: Math.max(longest, current), activeDays: days.length, today: activity[today] ?? 0 };
+  return {
+    current,
+    longest: Math.max(longest, current),
+    activeDays: days.length,
+    today: activity[today] ?? 0,
+  };
 }
 
 /* ------------------------------------------------ one-time legacy import */
@@ -346,7 +372,10 @@ if (typeof window !== "undefined" && hasStorage()) {
       for (const slug of slugs) {
         solved[slug] = {
           slug,
-          title: slug.split("-").map((w) => w[0]?.toUpperCase() + w.slice(1)).join(" "),
+          title: slug
+            .split("-")
+            .map((w) => w[0]?.toUpperCase() + w.slice(1))
+            .join(" "),
           difficulty: "Medium",
           language: "python",
           solvedAt: Date.now(),

@@ -49,7 +49,7 @@ import { cn } from "@/lib/utils";
 export const Route = createFileRoute("/roadmaps")({
   head: () => ({
     meta: [
-      { title: "Roadmaps & Skill Graphs: Visual Career Paths | Ezvor" },
+      { title: "Roadmaps & Skill Graphs: Visual Career Paths — Ezvor" },
       {
         name: "description",
         content:
@@ -165,7 +165,7 @@ function RoadmapsPage() {
     () =>
       personalGraph && activeId === "personal"
         ? personalGraph
-        : GRAPH_ROADMAPS.find((g) => g.id === activeId) ?? GRAPH_ROADMAPS[0],
+        : (GRAPH_ROADMAPS.find((g) => g.id === activeId) ?? GRAPH_ROADMAPS[0]),
     [personalGraph, activeId],
   );
 
@@ -181,11 +181,16 @@ function RoadmapsPage() {
         const res = await genGraph({ data: { role: r, skills: skills.trim() || undefined } });
         setPersonalGraph(res);
         setActiveId("personal");
-        toast.success("Your personalized skill graph is ready");
+        if (res.title.endsWith("(curated)")) {
+          toast.message("AI is busy — showing our closest hand-built skill graph instead");
+        } else {
+          toast.success("Your personalized skill graph is ready");
+        }
       } else {
-        const res = await genList({ data: { goal: r } });
+        const { fallback, ...res } = await genList({ data: { goal: r } });
         setGeneratedList({ id: "ai", icon: "MapIcon", ...res });
-        toast.success("Your personalized roadmap is ready");
+        if (fallback) toast.message(fallback);
+        else toast.success("Your personalized roadmap is ready");
       }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Could not generate. Try again.");
@@ -238,8 +243,16 @@ function RoadmapsPage() {
                 placeholder="Target role… e.g. Data Architect, DevOps, AI Engineer"
                 className="flex-1"
               />
-              <Button onClick={run} disabled={loading} className="shrink-0 bg-gradient-primary shadow-glow">
-                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              <Button
+                onClick={run}
+                disabled={loading}
+                className="shrink-0 bg-gradient-primary shadow-glow"
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4" />
+                )}
                 {mode === "graph" ? "Generate graph" : "Build roadmap"}
               </Button>
             </div>
@@ -297,7 +310,9 @@ function RoadmapsPage() {
             <div className="mt-6 rounded-3xl border border-border/60 bg-gradient-hero p-5 sm:p-8">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <h2 className="font-display text-xl font-bold sm:text-2xl">{activeGraph.title}</h2>
+                  <h2 className="font-display text-xl font-bold sm:text-2xl">
+                    {activeGraph.title}
+                  </h2>
                   <p className="text-sm text-muted-foreground">{activeGraph.tagline}</p>
                 </div>
                 <span className="hidden items-center gap-1.5 rounded-full border border-border/60 bg-card/60 px-3 py-1.5 text-xs text-muted-foreground sm:flex">
@@ -312,7 +327,10 @@ function RoadmapsPage() {
 
             <p className="mt-4 text-center text-xs text-muted-foreground">
               Prefer a linear checklist? Switch to{" "}
-              <button onClick={() => setMode("list")} className="text-primary-glow underline-offset-4 hover:underline">
+              <button
+                onClick={() => setMode("list")}
+                className="text-primary-glow underline-offset-4 hover:underline"
+              >
                 Checklist view
               </button>
               . Progress is saved for this session · all resources are 100% free.
@@ -339,7 +357,8 @@ function RoadmapsPage() {
 
             <h2 className="mt-12 font-display text-2xl font-bold">All roadmaps</h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              {ROADMAPS.length} career paths across every IT domain. Tap any skill to open free documentation.
+              {ROADMAPS.length} career paths across every IT domain. Tap any skill to open free
+              documentation.
             </p>
             <div className="mt-5 grid gap-5 md:grid-cols-2">
               {ROADMAPS.map((r) => {
