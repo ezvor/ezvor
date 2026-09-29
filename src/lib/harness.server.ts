@@ -304,7 +304,8 @@ async function pythonStage(
       { role: "user", content: pythonPrompt(problem, officials, feedback) },
     ],
     PY_SCHEMA,
-    { tier: "smart", timeoutMs: 120_000 },
+    // Low thinking keeps first-open latency down; execution verification catches mistakes.
+    { tier: "smart", reasoning: "low", timeoutMs: 120_000 },
   );
   const draft: PyStage = {
     ioFormat: String(raw.ioFormat ?? ""),
@@ -392,7 +393,9 @@ async function portStage(
     { role: "user", content: portPrompt(problem, lang, py, py.tests.slice(0, 3)) },
   ];
   let attempt = await aiJSON<{ harness: string; reference: string }>(base, PORT_SCHEMA, {
+    // Porting a verified harness is mechanical: keep thinking short for speed.
     tier: "smart",
+    reasoning: "low",
     timeoutMs: 90_000,
   }).catch(() => null);
 
@@ -414,7 +417,7 @@ async function portStage(
         },
       ],
       PORT_SCHEMA,
-      { tier: "smart", timeoutMs: 90_000 },
+      { tier: "smart", reasoning: "medium", timeoutMs: 90_000 },
     ).catch(() => null);
   }
   return null;
@@ -437,8 +440,16 @@ export async function generateHarness(problem: LeetProblem): Promise<HarnessData
   }
   const officials = officialExampleOutputs(problem.contentHtml);
 
+  const t0 = Date.now();
+  const debug = (msg: string) =>
+    process.env.AI_DEBUG &&
+    console.log(`[harness] ${problem.slug} ${msg} +${((Date.now() - t0) / 1000).toFixed(1)}s`);
   let py = await pythonStage(problem, officials);
-  if (!py.ok && !py.infra) py = await pythonStage(problem, officials, py.feedback);
+  debug(`python stage ${py.ok ? "ok" : "failed"}`);
+  if (!py.ok && !py.infra) {
+    py = await pythonStage(problem, officials, py.feedback);
+    debug(`python retry ${py.ok ? "ok" : "failed"}`);
+  }
 
   if (!py.ok) {
     // Couldn't verify (runners down or the model kept failing). Serve the

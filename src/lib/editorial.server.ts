@@ -175,7 +175,7 @@ Requirements:
       },
     ],
     SCHEMA,
-    { tier: "smart", timeoutMs: 150_000 },
+    { tier: "smart", reasoning: "low", timeoutMs: 150_000 },
   );
   return clean(raw, input);
 }
