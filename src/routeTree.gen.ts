@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as RoadmapsRouteImport } from './routes/roadmaps'
@@ -16,6 +17,7 @@ import { Route as ResourcesRouteImport } from './routes/resources'
 import { Route as ReadinessRouteImport } from './routes/readiness'
 import { Route as ProgressRouteImport } from './routes/progress'
 import { Route as ProblemsRouteImport } from './routes/problems'
+import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PlaygroundRouteImport } from './routes/playground'
 import { Route as OpportunitiesRouteImport } from './routes/opportunities'
 import { Route as ListsRouteImport } from './routes/lists'
@@ -36,6 +38,11 @@ import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as AdvisorThreadIdRouteImport } from './routes/advisor.$threadId'
 import { Route as ApiPublicHooksRefreshStatusesRouteImport } from './routes/api/public/hooks/refresh-statuses'
 
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
@@ -69,6 +76,11 @@ const ProgressRoute = ProgressRouteImport.update({
 const ProblemsRoute = ProblemsRouteImport.update({
   id: '/problems',
   path: '/problems',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PlaygroundRoute = PlaygroundRouteImport.update({
@@ -178,6 +190,7 @@ export interface FileRoutesByFullPath {
   '/lists': typeof ListsRoute
   '/opportunities': typeof OpportunitiesRoute
   '/playground': typeof PlaygroundRoute
+  '/privacy': typeof PrivacyRoute
   '/problems': typeof ProblemsRoute
   '/progress': typeof ProgressRoute
   '/readiness': typeof ReadinessRoute
@@ -185,6 +198,7 @@ export interface FileRoutesByFullPath {
   '/roadmaps': typeof RoadmapsRoute
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terms': typeof TermsRoute
   '/advisor/$threadId': typeof AdvisorThreadIdRoute
   '/api/chat': typeof ApiChatRoute
   '/api/coach': typeof ApiCoachRoute
@@ -205,6 +219,7 @@ export interface FileRoutesByTo {
   '/lists': typeof ListsRoute
   '/opportunities': typeof OpportunitiesRoute
   '/playground': typeof PlaygroundRoute
+  '/privacy': typeof PrivacyRoute
   '/problems': typeof ProblemsRoute
   '/progress': typeof ProgressRoute
   '/readiness': typeof ReadinessRoute
@@ -212,6 +227,7 @@ export interface FileRoutesByTo {
   '/roadmaps': typeof RoadmapsRoute
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terms': typeof TermsRoute
   '/advisor/$threadId': typeof AdvisorThreadIdRoute
   '/api/chat': typeof ApiChatRoute
   '/api/coach': typeof ApiCoachRoute
@@ -234,6 +250,7 @@ export interface FileRoutesById {
   '/lists': typeof ListsRoute
   '/opportunities': typeof OpportunitiesRoute
   '/playground': typeof PlaygroundRoute
+  '/privacy': typeof PrivacyRoute
   '/problems': typeof ProblemsRoute
   '/progress': typeof ProgressRoute
   '/readiness': typeof ReadinessRoute
@@ -241,6 +258,7 @@ export interface FileRoutesById {
   '/roadmaps': typeof RoadmapsRoute
   '/settings': typeof SettingsRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terms': typeof TermsRoute
   '/advisor/$threadId': typeof AdvisorThreadIdRoute
   '/api/chat': typeof ApiChatRoute
   '/api/coach': typeof ApiCoachRoute
@@ -264,6 +282,7 @@ export interface FileRouteTypes {
     | '/lists'
     | '/opportunities'
     | '/playground'
+    | '/privacy'
     | '/problems'
     | '/progress'
     | '/readiness'
@@ -271,6 +290,7 @@ export interface FileRouteTypes {
     | '/roadmaps'
     | '/settings'
     | '/sitemap.xml'
+    | '/terms'
     | '/advisor/$threadId'
     | '/api/chat'
     | '/api/coach'
@@ -291,6 +311,7 @@ export interface FileRouteTypes {
     | '/lists'
     | '/opportunities'
     | '/playground'
+    | '/privacy'
     | '/problems'
     | '/progress'
     | '/readiness'
@@ -298,6 +319,7 @@ export interface FileRouteTypes {
     | '/roadmaps'
     | '/settings'
     | '/sitemap.xml'
+    | '/terms'
     | '/advisor/$threadId'
     | '/api/chat'
     | '/api/coach'
@@ -319,6 +341,7 @@ export interface FileRouteTypes {
     | '/lists'
     | '/opportunities'
     | '/playground'
+    | '/privacy'
     | '/problems'
     | '/progress'
     | '/readiness'
@@ -326,6 +349,7 @@ export interface FileRouteTypes {
     | '/roadmaps'
     | '/settings'
     | '/sitemap.xml'
+    | '/terms'
     | '/advisor/$threadId'
     | '/api/chat'
     | '/api/coach'
@@ -348,6 +372,7 @@ export interface RootRouteChildren {
   ListsRoute: typeof ListsRoute
   OpportunitiesRoute: typeof OpportunitiesRoute
   PlaygroundRoute: typeof PlaygroundRoute
+  PrivacyRoute: typeof PrivacyRoute
   ProblemsRoute: typeof ProblemsRoute
   ProgressRoute: typeof ProgressRoute
   ReadinessRoute: typeof ReadinessRoute
@@ -355,6 +380,7 @@ export interface RootRouteChildren {
   RoadmapsRoute: typeof RoadmapsRoute
   SettingsRoute: typeof SettingsRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  TermsRoute: typeof TermsRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiCoachRoute: typeof ApiCoachRoute
   ApiHealthRoute: typeof ApiHealthRoute
@@ -367,6 +393,13 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
@@ -414,6 +447,13 @@ declare module '@tanstack/react-router' {
       path: '/problems'
       fullPath: '/problems'
       preLoaderRoute: typeof ProblemsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/playground': {
@@ -575,6 +615,7 @@ const rootRouteChildren: RootRouteChildren = {
   ListsRoute: ListsRoute,
   OpportunitiesRoute: OpportunitiesRoute,
   PlaygroundRoute: PlaygroundRoute,
+  PrivacyRoute: PrivacyRoute,
   ProblemsRoute: ProblemsRoute,
   ProgressRoute: ProgressRoute,
   ReadinessRoute: ReadinessRoute,
@@ -582,6 +623,7 @@ const rootRouteChildren: RootRouteChildren = {
   RoadmapsRoute: RoadmapsRoute,
   SettingsRoute: SettingsRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  TermsRoute: TermsRoute,
   ApiChatRoute: ApiChatRoute,
   ApiCoachRoute: ApiCoachRoute,
   ApiHealthRoute: ApiHealthRoute,
