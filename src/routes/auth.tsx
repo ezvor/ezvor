@@ -86,6 +86,34 @@ function friendlyError(err: unknown): string {
   return msg || "Something went wrong. Please try again.";
 }
 
+/**
+ * Which social providers are switched on in Supabase (Auth → Providers), read
+ * from the public settings endpoint so disabled buttons never render.
+ */
+function useEnabledProviders(): { google: boolean; github: boolean } {
+  const [enabled, setEnabled] = useState({ google: false, github: false });
+  useEffect(() => {
+    const url = import.meta.env.VITE_SUPABASE_URL as string | undefined;
+    const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined;
+    if (!url || !key) return;
+    let cancelled = false;
+    fetch(`${url.replace(/\/$/, "")}/auth/v1/settings`, { headers: { apikey: key } })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((s: { external?: Record<string, boolean> } | null) => {
+        if (!cancelled && s?.external) {
+          setEnabled({ google: !!s.external.google, github: !!s.external.github });
+        }
+      })
+      .catch(() => {
+        /* keep social sign-in hidden; email still works */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  return enabled;
+}
+
 function AuthPage() {
   if (!isSupabaseConfigured) return <AccountsDisabled />;
   return <AuthForms />;
@@ -143,6 +171,7 @@ function AuthForms() {
     kind: "confirm" | "magic" | "reset";
   } | null>(null);
 
+  const providers = useEnabledProviders();
   const resetting = mode === "reset" || recovery;
 
   const setMode = (m: Mode) => {
@@ -333,31 +362,37 @@ function AuthForms() {
             <SentNotice sentTo={sentTo} onBack={() => setMode("signin")} />
           ) : (
             <>
-              {!resetting && (mode === "signin" || mode === "signup") && (
-                <>
-                  <div className="mt-6 grid gap-2.5">
-                    <OAuthButton
-                      onClick={() => handleOAuth("google")}
-                      loading={busy === "google"}
-                      disabled={anyBusy}
-                      icon={<GoogleIcon className="h-4 w-4" />}
-                      label="Continue with Google"
-                    />
-                    <OAuthButton
-                      onClick={() => handleOAuth("github")}
-                      loading={busy === "github"}
-                      disabled={anyBusy}
-                      icon={<Github className="h-4 w-4" />}
-                      label="Continue with GitHub"
-                    />
-                  </div>
-                  <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground">
-                    <span className="h-px flex-1 bg-border" />
-                    or with email
-                    <span className="h-px flex-1 bg-border" />
-                  </div>
-                </>
-              )}
+              {!resetting &&
+                (mode === "signin" || mode === "signup") &&
+                (providers.google || providers.github) && (
+                  <>
+                    <div className="mt-6 grid gap-2.5">
+                      {providers.google && (
+                        <OAuthButton
+                          onClick={() => handleOAuth("google")}
+                          loading={busy === "google"}
+                          disabled={anyBusy}
+                          icon={<GoogleIcon className="h-4 w-4" />}
+                          label="Continue with Google"
+                        />
+                      )}
+                      {providers.github && (
+                        <OAuthButton
+                          onClick={() => handleOAuth("github")}
+                          loading={busy === "github"}
+                          disabled={anyBusy}
+                          icon={<Github className="h-4 w-4" />}
+                          label="Continue with GitHub"
+                        />
+                      )}
+                    </div>
+                    <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground">
+                      <span className="h-px flex-1 bg-border" />
+                      or with email
+                      <span className="h-px flex-1 bg-border" />
+                    </div>
+                  </>
+                )}
 
               <form
                 onSubmit={handleSubmit}
