@@ -15,7 +15,17 @@ export default defineConfig(({ command, mode }) => {
   for (const [key, value] of Object.entries(loadEnv(mode, process.cwd(), ""))) {
     if (process.env[key] === undefined) process.env[key] = value;
   }
+  // The Supabase URL and anon key are public by design; let one pair of vars
+  // configure both the server and the browser bundle.
+  const publicSupabase = {
+    VITE_SUPABASE_URL: process.env.VITE_SUPABASE_URL || process.env.SUPABASE_URL || "",
+    VITE_SUPABASE_PUBLISHABLE_KEY:
+      process.env.VITE_SUPABASE_PUBLISHABLE_KEY || process.env.SUPABASE_PUBLISHABLE_KEY || "",
+  };
   return {
+    define: Object.fromEntries(
+      Object.entries(publicSupabase).map(([k, v]) => [`import.meta.env.${k}`, JSON.stringify(v)]),
+    ),
     server: {
       port: 8080,
       // Don't watch build output: on Windows a concurrent `npm run build` locks
