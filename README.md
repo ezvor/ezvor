@@ -22,7 +22,7 @@ Most "career" sites are one of two things: link dumps or motivational fluff. I w
 
 Ezvor pulls together the things I kept opening ten different tabs for, and turns your actual, verifiable effort into a single readiness score you cannot fake.
 
-| | Feature | What it gives you |
+| | Features | What it gives you |
 | :---: | :--- | :--- |
 | 🎯 | **Readiness Engine** | The core of the product. Takes your server-verified activity plus a target role and computes a deterministic readiness score with a pillar breakdown (foundations, DSA, consistency, proof) and the highest-impact next moves. |
 | 💻 | **DSA Arena** | A LeetCode-style editor (Monaco) with multi-language compile and run, hidden test cases, and runtime and memory feedback. A problem only counts once the judge actually accepts it. |
