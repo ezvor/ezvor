@@ -99,7 +99,7 @@ npm run dev
 
 The app comes up on http://localhost:8080.
 
-### Environment
+### Environment:
 
 Run `npm run setup` (or copy `.env.example` to `.env`). **Nothing is required**: with no keys the app runs local-first (progress saved in the browser), code runs on free engines (in-browser Python/JS, Wandbox/Paiza for compiled languages) and the AI falls back to a keyless model.
 
