@@ -57,7 +57,7 @@ I stayed deliberately boring where it mattered and modern where it paid off.
 
 Server logic runs through TanStack `createServerFn` with a couple of public API routes for webhooks and cron. There is no separate backend service to babysit.
 
-## Architecture notes
+## Architecture notes:
 
 A few decisions worth calling out, the parts I would defend in a review:
 
